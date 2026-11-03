@@ -1,10 +1,10 @@
 {
   "skills": [
-    { "name": "Kotlin", "level": 90 },
-    { "name": "Vue / Nuxt", "level": 85 },
-    { "name": "Rust", "level": 70 },
-    { "name": "TypeScript", "level": 80 },
-    { "name": "PostgreSQL", "level": 75 },
-    { "name": "Docker", "level": 70 }
+    { "name": "Kotlin", "level": 90, "category": "Languages" },
+    { "name": "Rust", "level": 70, "category": "Languages" },
+    { "name": "TypeScript", "level": 80, "category": "Languages" },
+    { "name": "Vue / Nuxt", "level": 85, "category": "Frameworks" },
+    { "name": "PostgreSQL", "level": 75, "category": "Databases" },
+    { "name": "Docker", "level": 70, "category": "Tools" }
   ]
 }

@@ -5,5 +5,9 @@
   "location": "Batam, Kepulauan Riau, Indonesia",
   "email": "contact@ringga.dev",
   "github": "https://github.com/ringga-dev",
-  "linkedin": "https://linkedin.com/in/ringgadev"
+  "linkedin": "https://linkedin.com/in/ringgadev",
+  "experience": [
+    { "role": "Multi-Platform Engineer", "company": "Freelance", "period": "2022 — Present", "description": "Building mobile, web, and desktop apps with Kotlin Multiplatform and Vue/Nuxt." },
+    { "role": "Android Developer", "company": "Previous Co.", "period": "2020 — 2022", "description": "Jetpack Compose UI, system-level integrations, and CI/CD." }
+  ]
 }

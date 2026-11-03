@@ -1,5 +1,5 @@
 <template>
-  <main>
+  <div>
     <!-- Hero -->
     <section class="min-h-screen flex items-center justify-center relative overflow-hidden">
       <div class="absolute inset-0 bg-gradient-to-b from-[hsl(var(--accent)/0.05)] to-transparent"></div>
@@ -17,6 +17,17 @@
           <a href="https://github.com/ringga-dev" class="btn-primary">GitHub</a>
           <NuxtLink to="/projects" class="btn-secondary">View Projects</NuxtLink>
         </div>
+      </div>
+    </section>
+
+    <!-- About snippet -->
+    <section class="max-w-5xl mx-auto px-6 py-24">
+      <div class="glass p-8 md:p-12">
+        <h2 class="text-4xl mb-6">About <span class="text-gradient">Me</span></h2>
+        <p class="text-[hsl(var(--muted))] leading-relaxed mb-6">
+          I'm a multi-platform engineer specializing in Kotlin Multiplatform, Jetpack Compose, and Vue/Nuxt. I build mobile, web, and desktop applications with a focus on performance and clean architecture.
+        </p>
+        <NuxtLink to="/about" class="text-[hsl(var(--accent))] font-medium hover:underline">Learn more →</NuxtLink>
       </div>
     </section>
 
@@ -48,7 +59,21 @@
         </div>
       </div>
     </section>
-  </main>
+
+    <!-- CTA -->
+    <section class="max-w-5xl mx-auto px-6 py-24">
+      <div class="glass p-8 md:p-12 text-center">
+        <h2 class="text-4xl mb-6">Let's <span class="text-gradient">Work Together</span></h2>
+        <p class="text-[hsl(var(--muted))] mb-8 max-w-xl mx-auto leading-relaxed">
+          Have a project in mind or just want to say hi? I'm always open to new opportunities.
+        </p>
+        <div class="flex gap-4 justify-center">
+          <NuxtLink to="/contact" class="btn-primary">Get in Touch</NuxtLink>
+          <a href="https://github.com/ringga-dev" class="btn-secondary">GitHub</a>
+        </div>
+      </div>
+    </section>
+  </div>
 </template>
 
 <script setup>
