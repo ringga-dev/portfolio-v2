@@ -1,16 +1,23 @@
 {
-  "name": "Ringga",
-  "role": "Full-Stack Developer",
-  "tagline": "I build fast, accessible web apps with clean architecture and sharp attention to detail.",
-  "bio": "Full-stack developer focused on Nuxt, Vue, and TypeScript. I ship production-grade interfaces, APIs, and tooling that stay maintainable as they grow.",
-  "location": "Indonesia",
-  "email": "hello@ringga.dev",
+  "name": "Ringga Septia Pribadi",
+  "title": "Multi-Platform Engineer",
+  "bio": "I build mobile, web, and desktop applications with Kotlin and Vue. Specialized in Kotlin Multiplatform, Jetpack Compose, and system-level integrations.",
+  "location": "Batam, Kepulauan Riau, Indonesia",
+  "email": "contact@ringga.dev",
   "github": "https://github.com/ringga-dev",
-  "linkedin": "https://linkedin.com/in/ringga-dev",
-  "resume": "/resume.pdf",
-  "stats": [
-    { "value": "5+", "label": "Years experience" },
-    { "value": "30+", "label": "Projects shipped" },
-    { "value": "12", "label": "Open source repos" }
+  "linkedin": "https://linkedin.com/in/ringgadev",
+  "experience": [
+    {
+      "role": "Senior Mobile Developer",
+      "company": "Freelance",
+      "period": "2023 - Present",
+      "description": "Building cross-platform mobile apps with Kotlin Multiplatform and Compose Multiplatform."
+    },
+    {
+      "role": "Android Developer",
+      "company": "Various Clients",
+      "period": "2021 - 2023",
+      "description": "Native Android development with Kotlin and Jetpack Compose."
+    }
   ]
 }
