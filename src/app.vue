@@ -1,5 +1,9 @@
 <template>
-  <div class="min-h-screen bg-[hsl(var(--bg))] text-[hsl(var(--text))]">
-    <NuxtPage />
+  <div class="min-h-screen">
+    <Navbar />
+    <main class="pt-20">
+      <NuxtPage />
+    </main>
+    <Footer />
   </div>
 </template>

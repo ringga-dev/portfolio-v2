@@ -1,0 +1,10 @@
+{
+  "skills": [
+    { "name": "Kotlin", "level": 90 },
+    { "name": "Vue / Nuxt", "level": 85 },
+    { "name": "Rust", "level": 70 },
+    { "name": "TypeScript", "level": 80 },
+    { "name": "PostgreSQL", "level": 75 },
+    { "name": "Docker", "level": 70 }
+  ]
+}
