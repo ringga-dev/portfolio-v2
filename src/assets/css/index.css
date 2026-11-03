@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* portfolio-v2 — anti-slop stylesheet
    Solid surfaces, emerald accent used sparingly, no glow spam.
    Glass is an accent on 1-2 elements only. */
