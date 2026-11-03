@@ -1,25 +1,30 @@
-{
-  "projects": [
-    {
-      "slug": "system-monitor",
-      "title": "System Monitor",
-      "description": "Real-time server monitoring dashboard with Rust collector, Axum server, and Vue 3 frontend.",
-      "tech": ["Rust", "Axum", "Vue 3", "SQLite", "uPlot"],
-      "url": "https://github.com/ringga-dev/system-monitor-v2"
-    },
-    {
-      "slug": "pancing-bot",
-      "title": "Pancing Bot",
-      "description": "Documentation site for AI account identification and detection methods.",
-      "tech": ["MkDocs", "Python", "GitHub Actions"],
-      "url": "https://github.com/ringga-dev/pancing-bot"
-    },
-    {
-      "slug": "kmp-printer",
-      "title": "KMP Printer",
-      "description": "Open-source thermal printing library for Kotlin Multiplatform (ESC/POS).",
-      "tech": ["Kotlin", "KMP", "ESC/POS"],
-      "url": "https://github.com/ringga-dev/kmp-printer"
-    }
-  ]
-}
+[
+  {
+    "title": "Hermes Agent Dashboard",
+    "description": "Real-time monitoring dashboard for autonomous AI agents with live logs, task queues, and metrics.",
+    "tags": ["Vue", "Nuxt", "TypeScript", "WebSocket"],
+    "link": "https://github.com/ringga-dev/hermes-dashboard",
+    "featured": true
+  },
+  {
+    "title": "Static Site Perf Toolkit",
+    "description": "Auditing and optimization toolkit for static sites: image compression, critical CSS, and cache headers.",
+    "tags": ["Node", "CLI", "Performance"],
+    "link": "https://github.com/ringga-dev/static-perf",
+    "featured": false
+  },
+  {
+    "title": "Portfolio v2",
+    "description": "This portfolio. Nuxt 4, Tailwind, content-driven with JSON data and a clean component system.",
+    "tags": ["Nuxt 4", "Tailwind", "Vue"],
+    "link": "https://github.com/ringga-dev/portfolio-v2",
+    "featured": false
+  },
+  {
+    "title": "Embedded Frontend Builder",
+    "description": "Tooling to build and embed frontends into Go binaries with go:embed and hot reload in dev.",
+    "tags": ["Go", "Vue", "Vite"],
+    "link": "https://github.com/ringga-dev/embed-frontend",
+    "featured": false
+  }
+]

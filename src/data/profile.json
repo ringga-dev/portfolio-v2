@@ -1,13 +1,16 @@
 {
-  "name": "Ringga Septia Pribadi",
-  "title": "Multi-Platform Engineer",
-  "bio": "I build mobile, web, and desktop applications with Kotlin and Vue. Specialized in Kotlin Multiplatform, Jetpack Compose, and system-level integrations.",
-  "location": "Batam, Kepulauan Riau, Indonesia",
-  "email": "contact@ringga.dev",
+  "name": "Ringga",
+  "role": "Full-Stack Developer",
+  "tagline": "I build fast, accessible web apps with clean architecture and sharp attention to detail.",
+  "bio": "Full-stack developer focused on Nuxt, Vue, and TypeScript. I ship production-grade interfaces, APIs, and tooling that stay maintainable as they grow.",
+  "location": "Indonesia",
+  "email": "hello@ringga.dev",
   "github": "https://github.com/ringga-dev",
-  "linkedin": "https://linkedin.com/in/ringgadev",
-  "experience": [
-    { "role": "Multi-Platform Engineer", "company": "Freelance", "period": "2022 — Present", "description": "Building mobile, web, and desktop apps with Kotlin Multiplatform and Vue/Nuxt." },
-    { "role": "Android Developer", "company": "Previous Co.", "period": "2020 — 2022", "description": "Jetpack Compose UI, system-level integrations, and CI/CD." }
+  "linkedin": "https://linkedin.com/in/ringga-dev",
+  "resume": "/resume.pdf",
+  "stats": [
+    { "value": "5+", "label": "Years experience" },
+    { "value": "30+", "label": "Projects shipped" },
+    { "value": "12", "label": "Open source repos" }
   ]
 }

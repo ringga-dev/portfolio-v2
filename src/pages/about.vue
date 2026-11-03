@@ -7,8 +7,8 @@
       <p class="text-[hsl(var(--muted))] text-lg">{{ profile.title }} · {{ profile.location }}</p>
     </header>
 
-    <section class="glass p-8 md:p-10 mb-12">
-      <h2 class="text-2xl font-semibold mb-3">{{ profile.name }}</h2>
+    <section class="mb-12 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--surface))] p-8 md:p-10">
+      <h2 class="text-2xl font-semibold mb-3 text-[hsl(var(--text))]">{{ profile.name }}</h2>
       <p class="text-[hsl(var(--muted))] leading-relaxed mb-4">{{ profile.bio }}</p>
       <div class="flex flex-wrap gap-4 text-sm text-[hsl(var(--muted))]">
         <a :href="`mailto:${profile.email}`" class="hover:text-[hsl(var(--accent))] transition-colors">{{ profile.email }}</a>
@@ -23,7 +23,7 @@
         <div
           v-for="group in groupedSkills"
           :key="group.category"
-          class="p-6 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--surface))]"
+          class="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--surface))] p-6"
         >
           <h3 class="text-sm uppercase tracking-wide text-[hsl(var(--muted))] mb-4">{{ group.category }}</h3>
           <div class="space-y-4">
@@ -53,7 +53,7 @@
           class="pl-8 relative"
         >
           <span class="absolute -left-[7px] top-1.5 w-3.5 h-3.5 rounded-full bg-[hsl(var(--accent))] ring-4 ring-[hsl(var(--bg))]" />
-          <div class="p-6 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--surface))]">
+          <div class="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--surface))] p-6">
             <h3 class="text-xl font-semibold text-[hsl(var(--text))]">{{ e.role }}</h3>
             <p class="text-sm text-[hsl(var(--muted))] mb-2">{{ e.company }} · {{ e.period }}</p>
             <p class="text-[hsl(var(--muted))] leading-relaxed">{{ e.description }}</p>

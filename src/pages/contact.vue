@@ -1,12 +1,12 @@
 <template>
   <main class="max-w-3xl mx-auto px-6 py-12">
-    <h1 class="text-4xl mb-2 text-[hsl(var(--accent))]">Contact</h1>
+    <h1 class="text-4xl mb-2 text-[hsl(var(--text))]">Contact</h1>
     <p class="text-[hsl(var(--muted))] mb-8 leading-relaxed">
       Have a project in mind or just want to say hi? Reach out through any of these.
     </p>
 
-    <div class="glass p-8 mb-8">
-      <h2 class="text-xl mb-4 text-[hsl(var(--accent))]">Get in touch</h2>
+    <div class="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--surface))] p-8 mb-8">
+      <h2 class="text-xl mb-4 text-[hsl(var(--text))]">Get in touch</h2>
       <ul class="space-y-4">
         <li>
           <a
@@ -42,29 +42,29 @@
       </ul>
     </div>
 
-    <div class="glass p-8">
-      <h2 class="text-xl mb-4 text-[hsl(var(--accent))]">Send a message</h2>
+    <div class="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--surface))] p-8">
+      <h2 class="text-xl mb-4 text-[hsl(var(--text))]">Send a message</h2>
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <input
           v-model="name"
           type="text"
           required
           placeholder="Your Name"
-          class="w-full px-4 py-3 glass rounded"
+          class="w-full px-4 py-3 rounded border border-[hsl(var(--border))] bg-[hsl(var(--bg))] text-[hsl(var(--text))]"
         />
         <input
           v-model="email"
           type="email"
           required
           placeholder="email@example.com"
-          class="w-full px-4 py-3 glass rounded"
+          class="w-full px-4 py-3 rounded border border-[hsl(var(--border))] bg-[hsl(var(--bg))] text-[hsl(var(--text))]"
         />
         <textarea
           v-model="message"
           required
           rows="5"
           placeholder="Drop your message here..."
-          class="w-full px-4 py-3 glass rounded resize-y"
+          class="w-full px-4 py-3 rounded border border-[hsl(var(--border))] bg-[hsl(var(--bg))] text-[hsl(var(--text))] resize-y"
         ></textarea>
         <button type="submit" class="btn-primary">Send Message</button>
       </form>

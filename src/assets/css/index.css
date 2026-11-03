@@ -1,80 +1,163 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* portfolio-v2 — anti-slop stylesheet
+   Solid surfaces, emerald accent used sparingly, no glow spam.
+   Glass is an accent on 1-2 elements only. */
 
-@layer base {
-  :root {
-    --bg: 222 47% 4%;
-    --surface: 222 30% 8%;
-    --text: 0 0% 95%;
-    --muted: 220 15% 60%;
-    --border: 0 0% 100% / 0.1;
-    --accent: 160 84% 45%;
-    --accent-glow: 160 84% 55%;
-    --glass: 0 0% 100% / 0.04;
-    --glass-border: 0 0% 100% / 0.12;
-  }
-  body {
-    background: hsl(var(--bg));
-    color: hsl(var(--text));
-    font-family: 'Inter', system-ui, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    margin: 0;
-    min-height: 100vh;
-    background-image: 
-      radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--accent) / 0.15), transparent),
-      radial-gradient(ellipse 60% 40% at 80% 60%, hsl(var(--accent) / 0.08), transparent);
-  }
-  h1, h2, h3 { font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; }
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+  --bg: #0b0f14;
+  --surface: #131922;
+  --text: #e6eaf0;
+  --muted: #8a93a3;
+  --border: #1f2733;
+  --accent: #10b981; /* emerald, used sparingly */
+  --glass: rgba(255, 255, 255, 0.04);
 }
 
-@layer components {
-  .glass {
-    background: hsl(var(--glass));
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid hsl(var(--glass-border));
-    border-radius: 1.25rem;
-    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.3);
-  }
-  .glass:hover {
-    background: hsl(var(--glass) / 1.5);
-    border-color: hsl(var(--accent) / 0.3);
-  }
-  .btn-primary {
-    @apply inline-flex items-center justify-center px-8 py-4 rounded-xl font-semibold transition-all duration-300;
-    background: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent-glow)));
-    color: white;
-    box-shadow: 0 4px 20px hsl(var(--accent) / 0.4);
-  }
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px hsl(var(--accent) / 0.5);
-  }
-  .btn-secondary {
-    @apply inline-flex items-center justify-center px-8 py-4 rounded-xl font-semibold transition-all duration-300;
-    background: hsl(var(--glass));
-    border: 1px solid hsl(var(--glass-border));
-    backdrop-filter: blur(8px);
-  }
-  .btn-secondary:hover {
-    background: hsl(var(--accent) / 0.1);
-    border-color: hsl(var(--accent) / 0.4);
-  }
-  .glow {
-    box-shadow: 0 0 40px hsl(var(--accent-glow) / 0.25);
-  }
-  .text-gradient {
-    background: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--accent-glow)));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .card-hover {
-    transition: all 0.3s ease;
-  }
-  .card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px hsl(var(--accent) / 0.15);
-  }
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text);
+  background-color: var(--bg);
+  /* Subtle gradient mesh — not AI-slop */
+  background-image:
+    radial-gradient(ellipse 80% 60% at 10% 0%, rgba(16, 185, 129, 0.08), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 90% 100%, rgba(59, 130, 246, 0.06), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 50%, rgba(255, 255, 255, 0.02), transparent 70%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  margin: 0 0 0.5em;
+}
+
+p {
+  margin: 0 0 1em;
+  color: var(--text);
+}
+
+small,
+.muted {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Solid surfaces */
+.surface,
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+/* Buttons — solid, no glow */
+button,
+.btn {
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+button:hover,
+.btn:hover {
+  background: #1a2230;
+  border-color: #2a3444;
+}
+
+.btn--primary {
+  background: var(--accent);
+  color: #062a1f;
+  border-color: var(--accent);
+}
+
+.btn--primary:hover {
+  background: #0ea572;
+  border-color: #0ea572;
+}
+
+/* Glass — accent only, used on 1-2 elements */
+.glass-accent {
+  background: var(--glass);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Inputs */
+input,
+textarea,
+select {
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* No monospace defaults anywhere */
+code,
+pre,
+kbd,
+samp {
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* Layout helpers */
+.container {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+/* Subtle divider */
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
 }

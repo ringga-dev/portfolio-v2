@@ -1,115 +1,132 @@
 <template>
-  <div>
+  <div class="min-h-screen bg-zinc-950 text-zinc-100">
     <!-- Hero -->
-    <section class="min-h-[88vh] flex items-center relative overflow-hidden">
-      <div class="max-w-5xl mx-auto px-6 py-20 w-full">
-        <h1 class="text-5xl md:text-7xl font-semibold leading-tight mb-6">
-          <span class="text-gradient">{{ profile.name }}</span>
-        </h1>
-        <p class="text-2xl md:text-3xl text-[hsl(var(--text))] mb-4 max-w-3xl leading-snug">
-          {{ profile.title }}
-        </p>
-        <p class="text-lg text-[hsl(var(--muted))] mb-10 max-w-2xl leading-relaxed">
-          {{ profile.bio }}
-        </p>
-        <div class="flex flex-wrap gap-4">
-          <a :href="profile.github" class="btn-primary">GitHub</a>
-          <NuxtLink to="/projects" class="btn-secondary">View Projects</NuxtLink>
-          <NuxtLink to="/contact" class="btn-secondary">Contact</NuxtLink>
+    <section class="px-6 pt-24 pb-20 max-w-5xl mx-auto">
+      <h1 class="text-5xl md:text-7xl font-bold tracking-tight leading-[1.05]">
+        Hi, I'm <span class="text-emerald-400">{{ profile.name }}</span>.
+      </h1>
+      <p class="mt-6 text-xl md:text-2xl text-zinc-300 max-w-2xl">
+        {{ profile.tagline }}
+      </p>
+      <p class="mt-4 text-zinc-400 max-w-2xl leading-relaxed">
+        {{ profile.bio }}
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a
+          href="#projects"
+          class="px-5 py-3 rounded-lg bg-emerald-500 text-zinc-950 font-semibold hover:bg-emerald-400 transition-colors"
+        >
+          View projects
+        </a>
+        <a
+          :href="profile.github"
+          target="_blank"
+          rel="noopener"
+          class="px-5 py-3 rounded-lg border border-zinc-700 text-zinc-100 hover:border-zinc-500 transition-colors"
+        >
+          GitHub
+        </a>
+      </div>
+      <div class="mt-12 grid grid-cols-3 gap-6 max-w-md">
+        <div v-for="s in profile.stats" :key="s.label">
+          <div class="text-3xl font-bold text-emerald-400">{{ s.value }}</div>
+          <div class="text-sm text-zinc-400 mt-1">{{ s.label }}</div>
         </div>
       </div>
     </section>
 
-    <!-- About snippet -->
-    <section class="max-w-5xl mx-auto px-6 py-16">
-      <div class="glass p-8 md:p-12 rounded-2xl">
-        <h2 class="text-3xl md:text-4xl font-semibold mb-6">
-          About <span class="text-gradient">Me</span>
-        </h2>
-        <p class="text-[hsl(var(--muted))] leading-relaxed mb-6 max-w-3xl">
-          {{ profile.bio }} Based in {{ profile.location }}. I work across mobile, web, and desktop, with a focus on performance and clean architecture.
-        </p>
-        <NuxtLink to="/about" class="text-[hsl(var(--accent))] font-medium hover:underline">Learn more</NuxtLink>
-      </div>
-    </section>
-
-    <!-- Featured projects -->
-    <section class="max-w-5xl mx-auto px-6 py-16">
-      <div class="flex items-end justify-between mb-10 gap-4 flex-wrap">
-        <h2 class="text-3xl md:text-4xl font-semibold">
-          Featured <span class="text-gradient">Projects</span>
-        </h2>
-        <NuxtLink to="/projects" class="text-[hsl(var(--accent))] font-medium hover:underline">All projects</NuxtLink>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Projects -->
+    <section id="projects" class="px-6 py-20 max-w-5xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold tracking-tight">Projects</h2>
+      <p class="mt-3 text-zinc-400 max-w-2xl">
+        Selected work I've designed and shipped end to end.
+      </p>
+      <div class="mt-10 grid gap-6 sm:grid-cols-2">
         <article
-          v-for="p in projects.projects"
-          :key="p.slug"
-          class="p-6 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--surface))] flex flex-col gap-4"
+          v-for="(project, i) in projects"
+          :key="project.title"
+          class="rounded-xl p-6 transition-transform hover:-translate-y-1"
+          :class="i === 0 ? 'bg-zinc-900/60 backdrop-blur border border-emerald-500/30' : 'bg-zinc-900 border border-zinc-800'"
         >
-          <h3 class="text-xl font-semibold text-[hsl(var(--text))]">{{ p.title }}</h3>
-          <p class="text-[hsl(var(--muted))] leading-relaxed flex-1">{{ p.description }}</p>
-          <div class="flex flex-wrap gap-2">
+          <h3 class="text-xl font-semibold text-zinc-100">{{ project.title }}</h3>
+          <p class="mt-2 text-zinc-400 leading-relaxed">{{ project.description }}</p>
+          <div class="mt-4 flex flex-wrap gap-2">
             <span
-              v-for="t in p.tech"
-              :key="t"
-              class="text-xs px-2.5 py-1 rounded-full border border-[hsl(var(--border))] text-[hsl(var(--muted))]"
+              v-for="tag in project.tags"
+              :key="tag"
+              class="text-xs px-2 py-1 rounded-md bg-zinc-800 text-zinc-300"
             >
-              {{ t }}
+              {{ tag }}
             </span>
           </div>
-          <a :href="p.url" class="text-[hsl(var(--accent))] font-medium hover:underline self-start">
-            View on GitHub
+          <a
+            :href="project.link"
+            target="_blank"
+            rel="noopener"
+            class="mt-5 inline-block text-emerald-400 text-sm font-medium hover:text-emerald-300"
+          >
+            View on GitHub →
           </a>
         </article>
       </div>
     </section>
 
     <!-- Skills -->
-    <section class="max-w-5xl mx-auto px-6 py-16">
-      <h2 class="text-3xl md:text-4xl font-semibold mb-10">
-        Tech <span class="text-gradient">Stack</span>
-      </h2>
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <div
-          v-for="s in skills.skills"
-          :key="s.name"
-          class="p-5 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--surface))]"
-        >
-          <div class="flex items-center justify-between mb-3">
-            <span class="font-medium text-[hsl(var(--text))]">{{ s.name }}</span>
-            <span class="text-sm text-[hsl(var(--muted))]">{{ s.level }}%</span>
+    <section class="px-6 py-20 max-w-5xl mx-auto">
+      <h2 class="text-3xl md:text-4xl font-bold tracking-tight">Skills</h2>
+      <p class="mt-3 text-zinc-400 max-w-2xl">
+        Tools and technologies I work with day to day.
+      </p>
+      <div class="mt-10 space-y-5 max-w-2xl">
+        <div v-for="skill in skills" :key="skill.name">
+          <div class="flex justify-between mb-2">
+            <span class="text-zinc-200 font-medium">{{ skill.name }}</span>
+            <span class="text-zinc-400 text-sm">{{ skill.level }}%</span>
           </div>
-          <div class="h-2 rounded-full bg-[hsl(var(--border))] overflow-hidden">
+          <div class="h-2 rounded-full bg-zinc-800 overflow-hidden">
             <div
-              class="h-full rounded-full bg-[hsl(var(--accent))]"
-              :style="{ width: s.level + '%' }"
-            />
+              class="h-full rounded-full bg-emerald-500 transition-all"
+              :style="{ width: skill.level + '%' }"
+            ></div>
           </div>
         </div>
       </div>
     </section>
 
     <!-- CTA -->
-    <section class="max-w-5xl mx-auto px-6 py-20">
-      <div class="glass p-8 md:p-12 rounded-2xl text-center">
-        <h2 class="text-3xl md:text-4xl font-semibold mb-4">
-          Let's <span class="text-gradient">Work Together</span>
-        </h2>
-        <p class="text-[hsl(var(--muted))] mb-8 max-w-xl mx-auto leading-relaxed">
-          Have a project in mind or just want to say hi? I'm always open to new opportunities.
-        </p>
-        <div class="flex flex-wrap gap-4 justify-center">
-          <NuxtLink to="/contact" class="btn-primary">Get in Touch</NuxtLink>
-          <a :href="profile.github" class="btn-secondary">GitHub</a>
-        </div>
+    <section class="px-6 py-24 max-w-5xl mx-auto text-center">
+      <h2 class="text-3xl md:text-5xl font-bold tracking-tight">
+        Let's build something together.
+      </h2>
+      <p class="mt-4 text-zinc-400 max-w-xl mx-auto">
+        I'm open to freelance work, collaborations, and full-time roles. Drop me a line.
+      </p>
+      <div class="mt-8 flex flex-wrap justify-center gap-3">
+        <a
+          :href="'mailto:' + profile.email"
+          class="px-6 py-3 rounded-lg bg-emerald-500 text-zinc-950 font-semibold hover:bg-emerald-400 transition-colors"
+        >
+          Email me
+        </a>
+        <a
+          :href="profile.linkedin"
+          target="_blank"
+          rel="noopener"
+          class="px-6 py-3 rounded-lg border border-zinc-700 text-zinc-100 hover:border-zinc-500 transition-colors"
+        >
+          LinkedIn
+        </a>
       </div>
     </section>
+
+    <footer class="px-6 py-8 border-t border-zinc-800 text-center text-sm text-zinc-500">
+      © {{ new Date().getFullYear() }} {{ profile.name }}. Built with Nuxt.
+    </footer>
   </div>
 </template>
 
-<script setup>
-import profile from '~/data/profile.json'
-import projects from '~/data/projects.json'
-import skills from '~/data/skills.json'
+<script setup lang="ts">
+import profile from "~/data/profile.json";
+import projects from "~/data/projects.json";
+import skills from "~/data/skills.json";
 </script>

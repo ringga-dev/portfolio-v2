@@ -9,7 +9,7 @@
       <article
         v-for="p in projects.projects"
         :key="p.slug"
-        class="glass p-6 rounded-2xl flex flex-col gap-4"
+        class="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--surface))] p-6 flex flex-col gap-4"
       >
         <h2 class="text-xl font-semibold text-[hsl(var(--text))]">{{ p.title }}</h2>
         <p class="text-[hsl(var(--muted))] leading-relaxed text-sm flex-1">{{ p.description }}</p>

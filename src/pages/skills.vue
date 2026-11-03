@@ -5,9 +5,13 @@
       <p class="text-[hsl(var(--muted))]">Proficiency by category.</p>
     </header>
 
-    <section class="glass p-8 md:p-10">
-      <div v-for="(cat, ci) in categories" :key="cat.name" :class="ci > 0 ? 'mt-10 pt-10 border-t border-[hsl(var(--border))]' : ''">
-        <h2 class="text-xl mb-5 text-[hsl(var(--accent))]">{{ cat.name }}</h2>
+    <section class="space-y-6">
+      <div
+        v-for="cat in categories"
+        :key="cat.name"
+        class="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--surface))] p-6 md:p-8"
+      >
+        <h2 class="text-xl font-semibold mb-5 text-[hsl(var(--text))]">{{ cat.name }}</h2>
         <ul class="space-y-5">
           <li v-for="s in cat.skills" :key="s.name">
             <div class="flex items-baseline justify-between mb-2">
@@ -15,7 +19,7 @@
               <span class="text-sm tabular-nums text-[hsl(var(--muted))]">{{ s.level }}%</span>
             </div>
             <div
-              class="h-2 bg-[hsl(var(--surface))] rounded-full overflow-hidden"
+              class="h-2 bg-[hsl(var(--border))] rounded-full overflow-hidden"
               role="progressbar"
               :aria-valuenow="s.level"
               aria-valuemin="0"
@@ -23,8 +27,8 @@
               :aria-label="s.name + ' proficiency'"
             >
               <div
-                class="h-full rounded-full transition-[width] duration-500"
-                :style="{ width: s.level + '%', background: 'linear-gradient(90deg, hsl(var(--accent)), hsl(var(--accent-glow)))' }"
+                class="h-full rounded-full bg-[hsl(var(--accent))] transition-[width] duration-500"
+                :style="{ width: s.level + '%' }"
               ></div>
             </div>
           </li>
@@ -45,6 +49,6 @@ const categories = computed(() => {
     if (!map[c]) map[c] = { name: c, skills: [] }
     map[c].skills.push(s)
   }
-  return Object.values(map).sort((a, b) => a.name.localeCompare(b.name))
+  return Object.values(map)
 })
 </script>

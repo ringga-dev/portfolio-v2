@@ -1,30 +1,88 @@
 <template>
-  <nav class="sticky top-0 z-50 glass rounded-none border-t-0 border-x-0">
-    <div class="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-      <NuxtLink to="/" class="font-bold text-lg text-[hsl(var(--accent))]">
-        Ringga Dev
-      </NuxtLink>
-      <div class="flex gap-6 text-sm">
-        <NuxtLink
+  <header class="navbar">
+    <div class="navbar__inner">
+      <a href="/" class="navbar__logo" aria-label="Home">
+        <span class="navbar__logo-mark">P</span>
+        <span class="navbar__logo-text">Portfolio</span>
+      </a>
+      <nav class="navbar__nav" aria-label="Primary">
+        <a
           v-for="link in links"
-          :key="link.to"
-          :to="link.to"
-          class="text-[hsl(var(--muted))] hover:text-[hsl(var(--accent))] transition-colors"
-          active-class="text-[hsl(var(--accent))]"
+          :key="link.href"
+          :href="link.href"
+          class="navbar__link"
         >
           {{ link.label }}
-        </NuxtLink>
-      </div>
+        </a>
+      </nav>
     </div>
-  </nav>
+  </header>
 </template>
 
 <script setup lang="ts">
 const links = [
-  { to: '/', label: 'Home' },
-  { to: '/about', label: 'About' },
-  { to: '/projects', label: 'Projects' },
-  { to: '/skills', label: 'Skills' },
-  { to: '/contact', label: 'Contact' },
+  { label: 'Home', href: '/' },
+  { label: 'About', href: '/about' },
+  { label: 'Projects', href: '/projects' },
+  { label: 'Skills', href: '/skills' },
+  { label: 'Contact', href: '/contact' },
 ]
 </script>
+
+<style scoped>
+.navbar {
+  background-color: hsl(var(--background));
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.navbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+}
+
+.navbar__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: hsl(var(--foreground));
+  font-weight: 600;
+}
+
+.navbar__logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: 700;
+}
+
+.navbar__logo-text {
+  color: hsl(var(--primary));
+}
+
+.navbar__nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.navbar__link {
+  color: hsl(var(--muted-foreground));
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: color 0.15s ease;
+}
+
+.navbar__link:hover {
+  color: hsl(var(--foreground));
+}
+</style>
