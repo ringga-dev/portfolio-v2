@@ -78,7 +78,7 @@
         Tools and technologies I work with day to day.
       </p>
       <div class="mt-10 space-y-5 max-w-2xl">
-        <div v-for="skill in skills" :key="skill.name">
+        <div v-for="skill in skills.skills" :key="skill.name">
           <div class="flex justify-between mb-2">
             <span class="text-zinc-200 font-medium">{{ skill.name }}</span>
             <span class="text-zinc-400 text-sm">{{ skill.level }}%</span>
