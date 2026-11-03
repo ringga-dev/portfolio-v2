@@ -43,7 +43,7 @@
       </p>
       <div class="mt-10 grid gap-6 sm:grid-cols-2">
         <article
-          v-for="(project, i) in projects"
+          v-for="(project, i) in projects.projects"
           :key="project.title"
           class="rounded-xl p-6 transition-transform hover:-translate-y-1"
           :class="i === 0 ? 'bg-zinc-900/60 backdrop-blur border border-emerald-500/30' : 'bg-zinc-900 border border-zinc-800'"
