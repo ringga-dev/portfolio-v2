@@ -4,35 +4,41 @@
 
 @layer base {
   :root {
-    --bg: 0 0% 100%;
-    --surface: 0 0% 98%;
-    --text: 0 0% 8%;
-    --muted: 0 0% 40%;
-    --border: 0 0% 88%;
-    --accent: 250 70% 55%;
+    --bg: 150 20% 97%;
+    --surface: 150 15% 94%;
+    --text: 150 30% 8%;
+    --muted: 150 10% 40%;
+    --border: 150 15% 85%;
+    --accent: 150 60% 35%;
+    --accent-light: 150 50% 45%;
   }
   .dark {
-    --bg: 0 0% 6%;
-    --surface: 0 0% 10%;
-    --text: 0 0% 92%;
-    --muted: 0 0% 60%;
-    --border: 0 0% 18%;
-    --accent: 250 70% 65%;
+    --bg: 150 20% 6%;
+    --surface: 150 15% 10%;
+    --text: 150 10% 92%;
+    --muted: 150 10% 60%;
+    --border: 150 15% 18%;
+    --accent: 150 60% 50%;
+    --accent-light: 150 50% 60%;
   }
   body {
     background: hsl(var(--bg));
     color: hsl(var(--text));
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    margin: 0;
   }
   h1, h2, h3 { font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center px-6 py-3 bg-accent text-white rounded-lg font-medium transition hover:opacity-90;
+    @apply inline-flex items-center justify-center px-6 py-3 bg-[hsl(var(--accent))] text-white rounded-lg font-medium transition hover:opacity-90;
   }
   .btn-secondary {
-    @apply inline-flex items-center justify-center px-6 py-3 border border-border rounded-lg font-medium transition hover:bg-surface;
+    @apply inline-flex items-center justify-center px-6 py-3 border border-[hsl(var(--border))] rounded-lg font-medium transition hover:bg-[hsl(var(--surface))];
+  }
+  .card {
+    @apply bg-[hsl(var(--surface))] border border-[hsl(var(--border))] rounded-xl p-6;
   }
 }
