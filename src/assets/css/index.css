@@ -4,15 +4,70 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 
-:root {
+/* ————— LIGHT theme (default, iOS peach) ————— */
+:root, :root[data-theme="light"] {
   --bg: #fff7f0;
-  --bg-2: #ffe9d6;
+  --bg-glow-1: rgba(255, 190, 150, 0.40);
+  --bg-glow-2: rgba(16, 185, 129, 0.12);
+  --bg-glow-3: rgba(255, 170, 120, 0.32);
   --ink: #1a2420;
   --ink-soft: #3d4a43;
   --muted: #6b7d73;
   --accent: #10b981;
   --accent-deep: #047857;
-  --accent-soft: rgba(16, 185, 129, 0.12);
+  --line: rgba(26, 36, 32, 0.10);
+  --glass-bg: linear-gradient(160deg, rgba(255,255,255,0.72), rgba(255,255,255,0.42) 55%, rgba(255,255,255,0.55));
+  --glass-border: rgba(255,255,255,0.75);
+  --glass-fill: rgba(255,255,255,0.45);
+  --glass-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.95),
+    inset 0 -2px 0 rgba(255,255,255,0.45),
+    inset 2px 0 0 rgba(255,255,255,0.50),
+    inset -2px 0 0 rgba(255,255,255,0.35),
+    0 16px 48px rgba(180, 110, 60, 0.16),
+    0 4px 14px rgba(180, 110, 60, 0.09);
+  --glass-shadow-hover:
+    inset 0 2px 0 rgba(255,255,255,1),
+    inset 0 -2px 0 rgba(255,255,255,0.5),
+    inset 2px 0 0 rgba(255,255,255,0.55),
+    inset -2px 0 0 rgba(255,255,255,0.4),
+    0 24px 64px rgba(180, 110, 60, 0.22),
+    0 6px 20px rgba(180, 110, 60, 0.12);
+  --caustic-1: rgba(255,255,255,0.65);
+  --caustic-2: rgba(255,170,120,0.22);
+}
+
+/* ————— DARK theme (zambrut deep) ————— */
+:root[data-theme="dark"] {
+  --bg: #070b09;
+  --bg-glow-1: rgba(16, 185, 129, 0.16);
+  --bg-glow-2: rgba(52, 211, 153, 0.10);
+  --bg-glow-3: rgba(255, 255, 255, 0.04);
+  --ink: #ecfdf5;
+  --ink-soft: #c9e5d8;
+  --muted: #9db8ab;
+  --accent: #10b981;
+  --accent-deep: #34d399;
+  --line: rgba(255, 255, 255, 0.10);
+  --glass-bg: linear-gradient(160deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04) 55%, rgba(16,185,129,0.06));
+  --glass-border: rgba(255,255,255,0.22);
+  --glass-fill: rgba(10,18,15,0.38);
+  --glass-shadow:
+    inset 0 1.5px 0 rgba(255,255,255,0.35),
+    inset 0 -1.5px 0 rgba(255,255,255,0.10),
+    inset 1.5px 0 0 rgba(255,255,255,0.14),
+    inset -1.5px 0 0 rgba(255,255,255,0.08),
+    0 16px 48px rgba(0,0,0,0.45),
+    0 4px 14px rgba(0,0,0,0.30);
+  --glass-shadow-hover:
+    inset 0 1.5px 0 rgba(255,255,255,0.45),
+    inset 0 -1.5px 0 rgba(255,255,255,0.14),
+    inset 1.5px 0 0 rgba(255,255,255,0.18),
+    inset -1.5px 0 0 rgba(255,255,255,0.10),
+    0 24px 64px rgba(0,0,0,0.55),
+    0 0 40px rgba(52,211,153,0.12);
+  --caustic-1: rgba(255,255,255,0.10);
+  --caustic-2: rgba(52,211,153,0.14);
 }
 
 * { box-sizing: border-box; }
@@ -26,14 +81,14 @@ body {
   color: var(--ink);
   background-color: var(--bg);
   background-image:
-    radial-gradient(ellipse 60% 45% at 15% 0%, rgba(255, 190, 150, 0.35), transparent 65%),
-    radial-gradient(ellipse 55% 40% at 85% 15%, rgba(16, 185, 129, 0.10), transparent 65%),
-    radial-gradient(ellipse 60% 45% at 80% 90%, rgba(255, 170, 120, 0.28), transparent 65%),
-    radial-gradient(ellipse 40% 30% at 10% 85%, rgba(52, 211, 153, 0.08), transparent 70%);
+    radial-gradient(ellipse 60% 45% at 15% 0%, var(--bg-glow-1), transparent 65%),
+    radial-gradient(ellipse 55% 40% at 85% 15%, var(--bg-glow-2), transparent 65%),
+    radial-gradient(ellipse 60% 45% at 80% 90%, var(--bg-glow-3), transparent 65%);
   background-attachment: fixed;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 h1, h2, h3, h4 { font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 0.5em; color: var(--ink); }
@@ -41,70 +96,30 @@ p { margin: 0 0 1em; color: var(--ink); }
 a { color: var(--accent-deep); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-/* ============================================================
-   LIQUID GLASS — iOS style: thick jelly glass, light theme
-   ============================================================ */
-
-/* Sticky navbar: liquid glass bar */
-.glass-nav {
-  position: sticky;
-  top: 12px;
-  z-index: 50;
-  margin: 12px 16px 0;
-  background: linear-gradient(160deg, rgba(255,255,255,0.55), rgba(255,255,255,0.30) 55%, rgba(255,255,255,0.42));
-  backdrop-filter: blur(24px) saturate(1.6);
-  -webkit-backdrop-filter: blur(24px) saturate(1.6);
-  border: 1.5px solid rgba(255,255,255,0.65);
-  border-radius: 24px;
-  box-shadow:
-    inset 0 1.5px 0 rgba(255,255,255,0.85),
-    inset 0 -1px 0 rgba(255,255,255,0.35),
-    inset 1px 0 0 rgba(255,255,255,0.4),
-    inset -1px 0 0 rgba(255,255,255,0.25),
-    0 12px 40px rgba(180, 110, 60, 0.14),
-    0 2px 8px rgba(180, 110, 60, 0.08);
-}
-@media (min-width: 768px) {
-  .glass-nav { margin: 16px 32px 0; }
-}
-
-/* Jelly glass card — thick, squishy, refracting */
+/* ————— Liquid Glass surfaces ————— */
 .glass-card {
   position: relative;
-  background: linear-gradient(160deg, rgba(255,255,255,0.60), rgba(255,255,255,0.32) 55%, rgba(255,255,255,0.45));
+  background: var(--glass-bg);
   backdrop-filter: blur(24px) saturate(1.5);
   -webkit-backdrop-filter: blur(24px) saturate(1.5);
-  border: 1.5px solid rgba(255,255,255,0.65);
+  border: 1.5px solid var(--glass-border);
   border-radius: 28px;
-  box-shadow:
-    inset 0 2px 0 rgba(255,255,255,0.9),
-    inset 0 -2px 0 rgba(255,255,255,0.4),
-    inset 2px 0 0 rgba(255,255,255,0.45),
-    inset -2px 0 0 rgba(255,255,255,0.30),
-    0 16px 48px rgba(180, 110, 60, 0.13),
-    0 4px 14px rgba(180, 110, 60, 0.07);
+  box-shadow: var(--glass-shadow);
   transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease;
   overflow: hidden;
 }
 .glass-card:hover {
   transform: translateY(-3px) scale(1.005);
-  box-shadow:
-    inset 0 2px 0 rgba(255,255,255,0.95),
-    inset 0 -2px 0 rgba(255,255,255,0.45),
-    inset 2px 0 0 rgba(255,255,255,0.5),
-    inset -2px 0 0 rgba(255,255,255,0.35),
-    0 24px 64px rgba(180, 110, 60, 0.18),
-    0 6px 20px rgba(180, 110, 60, 0.10);
+  box-shadow: var(--glass-shadow-hover);
 }
-/* Liquid light inside — caustic shimmer */
 .glass-card::before {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
   background:
-    radial-gradient(ellipse 55% 40% at 18% 12%, rgba(255,255,255,0.55), transparent 70%),
-    radial-gradient(ellipse 45% 35% at 85% 88%, rgba(52,211,153,0.14), transparent 70%);
+    radial-gradient(ellipse 55% 40% at 18% 12%, var(--caustic-1), transparent 70%),
+    radial-gradient(ellipse 45% 35% at 85% 88%, var(--caustic-2), transparent 70%);
   background-size: 200% 200%;
   animation: liquid-drift 14s ease-in-out infinite alternate;
   pointer-events: none;
@@ -114,22 +129,14 @@ a:hover { text-decoration: underline; }
   100% { background-position: 80% 60%, 20% 40%; }
 }
 
-/* Jelly widget — like the lock screen clock widget */
 .glass-widget {
   position: relative;
-  background: linear-gradient(165deg, rgba(255,255,255,0.70), rgba(255,255,255,0.38) 50%, rgba(255,255,255,0.52));
+  background: var(--glass-bg);
   backdrop-filter: blur(28px) saturate(1.6);
   -webkit-backdrop-filter: blur(28px) saturate(1.6);
-  border: 1.5px solid rgba(255,255,255,0.75);
+  border: 1.5px solid var(--glass-border);
   border-radius: 32px;
-  box-shadow:
-    inset 0 2.5px 0 rgba(255,255,255,0.95),
-    inset 0 -2.5px 0 rgba(255,255,255,0.45),
-    inset 3px 0 0 rgba(255,255,255,0.5),
-    inset -3px 0 0 rgba(255,255,255,0.35),
-    inset 0 -20px 40px rgba(255,190,150,0.18),
-    0 20px 60px rgba(180, 110, 60, 0.16),
-    0 6px 18px rgba(180, 110, 60, 0.09);
+  box-shadow: var(--glass-shadow);
   overflow: hidden;
 }
 .glass-widget::before {
@@ -138,29 +145,24 @@ a:hover { text-decoration: underline; }
   inset: 0;
   border-radius: inherit;
   background:
-    radial-gradient(ellipse 65% 45% at 20% 8%, rgba(255,255,255,0.75), transparent 65%),
-    radial-gradient(ellipse 50% 40% at 85% 95%, rgba(255,170,120,0.20), transparent 70%);
+    radial-gradient(ellipse 65% 45% at 20% 8%, var(--caustic-1), transparent 65%),
+    radial-gradient(ellipse 50% 40% at 85% 95%, var(--caustic-2), transparent 70%);
   background-size: 210% 210%;
   animation: liquid-drift 16s ease-in-out infinite alternate-reverse;
   pointer-events: none;
 }
 
-/* Buttons — jelly pills */
 .btn-jelly {
   position: relative;
   display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
   padding: 0.9rem 2rem;
-  background: linear-gradient(165deg, rgba(255,255,255,0.72), rgba(255,255,255,0.42));
+  background: var(--glass-bg);
   backdrop-filter: blur(20px) saturate(1.5);
   -webkit-backdrop-filter: blur(20px) saturate(1.5);
   color: var(--ink); font-weight: 700; font-size: 1rem;
-  border: 1.5px solid rgba(255,255,255,0.75);
+  border: 1.5px solid var(--glass-border);
   border-radius: 999px;
-  box-shadow:
-    inset 0 2px 0 rgba(255,255,255,0.95),
-    inset 0 -2px 0 rgba(255,255,255,0.40),
-    0 8px 28px rgba(180, 110, 60, 0.15),
-    0 2px 6px rgba(180, 110, 60, 0.08);
+  box-shadow: var(--glass-shadow);
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
   text-decoration: none;
   cursor: pointer;
@@ -168,11 +170,7 @@ a:hover { text-decoration: underline; }
 }
 .btn-jelly:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow:
-    inset 0 2px 0 rgba(255,255,255,1),
-    inset 0 -2px 0 rgba(255,255,255,0.45),
-    0 14px 40px rgba(180, 110, 60, 0.20),
-    0 0 32px rgba(52,211,153,0.15);
+  box-shadow: var(--glass-shadow-hover);
   text-decoration: none;
 }
 .btn-jelly:active { transform: scale(0.97); }
@@ -205,6 +203,22 @@ a:hover { text-decoration: underline; }
   text-decoration: none;
 }
 .btn-accent:active { transform: scale(0.97); }
+
+.btn-theme {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  color: var(--ink); font-size: 1.1rem;
+  border: 1.5px solid var(--glass-border);
+  border-radius: 999px;
+  box-shadow: var(--glass-shadow);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+}
+.btn-theme:hover { transform: scale(1.08); }
+.btn-theme:active { transform: scale(0.94); }
 
 .masked-line { display: block; overflow: hidden; }
 .masked-line > span {
@@ -247,11 +261,11 @@ a.nav-link.active { color: var(--accent-deep); }
 
 input, textarea, select {
   font-family: "Inter", system-ui, sans-serif;
-  background: rgba(255,255,255,0.55);
+  background: var(--glass-fill);
   backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  color: var(--ink); border: 1.5px solid rgba(255,255,255,0.7); border-radius: 18px;
+  color: var(--ink); border: 1.5px solid var(--glass-border); border-radius: 18px;
   padding: 0.85rem 1.1rem; font-size: 1rem; width: 100%;
-  box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.8), 0 4px 16px rgba(180,110,60,0.07);
+  box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.5), 0 4px 16px rgba(0,0,0,0.06);
 }
-input:focus, textarea:focus, select:focus { outline: none; border-color: rgba(16,185,129,0.55); box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.9), 0 4px 20px rgba(16,185,129,0.15); }
-input::placeholder, textarea::placeholder { color: #8a9a90; }
+input:focus, textarea:focus, select:focus { outline: none; border-color: rgba(16,185,129,0.55); }
+input::placeholder, textarea::placeholder { color: var(--muted); }
