@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen">
-    <header class="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 glass rounded-2xl px-5 py-3 flex items-center justify-between">
+    <header class="sticky top-0 z-50 glass-nav px-6 md:px-10 py-4 flex items-center justify-between">
       <NuxtLink to="/" class="text-base font-bold tracking-tight text-[#ecfdf5] no-underline flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-[#34d399] shadow-[0_0_12px_rgba(52,211,153,0.8)]"></span>
         R.S.P.
@@ -13,7 +13,7 @@
       </nav>
     </header>
 
-    <main class="pt-32 px-6 md:px-10 max-w-[1200px] mx-auto">
+    <main class="pt-14 px-6 md:px-10 max-w-[1200px] mx-auto">
       <p class="text-sm text-[#34d399] font-semibold tracking-widest uppercase mb-3">About</p>
       <h1 class="reveal text-5xl md:text-6xl font-black tracking-tight text-[#ecfdf5]">{{ profile.name }}</h1>
       <p class="reveal mt-3 text-lg text-[#9db8ab]">{{ profile.title }} · {{ profile.location }}</p>
