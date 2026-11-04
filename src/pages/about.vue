@@ -1,63 +1,68 @@
 <template>
-  <div class="min-h-screen bg-[#0b0f14] text-[#e6eaf0]">
+  <div class="min-h-screen bg-[#171717] text-[#fafafa]">
     <!-- Top bar -->
-    <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 py-5 bg-[#0b0f14]/90 backdrop-blur-sm">
-      <NuxtLink to="/" class="text-base font-bold tracking-tight text-[#e6eaf0] no-underline">R.S.P.</NuxtLink>
-      <nav class="flex items-center gap-6 md:gap-8">
-        <NuxtLink to="/about" class="text-sm text-[#10b981] font-semibold no-underline">About</NuxtLink>
-        <NuxtLink to="/projects" class="text-sm text-[#8a93a3] hover:text-[#e6eaf0] transition-colors no-underline">Projects</NuxtLink>
-        <NuxtLink to="/skills" class="text-sm text-[#8a93a3] hover:text-[#e6eaf0] transition-colors no-underline">Skills</NuxtLink>
-        <NuxtLink to="/contact" class="text-sm text-[#8a93a3] hover:text-[#e6eaf0] transition-colors no-underline">Contact</NuxtLink>
+    <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#171717] border-b border-[#242424]">
+      <NuxtLink to="/" class="text-sm font-medium text-[#fafafa] no-underline">R.S.P.</NuxtLink>
+      <nav class="flex items-center gap-8">
+        <NuxtLink to="/about" class="nav-link active">About</NuxtLink>
+        <NuxtLink to="/projects" class="nav-link">Projects</NuxtLink>
+        <NuxtLink to="/skills" class="nav-link">Skills</NuxtLink>
+        <NuxtLink to="/contact" class="btn-pill">Contact</NuxtLink>
       </nav>
     </header>
 
-    <main class="pt-28 px-6 md:px-10 max-w-[1400px] mx-auto">
+    <main class="pt-28 px-6 max-w-[1400px] mx-auto">
       <header class="mb-16">
-        <h1 class="reveal text-[clamp(56px,10vw,140px)] font-black tracking-[-0.04em] leading-[0.85] text-[#e6eaf0]">
+        <h1 class="reveal text-[72px] font-normal leading-[1.00] tracking-tight text-[#fafafa]">
           About
         </h1>
-        <p class="reveal mt-6 text-lg text-[#8a93a3] max-w-2xl">
+        <p class="reveal mt-4 text-[16px] text-[#b4b4b4]">
           {{ profile.title }} · {{ profile.location }}
         </p>
       </header>
 
       <!-- Bio -->
-      <section class="mb-20">
-        <div class="reveal max-w-3xl">
-          <img
-            src="https://picsum.photos/id/279/400/400"
-            alt="Portrait"
-            class="float-left w-[100px] h-[100px] md:w-[120px] md:h-[120px] object-cover mr-4 mb-2"
-          />
-          <p class="text-[clamp(22px,2.5vw,34px)] leading-[1.2] text-[#e6eaf0]">
-            {{ profile.name }} builds software that ships. {{ profile.bio }}
-          </p>
-        </div>
-        <div class="clear-both mt-8 flex flex-wrap gap-4">
-          <a :href="'mailto:' + profile.email" class="text-link">{{ profile.email }}</a>
-          <a :href="profile.github" target="_blank" rel="noopener" class="text-link">GitHub</a>
-          <a :href="profile.linkedin" target="_blank" rel="noopener" class="text-link">LinkedIn</a>
+      <section class="mb-24">
+        <div class="flex gap-12">
+          <div class="w-[160px] shrink-0 space-y-5">
+            <div>
+              <div class="tech-label">Based in</div>
+              <div class="text-[13px] text-[#fafafa] mt-1">{{ profile.location }}</div>
+            </div>
+            <div>
+              <div class="tech-label">Since</div>
+              <div class="text-[13px] text-[#fafafa] mt-1">2020</div>
+            </div>
+            <div>
+              <div class="tech-label">Email</div>
+              <a :href="'mailto:' + profile.email" class="text-[13px] text-[#00c573] mt-1 block">{{ profile.email }}</a>
+            </div>
+          </div>
+          <div class="flex-1">
+            <p class="reveal text-[clamp(20px,1.7vw,26px)] leading-[1.35] text-[#fafafa]">
+              {{ profile.name }} builds software that ships. {{ profile.bio }}
+            </p>
+            <p class="reveal mt-8 text-[clamp(20px,1.7vw,26px)] leading-[1.35] text-[#898989]">
+              Focused on Kotlin Multiplatform and Vue since 2020.
+            </p>
+          </div>
         </div>
       </section>
 
       <!-- Skills -->
-      <section class="mb-20">
-        <h2 class="reveal text-[clamp(32px,4vw,56px)] font-light tracking-tight leading-[0.98] text-[#e6eaf0] mb-12">
-          Skills
-        </h2>
-        <div class="md:ml-[20%] space-y-0">
+      <section class="mb-24">
+        <h2 class="reveal text-[36px] font-normal leading-[1.25] text-[#fafafa] mb-12">Skills</h2>
+        <div class="space-y-0">
           <div
             v-for="group in groupedSkills"
             :key="group.category"
-            class="reveal grid grid-cols-12 gap-4 py-6 border-b border-[#242c38]"
+            class="reveal flex justify-between items-start py-6 border-b border-[#242424]"
           >
-            <div class="col-span-4 text-[#8a93a3] text-base">{{ group.category }}</div>
-            <div class="col-span-8">
-              <div class="space-y-3">
-                <div v-for="s in group.items" :key="s.name" class="flex justify-between items-baseline">
-                  <span class="text-[#e6eaf0] font-medium">{{ s.name }}</span>
-                  <span class="text-[#8a93a3] text-sm">{{ s.level }}%</span>
-                </div>
+            <div class="tech-label w-[160px] shrink-0">{{ group.category }}</div>
+            <div class="flex-1 space-y-2">
+              <div v-for="s in group.items" :key="s.name" class="flex justify-between">
+                <span class="text-[16px] text-[#fafafa]">{{ s.name }}</span>
+                <span class="text-[14px] text-[#898989] tabular-nums">{{ s.level }}%</span>
               </div>
             </div>
           </div>
@@ -66,39 +71,54 @@
 
       <!-- Experience -->
       <section class="mb-24">
-        <h2 class="reveal text-[clamp(32px,4vw,56px)] font-light tracking-tight leading-[0.98] text-[#e6eaf0] mb-12">
-          Experience
-        </h2>
-        <div class="md:ml-[20%] space-y-0">
+        <h2 class="reveal text-[36px] font-normal leading-[1.25] text-[#fafafa] mb-12">Experience</h2>
+        <div class="space-y-0">
           <div
             v-for="(e, i) in profile.experience"
             :key="i"
-            class="reveal grid grid-cols-12 gap-4 py-6 border-b border-[#242c38]"
+            class="reveal flex justify-between items-start py-6 border-b border-[#242424]"
           >
-            <div class="col-span-4 text-[#8a93a3] text-base">{{ e.period }}</div>
-            <div class="col-span-8">
-              <div class="text-xl font-semibold text-[#e6eaf0]">{{ e.role }}</div>
-              <div class="text-sm text-[#8a93a3] mt-1">{{ e.company }}</div>
-              <p class="mt-3 text-[#8a93a3] leading-relaxed">{{ e.description }}</p>
+            <div class="tech-label w-[160px] shrink-0">{{ e.period }}</div>
+            <div class="flex-1">
+              <div class="text-[18px] font-medium text-[#fafafa]">{{ e.role }}</div>
+              <div class="text-[14px] text-[#898989] mt-1">{{ e.company }}</div>
+              <p class="mt-3 text-[16px] text-[#b4b4b4] leading-[1.5]">{{ e.description }}</p>
             </div>
           </div>
         </div>
       </section>
     </main>
 
-    <!-- Footer (simplified) -->
-    <footer class="bg-[#e6eaf0] text-[#0b0f14] p-6 md:p-10">
-      <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+    <!-- Footer -->
+    <footer class="bg-[#fafafa] text-[#171717] min-h-[100svh] flex flex-col justify-between p-6 md:p-10">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-[1400px] mx-auto w-full pt-10">
         <div>
-          <div class="text-sm font-semibold mb-3">Navigate</div>
-          <div class="flex flex-wrap gap-4">
-            <NuxtLink to="/" class="text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">Home</NuxtLink>
-            <NuxtLink to="/projects" class="text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">Projects</NuxtLink>
-            <NuxtLink to="/skills" class="text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">Skills</NuxtLink>
-            <NuxtLink to="/contact" class="text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">Contact</NuxtLink>
+          <div class="tech-label mb-3">Navigate</div>
+          <div class="space-y-2">
+            <NuxtLink to="/" class="block text-[15px] text-[#171717] no-underline">Home</NuxtLink>
+            <NuxtLink to="/projects" class="block text-[15px] text-[#171717] no-underline">Projects</NuxtLink>
+            <NuxtLink to="/skills" class="block text-[15px] text-[#171717] no-underline">Skills</NuxtLink>
+            <NuxtLink to="/contact" class="block text-[15px] text-[#171717] no-underline">Contact</NuxtLink>
           </div>
         </div>
-        <div class="text-center font-black tracking-[-0.04em] leading-[0.82] text-[clamp(40px,12vw,180px)] text-[#0b0f14]">
+        <div>
+          <div class="tech-label mb-3">Social</div>
+          <div class="space-y-2">
+            <a :href="profile.github" target="_blank" rel="noopener" class="block text-[15px] text-[#171717] no-underline">GitHub</a>
+            <a :href="profile.linkedin" target="_blank" rel="noopener" class="block text-[15px] text-[#171717] no-underline">LinkedIn</a>
+          </div>
+        </div>
+        <div>
+          <div class="tech-label mb-3">Contact</div>
+          <a :href="'mailto:' + profile.email" class="block text-[15px] text-[#171717] no-underline">{{ profile.email }}</a>
+        </div>
+        <div>
+          <div class="tech-label mb-3">Legal</div>
+          <div class="text-[15px] text-[#171717]">© {{ new Date().getFullYear() }}</div>
+        </div>
+      </div>
+      <div class="mt-24 max-w-[1400px] mx-auto w-full">
+        <div class="text-center font-medium tracking-[-0.04em] leading-[1.00] text-[clamp(72px,12vw,180px)] text-[#171717]">
           RINGGA
         </div>
       </div>

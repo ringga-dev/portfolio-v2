@@ -1,214 +1,228 @@
 <template>
-  <div class="min-h-screen bg-[#0b0f14] text-[#e6eaf0]">
-    <!-- Top bar -->
-    <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 py-5 bg-[#0b0f14]/90 backdrop-blur-sm">
-      <NuxtLink to="/" class="text-base font-bold tracking-tight text-[#e6eaf0] no-underline">R.S.P.</NuxtLink>
-      <nav class="flex items-center gap-6 md:gap-8">
-        <NuxtLink to="/about" class="text-sm text-[#8a93a3] hover:text-[#e6eaf0] transition-colors no-underline">About</NuxtLink>
-        <NuxtLink to="/projects" class="text-sm text-[#8a93a3] hover:text-[#e6eaf0] transition-colors no-underline">Projects</NuxtLink>
-        <NuxtLink to="/skills" class="text-sm text-[#8a93a3] hover:text-[#e6eaf0] transition-colors no-underline">Skills</NuxtLink>
-        <NuxtLink to="/contact" class="text-sm text-[#10b981] font-semibold hover:text-[#0da271] transition-colors no-underline">Contact</NuxtLink>
+  <div class="min-h-screen bg-[#171717] text-[#fafafa]">
+    <!-- Top bar — Supabase style -->
+    <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#171717] border-b border-[#242424]">
+      <NuxtLink to="/" class="text-sm font-medium text-[#fafafa] no-underline">R.S.P.</NuxtLink>
+      <nav class="flex items-center gap-8">
+        <NuxtLink to="/about" class="nav-link">About</NuxtLink>
+        <NuxtLink to="/projects" class="nav-link">Projects</NuxtLink>
+        <NuxtLink to="/skills" class="nav-link">Skills</NuxtLink>
+        <NuxtLink to="/contact" class="btn-pill">Contact</NuxtLink>
       </nav>
     </header>
 
-    <!-- Hero: name as monument -->
-    <section class="min-h-screen flex flex-col justify-center px-6 md:px-10 pt-24 pb-16 relative">
+    <!-- Hero: Name across the middle -->
+    <section class="min-h-screen flex flex-col justify-center px-[18px] pt-24 pb-16 relative">
       <div class="max-w-[1400px] w-full mx-auto">
-        <h1 class="font-black tracking-[-0.04em] leading-[0.82] text-[clamp(56px,15vw,230px)]">
-          <span class="masked-line"><span class="text-[#e6eaf0]">RINGGA</span></span>
-          <span class="masked-line"><span class="text-[#8a93a3]">SEPTIA PRIBADI</span></span>
-        </h1>
-        <div class="mt-12 flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <p class="fade-up text-lg md:text-xl text-[#8a93a3] max-w-md leading-relaxed">
+        <!-- Top-left: supporting sentence -->
+        <div class="absolute top-24 left-[18px] max-w-[36ch]">
+          <p class="fade-up text-[18px] leading-[1.4] text-[#fafafa]">
             {{ profile.tagline }}
           </p>
-          <div class="fade-up">
-            <a :href="'mailto:' + profile.email" class="btn-solid">Get in touch</a>
-          </div>
+          <a :href="'mailto:' + profile.email" class="btn-pill mt-4">Get in touch</a>
+        </div>
+
+        <!-- Top-right: links -->
+        <div class="absolute top-24 right-[18px] flex gap-6">
+          <a :href="profile.github" target="_blank" rel="noopener" class="text-[15px] text-[#b4b4b4] hover:text-[#fafafa] no-underline">GitHub</a>
+          <a :href="profile.linkedin" target="_blank" rel="noopener" class="text-[15px] text-[#b4b4b4] hover:text-[#fafafa] no-underline">LinkedIn</a>
+        </div>
+
+        <!-- Name across the middle -->
+        <h1 class="font-medium tracking-[-0.04em] leading-[1.00] text-center text-[clamp(72px,12vw,180px)] text-[#fafafa]">
+          <span class="masked-line"><span>RINGGA SEPTIA PRIBADI</span></span>
+        </h1>
+
+        <!-- Bottom corners -->
+        <div class="absolute bottom-6 left-[18px] text-[16px] text-[#898989]">
+          Indonesia
+        </div>
+        <div class="absolute bottom-6 right-[18px] flex gap-6">
+          <a :href="profile.github" target="_blank" rel="noopener" class="text-[15px] text-[#b4b4b4] hover:text-[#fafafa] no-underline">GitHub</a>
+          <a :href="'mailto:' + profile.email" class="text-[15px] text-[#00c573] hover:text-[#3ecf8e] no-underline">Email</a>
         </div>
       </div>
     </section>
 
-    <!-- Intro: title, note, facts row -->
-    <section class="px-6 md:px-10 py-24 md:py-32 bg-[#0b0f14] border-t border-[#242c38]">
+    <!-- Intro: Heading captions a panorama -->
+    <section class="min-h-[100svh] px-6 py-24 bg-[#171717] border-t border-[#242424]">
       <div class="max-w-[1400px] mx-auto">
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <h2 class="reveal text-[clamp(44px,5vw,76px)] font-light tracking-tight leading-[1.05] text-[#e6eaf0] max-w-[12ch]">
-            What I do
-          </h2>
-          <p class="reveal text-base text-[#8a93a3] max-w-[260px] leading-relaxed">
-            I build mobile, web, and desktop applications with Kotlin and Vue, end to end.
-          </p>
-        </div>
-        <div class="mt-16 flex flex-wrap justify-between gap-8 md:gap-12">
-          <div class="reveal">
-            <div class="text-[clamp(28px,3vw,44px)] font-light text-[#e6eaf0]">{{ profile.stats[0].value }}</div>
-            <div class="text-sm text-[#8a93a3] mt-1">{{ profile.stats[0].label }}</div>
-          </div>
-          <div class="reveal">
-            <div class="text-[clamp(28px,3vw,44px)] font-light text-[#e6eaf0]">{{ profile.stats[1].value }}</div>
-            <div class="text-sm text-[#8a93a3] mt-1">{{ profile.stats[1].label }}</div>
-          </div>
-          <div class="reveal">
-            <div class="text-[clamp(28px,3vw,44px)] font-light text-[#e6eaf0]">{{ profile.stats[2].value }}</div>
-            <div class="text-sm text-[#8a93a3] mt-1">{{ profile.stats[2].label }}</div>
-          </div>
-          <div class="reveal">
-            <div class="text-[clamp(28px,3vw,44px)] font-light text-[#e6eaf0]">Indonesia</div>
-            <div class="text-sm text-[#8a93a3] mt-1">Based in</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Work: giant title, uneven wall -->
-    <section class="px-6 md:px-10 py-24 md:py-32 bg-[#131922] border-t border-[#242c38]">
-      <div class="max-w-[1400px] mx-auto">
-        <div class="flex items-baseline justify-between mb-12">
-          <h2 class="reveal text-[clamp(64px,9vw,136px)] font-black uppercase tracking-tight leading-[0.9] text-[#e6eaf0]">
-            Work
-          </h2>
-          <NuxtLink to="/projects" class="reveal text-link text-base">Full archive</NuxtLink>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <div class="reveal w-full md:w-[calc(50%-4px)]">
-            <div class="tile h-[280px] md:h-[360px]">
-              <img src="https://picsum.photos/id/228/1200/800" alt="System Monitor project" class="w-full h-full object-cover" />
-            </div>
-            <div class="tile-caption">
-              <span class="name">System Monitor</span>
-              <span class="year">2024</span>
-            </div>
-          </div>
-          <div class="reveal w-full md:w-[calc(33%-6px)]">
-            <div class="tile h-[240px] md:h-[300px]">
-              <img src="https://picsum.photos/id/266/900/600" alt="Pancing Bot" class="w-full h-full object-cover" />
-            </div>
-            <div class="tile-caption">
-              <span class="name">Pancing Bot</span>
-              <span class="year">2024</span>
-            </div>
-          </div>
-          <div class="reveal w-full md:w-[calc(33%-6px)]">
-            <div class="tile h-[240px] md:h-[300px]">
-              <img src="https://picsum.photos/id/994/900/600" alt="KMP Printer" class="w-full h-full object-cover" />
-            </div>
-            <div class="tile-caption">
-              <span class="name">KMP Printer</span>
-              <span class="year">2024</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Skills: statement, table pushed right -->
-    <section class="px-6 md:px-10 py-24 md:py-32 bg-[#0b0f14] border-t border-[#242c38]">
-      <div class="max-w-[1400px] mx-auto">
-        <h2 class="reveal text-[clamp(40px,4.5vw,68px)] font-light tracking-tight leading-[0.98] text-[#e6eaf0] max-w-[20ch]">
-          Tools I use every day
+        <h2 class="reveal text-[clamp(48px,6.5vw,96px)] font-light tracking-tight leading-[0.95] text-[#fafafa]">
+          What I build
         </h2>
-        <div class="mt-24 md:ml-[30%]">
-          <div class="reveal grid grid-cols-12 gap-4 py-4 border-b border-[#242c38]">
-            <div class="col-span-4 text-[#8a93a3] text-base">Mobile</div>
-            <div class="col-span-8 text-[#e6eaf0] text-base font-medium">Kotlin · Jetpack Compose · KMP</div>
-          </div>
-          <div class="reveal grid grid-cols-12 gap-4 py-4 border-b border-[#242c38]">
-            <div class="col-span-4 text-[#8a93a3] text-base">Web</div>
-            <div class="col-span-8 text-[#e6eaf0] text-base font-medium">Vue / Nuxt · TypeScript · Tailwind</div>
-          </div>
-          <div class="reveal grid grid-cols-12 gap-4 py-4 border-b border-[#242c38]">
-            <div class="col-span-4 text-[#8a93a3] text-base">Backend</div>
-            <div class="col-span-8 text-[#e6eaf0] text-base font-medium">Rust · Axum · PostgreSQL</div>
-          </div>
-          <div class="reveal grid grid-cols-12 gap-4 py-4 border-b border-[#242c38]">
-            <div class="col-span-4 text-[#8a93a3] text-base">DevOps</div>
-            <div class="col-span-8 text-[#e6eaf0] text-base font-medium">Docker · GitHub Actions · CI/CD</div>
-          </div>
+        <div class="mt-7 flex gap-12">
+          <p class="reveal text-[13px] leading-[1.5] text-[#898989] w-[150px]">
+            Mobile, web, and desktop applications with Kotlin and Vue. End to end.
+          </p>
+          <p class="reveal text-[13px] leading-[1.5] text-[#898989] w-[150px]">
+            Systems that run in production. Not demos.
+          </p>
         </div>
-      </div>
-    </section>
-
-    <!-- About: portrait as drop cap -->
-    <section class="px-6 md:px-10 py-24 md:py-32 bg-[#131922] border-t border-[#242c38]">
-      <div class="max-w-[1400px] mx-auto">
-        <div class="md:ml-[16%] max-w-3xl">
+        <!-- Full-bleed photograph -->
+        <div class="mt-10 -mx-6 reveal">
           <img
-            src="https://picsum.photos/id/842/400/400"
-            alt="Portrait"
-            class="float-left w-[100px] h-[100px] md:w-[120px] md:h-[120px] object-cover mr-4 mb-2"
+            src="https://picsum.photos/id/228/2400/1200"
+            alt="Fog over field at dawn"
+            class="w-full h-[55svh] md:h-[60svh] object-cover"
+            loading="lazy"
           />
-          <p class="reveal text-[clamp(24px,2.5vw,38px)] leading-[1.2] text-[#e6eaf0]">
-            Ringga Septia Pribadi builds software that ships. {{ profile.bio }}
-          </p>
-          <p class="reveal mt-6 text-[clamp(20px,2vw,28px)] leading-[1.3] text-[#8a93a3]">
-            Focused on Kotlin Multiplatform and Vue since 2020, with a bias for systems that run in production.
-          </p>
         </div>
-        <div class="mt-16 md:ml-[16%] grid grid-cols-3 gap-6 max-w-3xl">
-          <div class="reveal">
-            <div class="text-sm text-[#8a93a3]">Location</div>
-            <div class="text-base text-[#e6eaf0] mt-1">Indonesia</div>
+      </div>
+    </section>
+
+    <!-- Work: Names passing a held square -->
+    <section class="py-24 bg-[#171717] border-t border-[#242424]">
+      <div class="max-w-[1400px] mx-auto px-6">
+        <h2 class="reveal text-[28px] font-light text-[#898989] mb-12">Work</h2>
+        
+        <div class="relative">
+          <!-- Sticky image frame -->
+          <div class="hidden lg:block sticky top-[calc(50svh-225px)] mx-auto w-[450px] h-[450px] z-0 pointer-events-none">
+            <img
+              :src="`https://picsum.photos/id/${activeImageId}/900/900`"
+              alt=""
+              class="w-full h-full object-cover"
+              style="opacity: 0.3"
+            />
           </div>
-          <div class="reveal">
-            <div class="text-sm text-[#8a93a3]">Since</div>
-            <div class="text-base text-[#e6eaf0] mt-1">2020</div>
+
+          <!-- Names list -->
+          <div class="relative z-10 -mt-[450px] lg:-mt-0">
+            <a
+              v-for="(p, i) in projects.projects"
+              :key="p.slug"
+              :href="p.url"
+              target="_blank"
+              rel="noopener"
+              class="project-name block text-center text-[clamp(96px,14vw,200px)] font-medium uppercase tracking-[-0.04em] leading-[0.85] py-4 no-underline"
+              :class="{ active: activeProject === i }"
+              @mouseenter="activeProject = i; activeImageId = projectImages[i]"
+              @focus="activeProject = i; activeImageId = projectImages[i]"
+            >
+              {{ p.title }}
+            </a>
           </div>
-          <div class="reveal">
-            <div class="text-sm text-[#8a93a3]">Email</div>
-            <a :href="'mailto:' + profile.email" class="text-link text-base mt-1 inline-block">{{ profile.email }}</a>
+        </div>
+
+        <div class="mt-12 text-center">
+          <NuxtLink to="/projects" class="btn-pill-secondary">View all projects</NuxtLink>
+        </div>
+      </div>
+    </section>
+
+    <!-- Skills: Poster lines -->
+    <section class="py-24 bg-[#171717] border-t border-[#242424]">
+      <div class="max-w-[1400px] mx-auto px-6">
+        <div class="space-y-0">
+          <div class="reveal flex justify-between items-baseline py-8 border-b border-[#242424]">
+            <span class="text-[clamp(64px,10vw,150px)] font-medium uppercase tracking-[-0.04em] leading-[0.92] text-[#fafafa]">Kotlin</span>
+            <span class="text-[18px] text-[#898989] tabular-nums">90%</span>
+          </div>
+          <div class="reveal flex justify-between items-baseline py-8 border-b border-[#242424]">
+            <span class="text-[clamp(64px,10vw,150px)] font-medium uppercase tracking-[-0.04em] leading-[0.92] text-[#fafafa]">Vue / Nuxt</span>
+            <span class="text-[18px] text-[#898989] tabular-nums">85%</span>
+          </div>
+          <div class="reveal flex justify-between items-baseline py-8 border-b border-[#242424]">
+            <span class="text-[clamp(64px,10vw,150px)] font-medium uppercase tracking-[-0.04em] leading-[0.92] text-[#fafafa]">TypeScript</span>
+            <span class="text-[18px] text-[#898989] tabular-nums">80%</span>
+          </div>
+          <div class="reveal flex justify-between items-baseline py-8 border-b border-[#242424]">
+            <span class="text-[clamp(64px,10vw,150px)] font-medium uppercase tracking-[-0.04em] leading-[0.92] text-[#fafafa]">Rust</span>
+            <span class="text-[18px] text-[#898989] tabular-nums">70%</span>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- CTA: one word is the button -->
-    <a :href="'mailto:' + profile.email" class="block bg-[#10b981] hover:bg-[#0da271] transition-colors no-underline group">
-      <div class="min-h-[46svh] md:min-h-[60svh] flex flex-col justify-between p-6 md:p-10 max-w-[1400px] mx-auto">
-        <div class="flex justify-between items-start">
-          <p class="text-[#062e22] text-lg md:text-xl font-medium max-w-[30ch]">Open to freelance, collaborations, and full-time roles.</p>
-          <svg class="w-10 h-10 md:w-12 md:h-12 text-[#062e22] group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
-          </svg>
-        </div>
-        <div class="text-[#062e22] font-black tracking-[-0.04em] leading-[0.82] text-[clamp(64px,24vw,360px)] text-center">
-          HELLO
+    <!-- About: Side facts, wide paragraph -->
+    <section class="py-24 bg-[#171717] border-t border-[#242424]">
+      <div class="max-w-[1400px] mx-auto px-6">
+        <div class="flex gap-12">
+          <div class="w-[160px] shrink-0 space-y-5">
+            <div>
+              <div class="tech-label">Based in</div>
+              <div class="text-[13px] text-[#fafafa] mt-1">Indonesia</div>
+            </div>
+            <div>
+              <div class="tech-label">Since</div>
+              <div class="text-[13px] text-[#fafafa] mt-1">2020</div>
+            </div>
+            <div>
+              <div class="tech-label">Focus</div>
+              <div class="text-[13px] text-[#fafafa] mt-1">Kotlin · Vue</div>
+            </div>
+          </div>
+          <div class="flex-1">
+            <p class="reveal text-[clamp(20px,1.7vw,26px)] leading-[1.35] text-[#fafafa]">
+              Ringga Septia Pribadi builds software that ships. {{ profile.bio }}
+            </p>
+            <p class="reveal mt-8 text-[clamp(20px,1.7vw,26px)] leading-[1.35] text-[#898989]">
+              Focused on Kotlin Multiplatform and Vue since 2020, with a bias for systems that run in production. Currently building monitoring tools, POS systems, and developer tooling.
+            </p>
+          </div>
         </div>
       </div>
-    </a>
+    </section>
 
-    <!-- Footer: columns above, wordmark below -->
-    <footer class="bg-[#e6eaf0] text-[#0b0f14] min-h-[100svh] flex flex-col justify-between p-6 md:p-10">
+    <!-- Marquee: Edge-to-edge -->
+    <div class="py-8 bg-[#171717] border-t border-[#242424] overflow-hidden">
+      <div class="flex whitespace-nowrap" style="animation: marquee 30s linear infinite">
+        <span class="text-[clamp(48px,8vw,120px)] font-medium uppercase tracking-[-0.04em] leading-[0.92] text-[#fafafa] pr-12">
+          RINGGA SEPTIA PRIBADI — KOTLIN — VUE — RUST — 
+        </span>
+        <span class="text-[clamp(48px,8vw,120px)] font-medium uppercase tracking-[-0.04em] leading-[0.92] text-[#fafafa] pr-12">
+          RINGGA SEPTIA PRIBADI — KOTLIN — VUE — RUST — 
+        </span>
+      </div>
+    </div>
+
+    <!-- CTA: Inverted -->
+    <section class="bg-[#fafafa] text-[#171717] min-h-[90svh] flex flex-col justify-between p-6 md:p-10">
+      <h2 class="text-[clamp(48px,9vw,140px)] font-medium tracking-[-0.04em] leading-[0.9] text-[#171717]">
+        Let's build<br/>something.
+      </h2>
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+        <p class="text-[20px] text-[#171717] max-w-[36ch]">
+          Open to freelance, collaborations, and full-time roles.
+        </p>
+        <a :href="'mailto:' + profile.email" class="btn-pill bg-[#171717] text-[#fafafa] border-[#171717] hover:border-[#3ecf8e]">
+          Get in touch
+        </a>
+      </div>
+    </section>
+
+    <!-- Footer: Columns above, wordmark below -->
+    <footer class="bg-[#fafafa] text-[#171717] min-h-[100svh] flex flex-col justify-between p-6 md:p-10">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-[1400px] mx-auto w-full pt-10">
         <div>
-          <div class="text-sm font-semibold mb-3">Navigate</div>
+          <div class="tech-label mb-3">Navigate</div>
           <div class="space-y-2">
-            <NuxtLink to="/about" class="block text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">About</NuxtLink>
-            <NuxtLink to="/projects" class="block text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">Projects</NuxtLink>
-            <NuxtLink to="/skills" class="block text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">Skills</NuxtLink>
-            <NuxtLink to="/contact" class="block text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">Contact</NuxtLink>
+            <NuxtLink to="/about" class="block text-[15px] text-[#171717] no-underline">About</NuxtLink>
+            <NuxtLink to="/projects" class="block text-[15px] text-[#171717] no-underline">Projects</NuxtLink>
+            <NuxtLink to="/skills" class="block text-[15px] text-[#171717] no-underline">Skills</NuxtLink>
+            <NuxtLink to="/contact" class="block text-[15px] text-[#171717] no-underline">Contact</NuxtLink>
           </div>
         </div>
         <div>
-          <div class="text-sm font-semibold mb-3">Social</div>
+          <div class="tech-label mb-3">Social</div>
           <div class="space-y-2">
-            <a :href="profile.github" target="_blank" rel="noopener" class="block text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">GitHub</a>
-            <a :href="profile.linkedin" target="_blank" rel="noopener" class="block text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">LinkedIn</a>
+            <a :href="profile.github" target="_blank" rel="noopener" class="block text-[15px] text-[#171717] no-underline">GitHub</a>
+            <a :href="profile.linkedin" target="_blank" rel="noopener" class="block text-[15px] text-[#171717] no-underline">LinkedIn</a>
           </div>
         </div>
         <div>
-          <div class="text-sm font-semibold mb-3">Contact</div>
+          <div class="tech-label mb-3">Contact</div>
           <div class="space-y-2">
-            <a :href="'mailto:' + profile.email" class="block text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">{{ profile.email }}</a>
+            <a :href="'mailto:' + profile.email" class="block text-[15px] text-[#171717] no-underline">{{ profile.email }}</a>
           </div>
         </div>
         <div>
-          <div class="text-sm font-semibold mb-3">Legal</div>
-          <div class="text-sm text-[#0b0f14]/70">© {{ new Date().getFullYear() }} Ringga Septia Pribadi</div>
+          <div class="tech-label mb-3">Legal</div>
+          <div class="text-[15px] text-[#171717]">© {{ new Date().getFullYear() }} Ringga Septia Pribadi</div>
         </div>
       </div>
       <div class="mt-24 max-w-[1400px] mx-auto w-full">
-        <div class="text-center font-black tracking-[-0.04em] leading-[0.82] text-[clamp(40px,12vw,180px)] text-[#0b0f14]">
+        <div class="text-center font-medium tracking-[-0.04em] leading-[1.00] text-[clamp(72px,12vw,180px)] text-[#171717]">
           RINGGA
         </div>
       </div>
@@ -216,6 +230,19 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import profile from "~/data/profile.json"
+import projects from "~/data/projects.json"
+import { ref } from 'vue'
+
+const activeProject = ref(0)
+const activeImageId = ref(266)
+const projectImages = [266, 279, 228, 594]
 </script>
+
+<style>
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+</style>

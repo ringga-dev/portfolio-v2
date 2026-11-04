@@ -1,71 +1,88 @@
 <template>
-  <div class="min-h-screen bg-[#0b0f14] text-[#e6eaf0]">
+  <div class="min-h-screen bg-[#171717] text-[#fafafa]">
     <!-- Top bar -->
-    <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 py-5 bg-[#0b0f14]/90 backdrop-blur-sm">
-      <NuxtLink to="/" class="text-base font-bold tracking-tight text-[#e6eaf0] no-underline">R.S.P.</NuxtLink>
-      <nav class="flex items-center gap-6 md:gap-8">
-        <NuxtLink to="/about" class="text-sm text-[#8a93a3] hover:text-[#e6eaf0] transition-colors no-underline">About</NuxtLink>
-        <NuxtLink to="/projects" class="text-sm text-[#10b981] font-semibold no-underline">Projects</NuxtLink>
-        <NuxtLink to="/skills" class="text-sm text-[#8a93a3] hover:text-[#e6eaf0] transition-colors no-underline">Skills</NuxtLink>
-        <NuxtLink to="/contact" class="text-sm text-[#8a93a3] hover:text-[#e6eaf0] transition-colors no-underline">Contact</NuxtLink>
+    <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#171717] border-b border-[#242424]">
+      <NuxtLink to="/" class="text-sm font-medium text-[#fafafa] no-underline">R.S.P.</NuxtLink>
+      <nav class="flex items-center gap-8">
+        <NuxtLink to="/about" class="nav-link">About</NuxtLink>
+        <NuxtLink to="/projects" class="nav-link active">Projects</NuxtLink>
+        <NuxtLink to="/skills" class="nav-link">Skills</NuxtLink>
+        <NuxtLink to="/contact" class="btn-pill">Contact</NuxtLink>
       </nav>
     </header>
 
-    <main class="pt-28 px-6 md:px-10 max-w-[1400px] mx-auto">
-      <header class="mb-16 flex items-baseline justify-between">
-        <h1 class="reveal text-[clamp(56px,10vw,140px)] font-black tracking-[-0.04em] leading-[0.85] text-[#e6eaf0]">
+    <main class="pt-28 px-6 max-w-[1400px] mx-auto">
+      <header class="mb-16">
+        <h1 class="reveal text-[72px] font-normal leading-[1.00] tracking-tight text-[#fafafa]">
           Projects
         </h1>
-        <a :href="profile.github" target="_blank" rel="noopener" class="reveal text-link text-base hidden md:inline-block">GitHub</a>
+        <p class="reveal mt-4 text-[16px] text-[#b4b4b4]">
+          Selected work and open-source contributions.
+        </p>
       </header>
 
-      <div class="flex flex-wrap gap-2 mb-24">
-        <div
-          v-for="(p, i) in projects.projects"
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-24">
+        <article
+          v-for="p in projects.projects"
           :key="p.slug"
-          class="reveal"
-          :class="i % 3 === 0 ? 'w-full md:w-[calc(50%-4px)]' : 'w-full md:w-[calc(33%-6px)]'"
+          class="reveal bg-[#171717] border border-[#2e2e2e] rounded-[16px] p-6 hover:border-[#363636] transition-colors"
         >
-          <div class="tile" :class="i % 3 === 0 ? 'h-[280px] md:h-[360px]' : 'h-[240px] md:h-[300px]'">
+          <div class="mb-4">
             <img
-              :src="`https://picsum.photos/seed/${p.slug}/900/600`"
+              :src="`https://picsum.photos/seed/${p.slug}/800/500`"
               :alt="p.title"
-              class="w-full h-full object-cover"
+              class="w-full h-[200px] object-cover rounded-[8px]"
               loading="lazy"
             />
           </div>
-          <div class="tile-caption">
-            <span class="name">{{ p.title }}</span>
-            <span class="year">2024</span>
-          </div>
-          <p class="mt-2 text-sm text-[#8a93a3] leading-relaxed">{{ p.description }}</p>
-          <div class="mt-3 flex flex-wrap gap-2">
+          <h2 class="text-[24px] font-normal leading-[1.33] tracking-[-0.16px] text-[#fafafa] mb-2">{{ p.title }}</h2>
+          <p class="text-[14px] text-[#898989] leading-[1.43] mb-4">{{ p.description }}</p>
+          <div class="flex flex-wrap gap-2 mb-4">
             <span
               v-for="t in p.tech"
               :key="t"
-              class="text-xs px-2.5 py-1 border border-[#242c38] text-[#8a93a3]"
+              class="text-[12px] px-2 py-1 border border-[#2e2e2e] rounded-md text-[#b4b4b4]"
             >
               {{ t }}
             </span>
           </div>
-          <a :href="p.url" target="_blank" rel="noopener" class="mt-4 inline-block text-link text-sm">View on GitHub</a>
-        </div>
+          <a :href="p.url" target="_blank" rel="noopener" class="text-[14px] text-[#00c573] hover:text-[#3ecf8e] no-underline">
+            View on GitHub
+          </a>
+        </article>
       </div>
     </main>
 
-    <!-- Footer (simplified) -->
-    <footer class="bg-[#e6eaf0] text-[#0b0f14] p-6 md:p-10">
-      <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+    <!-- Footer -->
+    <footer class="bg-[#fafafa] text-[#171717] min-h-[100svh] flex flex-col justify-between p-6 md:p-10">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-[1400px] mx-auto w-full pt-10">
         <div>
-          <div class="text-sm font-semibold mb-3">Navigate</div>
-          <div class="flex flex-wrap gap-4">
-            <NuxtLink to="/" class="text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">Home</NuxtLink>
-            <NuxtLink to="/about" class="text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">About</NuxtLink>
-            <NuxtLink to="/skills" class="text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">Skills</NuxtLink>
-            <NuxtLink to="/contact" class="text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">Contact</NuxtLink>
+          <div class="tech-label mb-3">Navigate</div>
+          <div class="space-y-2">
+            <NuxtLink to="/" class="block text-[15px] text-[#171717] no-underline">Home</NuxtLink>
+            <NuxtLink to="/about" class="block text-[15px] text-[#171717] no-underline">About</NuxtLink>
+            <NuxtLink to="/skills" class="block text-[15px] text-[#171717] no-underline">Skills</NuxtLink>
+            <NuxtLink to="/contact" class="block text-[15px] text-[#171717] no-underline">Contact</NuxtLink>
           </div>
         </div>
-        <div class="text-center font-black tracking-[-0.04em] leading-[0.82] text-[clamp(40px,12vw,180px)] text-[#0b0f14]">
+        <div>
+          <div class="tech-label mb-3">Social</div>
+          <div class="space-y-2">
+            <a :href="profile.github" target="_blank" rel="noopener" class="block text-[15px] text-[#171717] no-underline">GitHub</a>
+            <a :href="profile.linkedin" target="_blank" rel="noopener" class="block text-[15px] text-[#171717] no-underline">LinkedIn</a>
+          </div>
+        </div>
+        <div>
+          <div class="tech-label mb-3">Contact</div>
+          <a :href="'mailto:' + profile.email" class="block text-[15px] text-[#171717] no-underline">{{ profile.email }}</a>
+        </div>
+        <div>
+          <div class="tech-label mb-3">Legal</div>
+          <div class="text-[15px] text-[#171717]">© {{ new Date().getFullYear() }}</div>
+        </div>
+      </div>
+      <div class="mt-24 max-w-[1400px] mx-auto w-full">
+        <div class="text-center font-medium tracking-[-0.04em] leading-[1.00] text-[clamp(72px,12vw,180px)] text-[#171717]">
           RINGGA
         </div>
       </div>

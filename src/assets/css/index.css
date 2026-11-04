@@ -2,16 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap");
 
 :root {
-  --bg: #0b0f14;
-  --surface: #131922;
-  --text: #e6eaf0;
-  --muted: #8a93a3;
-  --border: #242c38;
-  --accent: #10b981;
-  --accent-ink: #062e22;
+  --bg: #171717;
+  --bg-deep: #0f0f0f;
+  --text: #fafafa;
+  --text-secondary: #b4b4b4;
+  --muted: #898989;
+  --border-subtle: #242424;
+  --border: #2e2e2e;
+  --border-strong: #363636;
+  --accent: #3ecf8e;
+  --accent-link: #00c573;
+  --accent-border: rgba(62, 207, 142, 0.3);
 }
 
 * { box-sizing: border-box; }
@@ -24,12 +28,11 @@ html, body {
 }
 
 body {
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.5;
   color: var(--text);
   background-color: var(--bg);
-  background-attachment: fixed;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -38,11 +41,10 @@ body {
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-weight: 600;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 400;
   line-height: 1.25;
   color: var(--text);
-  letter-spacing: -0.01em;
   margin: 0 0 0.5em;
 }
 
@@ -57,12 +59,88 @@ small, .muted {
 }
 
 a {
-  color: var(--accent);
+  color: var(--accent-link);
   text-decoration: none;
 }
 
 a:hover {
   text-decoration: underline;
+}
+
+/* Technical label (Source Code Pro) */
+.tech-label {
+  font-family: 'Source Code Pro', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Buttons - Supabase style: pill, dark bg, white border */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 8px 32px;
+  background: var(--bg-deep);
+  color: var(--text);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.14;
+  border: 1px solid var(--text);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  text-decoration: none;
+  min-height: 44px;
+}
+.btn-pill:hover {
+  border-color: var(--accent);
+  text-decoration: none;
+}
+.btn-pill:active {
+  transform: scale(0.98);
+}
+.btn-pill:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.btn-pill-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 8px 32px;
+  background: var(--bg-deep);
+  color: var(--text);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.14;
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  text-decoration: none;
+  min-height: 44px;
+  opacity: 0.8;
+}
+.btn-pill-secondary:hover {
+  border-color: var(--border-strong);
+  opacity: 1;
+  text-decoration: none;
+}
+
+/* Section spacing */
+.section {
+  padding: 90px 0 128px 0;
+}
+
+@media (max-width: 600px) {
+  .section {
+    padding: 48px 0 64px 0;
+  }
 }
 
 /* Masked headline reveal */
@@ -82,7 +160,7 @@ a:hover {
   to { transform: translateY(0); }
 }
 
-/* Fade-up for supporting elements */
+/* Fade-up */
 .fade-up {
   opacity: 0;
   transform: translateY(16px);
@@ -92,7 +170,7 @@ a:hover {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Section entrances on scroll */
+/* Section entrances */
 .reveal {
   opacity: 0;
   transform: translateY(24px);
@@ -109,150 +187,49 @@ a:hover {
   .reveal { opacity: 1; transform: none; transition: none; }
 }
 
-/* Solid surfaces */
-.surface, .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.25rem;
-}
-
-/* Buttons — solid, no glow */
-button, .btn {
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  font-size: 0.95rem;
-  font-weight: 500;
+/* Project index - big names */
+.project-name {
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-button:hover, .btn:hover {
-  background: #1a2230;
-  border-color: #2a3444;
-}
-
-.btn--primary {
-  background: var(--accent);
-  color: #062a1f;
-  border-color: var(--accent);
-}
-
-.btn--primary:hover {
-  background: #0ea572;
-  border-color: #0ea572;
-}
-
-/* Solid accent button */
-.btn-solid {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.85rem 1.75rem;
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-weight: 700;
-  font-size: 1rem;
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.15s ease;
-  text-decoration: none;
-}
-.btn-solid:hover {
-  background: #0da271;
-  text-decoration: none;
-}
-.btn-solid:active {
-  transform: scale(0.98);
-}
-.btn-solid:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-
-/* Inputs */
-input, textarea, select {
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.95rem;
-}
-
-input:focus, textarea:focus, select:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-/* No monospace defaults anywhere */
-code, pre, kbd, samp {
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-}
-
-/* Layout helpers */
-.container {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 0 1.25rem;
-}
-
-/* Subtle divider */
-hr {
-  border: none;
-  border-top: 1px solid var(--border);
-  margin: 2rem 0;
-}
-
-/* Project tiles */
-.tile {
-  position: relative;
-  overflow: hidden;
-  background: var(--surface);
-  flex-grow: 1;
-}
-.tile img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
-}
-.tile:hover img {
-  transform: scale(1.04);
-}
-.tile-caption {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.5rem 0;
-  font-size: 0.8125rem;
-}
-.tile-caption .name { color: var(--text); font-weight: 500; }
-.tile-caption .year { color: var(--muted); }
-
-/* Text link */
-a.text-link {
-  color: var(--text);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  text-decoration-color: var(--accent);
   transition: color 0.2s ease;
 }
+.project-name:hover,
+.project-name.active {
+  color: var(--text);
+}
+.project-name:not(.active) {
+  color: var(--muted);
+}
+
+/* Selection */
+::selection {
+  background: var(--accent);
+  color: var(--bg-deep);
+}
+
+/* Links */
+a.text-link {
+  color: var(--accent-link);
+  text-decoration: none;
+}
 a.text-link:hover {
-  color: var(--accent);
+  text-decoration: underline;
 }
 a.text-link:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
-/* Selection */
-::selection {
-  background: var(--accent);
-  color: var(--accent-ink);
+a.nav-link {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+a.nav-link:hover {
+  color: var(--text);
+  text-decoration: none;
+}
+a.nav-link.active {
+  color: var(--accent-link);
 }

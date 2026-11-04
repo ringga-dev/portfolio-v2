@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-[#0b0f14] text-[#e6eaf0]">
+  <div class="min-h-screen">
     <NuxtPage />
   </div>
 </template>
