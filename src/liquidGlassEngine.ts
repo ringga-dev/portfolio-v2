@@ -172,15 +172,15 @@ vec4 sampleDispersion(sampler2D tex, vec2 uv, vec2 offset, float factor) {
 void main() {
   vec2 res1x = u_resolution / u_dpr;
   vec2 p2 = (vec2(0.0) - u_mouseSpring) / u_resolution.y;
-  vec2 p1 = (vec2(0.0) - u_resolution * 0.0) / u_resolution.y;
-  float merged = mainSDF(p1 * 0.0, p2, gl_FragCoord.xy);
+  vec2 p1 = (-u_resolution * 0.5) / u_resolution.y;
+  float merged = mainSDF(p1, p2, gl_FragCoord.xy);
 
   if (merged >= 0.0) {
     fragColor = texture(u_bg, v_uv);
     return;
   }
 
-  vec2 normal = getNormal(p1 * 0.0, p2, gl_FragCoord.xy);
+  vec2 normal = getNormal(p1, p2, gl_FragCoord.xy);
   float nmerged = -1.0 * (merged * res1x.y);
 
   // Snell refraction — edge bend factor
@@ -211,7 +211,13 @@ void main() {
     fragColor = texture(u_blurredBg, v_uv);
   } else {
     vec2 refracted = v_uv - normal * edgeFactor * u_refDistance * u_dpr * vec2(u_resolution.y / res1x.x, 1.0);
-    vec4 blurredPixel = sampleDispersion(u_blurredBg, refracted, vec2(0.0), u_refDispersion * 0.01);
+    // Dispersion: split RGB channels along the normal — chromatic fringe at the edge
+    vec2 disp = normal * 0.010 * edgeFactor;
+    vec4 blurredPixel;
+    blurredPixel.r = texture(u_blurredBg, refracted + disp).r;
+    blurredPixel.g = texture(u_blurredBg, refracted).g;
+    blurredPixel.b = texture(u_blurredBg, refracted - disp).b;
+    blurredPixel.a = 1.0;
     fragColor = blurredPixel;
     fragColor = mix(fragColor, vec4(1.0), fresnelFactor * u_refFresnelFactor * 0.7);
     fragColor = mix(fragColor, vec4(1.0), glareAngleFactor * glareGeoFactor);
@@ -294,6 +300,9 @@ export class LiquidGlass {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
 
     this.resize()
+    // Shape starts centered in canvas (CSS px, top-left origin) — fixes corner-position bug
+    this.mouse = { x: this.opts.width / 2, y: this.opts.height / 2 }
+    this.spring = { x: this.opts.width / 2, y: this.opts.height / 2 }
     window.addEventListener('resize', () => this.resize())
     canvas.addEventListener('pointermove', (e) => {
       const r = canvas.getBoundingClientRect()
@@ -301,8 +310,8 @@ export class LiquidGlass {
       this.mouse.y = e.clientY - r.top
     })
     canvas.addEventListener('pointerleave', () => {
-      this.mouse.x = 0
-      this.mouse.y = 0
+      this.mouse.x = this.opts.width / 2
+      this.mouse.y = this.opts.height / 2
     })
 
     this.startTime = performance.now()
@@ -357,11 +366,13 @@ export class LiquidGlass {
     const H = this.canvas.height
     const time = (performance.now() - this.startTime) / 1000
 
-    // Spring for mouse-follow blob
+    // Spring for mouse-follow blob (CSS px, top-left origin)
     const tx = this.opts.mouseFollow ? (this.mouse.x - width / 2) * 0.15 : 0
     const ty = this.opts.mouseFollow ? (this.mouse.y - height / 2) * 0.15 : 0
     this.spring.x += (tx - this.spring.x) * 0.06
     this.spring.y += (ty - this.spring.y) * 0.06
+    // Shape center in raw pixels (bottom-up): center + offset, Y flipped
+    const springPx = [(width / 2 + this.spring.x) * dpr, (height / 2 - this.spring.y) * dpr]
 
     const kernel = gaussianKernel(12)
     const pass = (prog: WebGLProgram, inTex: WebGLTexture, outFbo: WebGLFramebuffer | null, uniforms: Record<string, unknown>) => {
@@ -371,13 +382,23 @@ export class LiquidGlass {
       gl.useProgram(prog)
       gl.activeTexture(gl.TEXTURE0)
       gl.bindTexture(gl.TEXTURE_2D, inTex)
+      let unit = 0
       for (const [k, v] of Object.entries(uniforms)) {
         const loc = gl.getUniformLocation(prog, k)
         if (loc === null) continue
-        if (typeof v === 'number') gl.uniform1f(loc, v)
-        else if (Array.isArray(v)) gl.uniform2f(loc, v[0], v[1])
-        else if (v instanceof WebGLTexture) gl.uniform1i(loc, 0)
+        if (v instanceof WebGLTexture) {
+          gl.activeTexture(gl.TEXTURE0 + unit)
+          gl.bindTexture(gl.TEXTURE_2D, v)
+          gl.uniform1i(loc, unit)
+          unit++
+        }
+        else if (typeof v === 'number') gl.uniform1f(loc, v)
+        else if (Array.isArray(v)) {
+          if (v.length === 2) gl.uniform2f(loc, v[0], v[1])
+          else gl.uniform1fv(loc, new Float32Array(v as number[]))
+        }
       }
+      gl.activeTexture(gl.TEXTURE0)
       gl.drawArrays(gl.TRIANGLES, 0, 3)
     }
 
@@ -399,8 +420,8 @@ export class LiquidGlass {
     pass(this.progs.main, this.tex[0], null, {
       u_bg: this.tex[0], u_blurredBg: this.tex[2],
       u_resolution: [W, H], u_dpr: dpr, u_time: time,
-      u_mouse: [this.mouse.x * dpr, this.mouse.y * dpr],
-      u_mouseSpring: [this.spring.x * dpr, this.spring.y * dpr],
+      u_mouse: [this.mouse.x * dpr, (height - this.mouse.y) * dpr],
+      u_mouseSpring: springPx,
       u_shapeWidth: this.opts.shapeWidth, u_shapeHeight: this.opts.shapeHeight,
       u_shapeRadius: this.opts.shapeRadius, u_shapeRoundness: this.opts.shapeRoundness,
       u_refThickness: 20, u_refDistance: 0.05, u_refFactor: 1.4,
