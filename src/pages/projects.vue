@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen">
-    <header class="px-4 md:px-8 pt-4">
+    <header class="sticky top-0 z-50 px-4 md:px-8 py-3">
       <div class="relative">
         <LiquidGlass :width="navWidth" :height="64" :shape-width="navWidth" :shape-height="64" :shape-radius="32" :shape-roundness="5" />
         <nav class="absolute inset-0 flex items-center justify-between px-6">
