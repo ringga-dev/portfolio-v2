@@ -9,7 +9,7 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import { LiquidGlass } from '~/plugins/liquidGlass'
+import { LiquidGlass } from '~/liquidGlassEngine'
 
 const props = defineProps({
   width: { type: Number, required: true },
