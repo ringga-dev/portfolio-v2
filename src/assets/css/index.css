@@ -5,12 +5,14 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 
 :root {
-  --bg: #070b09;
-  --text: #ecfdf5;
-  --muted: #9db8ab;
+  --bg: #fff7f0;
+  --bg-2: #ffe9d6;
+  --ink: #1a2420;
+  --ink-soft: #3d4a43;
+  --muted: #6b7d73;
   --accent: #10b981;
-  --accent-bright: #34d399;
-  --accent-ink: #022c22;
+  --accent-deep: #047857;
+  --accent-soft: rgba(16, 185, 129, 0.12);
 }
 
 * { box-sizing: border-box; }
@@ -21,216 +23,188 @@ body {
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 16px;
   line-height: 1.6;
-  color: var(--text);
-  /* Water body: deep pool with light entering from above */
+  color: var(--ink);
   background-color: var(--bg);
   background-image:
-    radial-gradient(ellipse 55% 40% at 20% 6%, rgba(52, 211, 153, 0.16), transparent 65%),
-    radial-gradient(ellipse 45% 35% at 78% 20%, rgba(16, 185, 129, 0.10), transparent 65%),
-    radial-gradient(ellipse 60% 45% at 85% 95%, rgba(52, 211, 153, 0.09), transparent 65%),
-    radial-gradient(ellipse 40% 30% at 10% 80%, rgba(255, 255, 255, 0.03), transparent 70%);
+    radial-gradient(ellipse 60% 45% at 15% 0%, rgba(255, 190, 150, 0.35), transparent 65%),
+    radial-gradient(ellipse 55% 40% at 85% 15%, rgba(16, 185, 129, 0.10), transparent 65%),
+    radial-gradient(ellipse 60% 45% at 80% 90%, rgba(255, 170, 120, 0.28), transparent 65%),
+    radial-gradient(ellipse 40% 30% at 10% 85%, rgba(52, 211, 153, 0.08), transparent 70%);
   background-attachment: fixed;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
-h1, h2, h3, h4 { font-weight: 700; line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 0.5em; color: var(--text); }
-p { margin: 0 0 1em; color: var(--text); }
-a { color: var(--accent-bright); text-decoration: none; }
+h1, h2, h3, h4 { font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 0.5em; color: var(--ink); }
+p { margin: 0 0 1em; color: var(--ink); }
+a { color: var(--accent-deep); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 /* ============================================================
-   WATER GLASS — iPhone Liquid Glass with water reflection
+   LIQUID GLASS — iOS style: thick jelly glass, light theme
    ============================================================ */
 
-/* --- Sticky navbar: liquid water surface --- */
+/* Sticky navbar: liquid glass bar */
 .glass-nav {
   position: sticky;
-  top: 0;
+  top: 12px;
   z-index: 50;
-  /* Water surface: translucent deep water with light from above */
-  background: linear-gradient(180deg,
-    rgba(14, 26, 22, 0.78) 0%,
-    rgba(10, 18, 15, 0.62) 60%,
-    rgba(10, 18, 15, 0.55) 100%);
-  /* Ripple distortion — content behind warps like through water */
-  backdrop-filter: blur(20px) saturate(1.6) url(#water);
-  -webkit-backdrop-filter: blur(20px) saturate(1.6);
-  border-bottom: 1px solid transparent;
-  border-image: linear-gradient(90deg, transparent, rgba(255,255,255,0.30) 20%, rgba(52,211,153,0.45) 50%, rgba(255,255,255,0.30) 80%, transparent) 1;
+  margin: 12px 16px 0;
+  background: linear-gradient(160deg, rgba(255,255,255,0.55), rgba(255,255,255,0.30) 55%, rgba(255,255,255,0.42));
+  backdrop-filter: blur(24px) saturate(1.6);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  border: 1.5px solid rgba(255,255,255,0.65);
+  border-radius: 24px;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.22),
-    inset 0 -18px 24px -16px rgba(255,255,255,0.16),
-    0 12px 40px rgba(0,0,0,0.5);
-  overflow: hidden;
+    inset 0 1.5px 0 rgba(255,255,255,0.85),
+    inset 0 -1px 0 rgba(255,255,255,0.35),
+    inset 1px 0 0 rgba(255,255,255,0.4),
+    inset -1px 0 0 rgba(255,255,255,0.25),
+    0 12px 40px rgba(180, 110, 60, 0.14),
+    0 2px 8px rgba(180, 110, 60, 0.08);
 }
-/* Caustic light: water light patterns flowing along the surface */
-.glass-nav::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 34% 60% at 22% 50%, rgba(52,211,153,0.16), transparent 70%),
-    radial-gradient(ellipse 28% 50% at 58% 40%, rgba(255,255,255,0.10), transparent 70%),
-    radial-gradient(ellipse 30% 55% at 82% 55%, rgba(52,211,153,0.12), transparent 70%);
-  background-size: 200% 200%;
-  animation: caustic-drift 16s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-/* Curved light arc at bottom edge — water surface tension highlight */
-.glass-nav::after {
-  content: "";
-  position: absolute;
-  left: 4%;
-  right: 4%;
-  bottom: -2px;
-  height: 22px;
-  background: radial-gradient(ellipse 50% 100% at 50% 100%, rgba(52,211,153,0.35), rgba(255,255,255,0.14) 55%, transparent 80%);
-  filter: blur(2px);
-  pointer-events: none;
-  animation: arc-pulse 7s ease-in-out infinite;
-}
-@keyframes caustic-drift {
-  0% { background-position: 0% 50%, 40% 0%, 100% 50%; }
-  50% { background-position: 60% 60%, 20% 80%, 40% 30%; }
-  100% { background-position: 100% 40%, 80% 20%, 0% 60%; }
-}
-@keyframes arc-pulse {
-  0%, 100% { opacity: 0.75; }
-  50% { opacity: 1; }
+@media (min-width: 768px) {
+  .glass-nav { margin: 16px 32px 0; }
 }
 
-/* --- Glass panels: water-filled cards --- */
-.glass {
-  position: relative;
-  background: linear-gradient(160deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02) 50%, rgba(16,185,129,0.045));
-  backdrop-filter: blur(18px) saturate(1.5) url(#water-soft);
-  -webkit-backdrop-filter: blur(18px) saturate(1.5);
-  border: 1px solid transparent;
-  border-radius: 16px;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.35),
-    inset 0 -1px 0 rgba(255,255,255,0.06),
-    inset 1px 0 0 rgba(255,255,255,0.08),
-    inset -1px 0 0 rgba(255,255,255,0.05),
-    0 8px 32px rgba(0,0,0,0.35);
-  background-image:
-    linear-gradient(rgba(9,15,12,0.45), rgba(9,15,12,0.45)) padding-box,
-    linear-gradient(150deg, rgba(255,255,255,0.32) 0%, rgba(52,211,153,0.20) 40%, rgba(255,255,255,0.06) 70%, rgba(52,211,153,0.25) 100%) border-box;
-}
-/* Water light shimmer inside the glass */
-.glass::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background:
-    radial-gradient(ellipse 45% 35% at 18% 20%, rgba(255,255,255,0.10), transparent 70%),
-    radial-gradient(ellipse 40% 30% at 80% 85%, rgba(52,211,153,0.10), transparent 70%);
-  background-size: 180% 180%;
-  animation: caustic-drift 18s ease-in-out infinite alternate-reverse;
-  pointer-events: none;
-}
-/* Ripple sweep on hover — like touching the water surface */
-.glass::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.16), rgba(52,211,153,0.07) 45%, transparent 70%);
-  opacity: 0;
-  transition: opacity 0.45s ease;
-  pointer-events: none;
-}
-.glass:hover::after { opacity: 1; }
-
+/* Jelly glass card — thick, squishy, refracting */
 .glass-card {
   position: relative;
-  background: linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.015) 50%, rgba(16,185,129,0.04));
-  backdrop-filter: blur(14px) saturate(1.4) url(#water-soft);
-  -webkit-backdrop-filter: blur(14px) saturate(1.4);
-  border: 1px solid transparent;
-  border-radius: 16px;
+  background: linear-gradient(160deg, rgba(255,255,255,0.60), rgba(255,255,255,0.32) 55%, rgba(255,255,255,0.45));
+  backdrop-filter: blur(24px) saturate(1.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  border: 1.5px solid rgba(255,255,255,0.65);
+  border-radius: 28px;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.28),
-    inset 0 -1px 0 rgba(255,255,255,0.05),
-    0 8px 32px rgba(0,0,0,0.35);
-  background-image:
-    linear-gradient(rgba(9,15,12,0.55), rgba(9,15,12,0.55)) padding-box,
-    linear-gradient(145deg, rgba(255,255,255,0.25) 0%, rgba(52,211,153,0.16) 40%, rgba(255,255,255,0.05) 70%, rgba(52,211,153,0.22) 100%) border-box;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+    inset 0 2px 0 rgba(255,255,255,0.9),
+    inset 0 -2px 0 rgba(255,255,255,0.4),
+    inset 2px 0 0 rgba(255,255,255,0.45),
+    inset -2px 0 0 rgba(255,255,255,0.30),
+    0 16px 48px rgba(180, 110, 60, 0.13),
+    0 4px 14px rgba(180, 110, 60, 0.07);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease;
   overflow: hidden;
 }
+.glass-card:hover {
+  transform: translateY(-3px) scale(1.005);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.95),
+    inset 0 -2px 0 rgba(255,255,255,0.45),
+    inset 2px 0 0 rgba(255,255,255,0.5),
+    inset -2px 0 0 rgba(255,255,255,0.35),
+    0 24px 64px rgba(180, 110, 60, 0.18),
+    0 6px 20px rgba(180, 110, 60, 0.10);
+}
+/* Liquid light inside — caustic shimmer */
 .glass-card::before {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
   background:
-    radial-gradient(ellipse 50% 40% at 20% 15%, rgba(255,255,255,0.09), transparent 70%),
-    radial-gradient(ellipse 45% 35% at 85% 90%, rgba(52,211,153,0.09), transparent 70%);
-  background-size: 190% 190%;
-  animation: caustic-drift 20s ease-in-out infinite alternate;
+    radial-gradient(ellipse 55% 40% at 18% 12%, rgba(255,255,255,0.55), transparent 70%),
+    radial-gradient(ellipse 45% 35% at 85% 88%, rgba(52,211,153,0.14), transparent 70%);
+  background-size: 200% 200%;
+  animation: liquid-drift 14s ease-in-out infinite alternate;
   pointer-events: none;
 }
-.glass-card::after {
+@keyframes liquid-drift {
+  0% { background-position: 0% 50%, 100% 50%; }
+  100% { background-position: 80% 60%, 20% 40%; }
+}
+
+/* Jelly widget — like the lock screen clock widget */
+.glass-widget {
+  position: relative;
+  background: linear-gradient(165deg, rgba(255,255,255,0.70), rgba(255,255,255,0.38) 50%, rgba(255,255,255,0.52));
+  backdrop-filter: blur(28px) saturate(1.6);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  border: 1.5px solid rgba(255,255,255,0.75);
+  border-radius: 32px;
+  box-shadow:
+    inset 0 2.5px 0 rgba(255,255,255,0.95),
+    inset 0 -2.5px 0 rgba(255,255,255,0.45),
+    inset 3px 0 0 rgba(255,255,255,0.5),
+    inset -3px 0 0 rgba(255,255,255,0.35),
+    inset 0 -20px 40px rgba(255,190,150,0.18),
+    0 20px 60px rgba(180, 110, 60, 0.16),
+    0 6px 18px rgba(180, 110, 60, 0.09);
+  overflow: hidden;
+}
+.glass-widget::before {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.14), rgba(52,211,153,0.06) 45%, transparent 70%);
-  opacity: 0;
-  transition: opacity 0.45s ease;
+  background:
+    radial-gradient(ellipse 65% 45% at 20% 8%, rgba(255,255,255,0.75), transparent 65%),
+    radial-gradient(ellipse 50% 40% at 85% 95%, rgba(255,170,120,0.20), transparent 70%);
+  background-size: 210% 210%;
+  animation: liquid-drift 16s ease-in-out infinite alternate-reverse;
   pointer-events: none;
 }
-.glass-card:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.35),
-    inset 0 -1px 0 rgba(255,255,255,0.08),
-    0 12px 40px rgba(0,0,0,0.45),
-    0 0 32px rgba(52,211,153,0.10);
-}
-.glass-card:hover::after { opacity: 1; }
 
-/* --- Buttons --- */
-.btn-solid {
-  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-  padding: 0.85rem 1.75rem;
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: #022c22; font-weight: 700; font-size: 1rem;
-  border: none; border-radius: 12px; cursor: pointer;
-  transition: box-shadow 0.25s ease, transform 0.15s ease; text-decoration: none;
-  box-shadow: 0 4px 16px rgba(16,185,129,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
-}
-.btn-solid:hover { box-shadow: 0 8px 28px rgba(16,185,129,0.5), inset 0 1px 0 rgba(255,255,255,0.3); text-decoration: none; }
-.btn-solid:active { transform: scale(0.98); }
-
-.btn-glass {
+/* Buttons — jelly pills */
+.btn-jelly {
   position: relative;
   display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-  padding: 0.85rem 1.75rem;
-  background: linear-gradient(160deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
-  backdrop-filter: blur(14px) saturate(1.5);
-  -webkit-backdrop-filter: blur(14px) saturate(1.5);
-  color: var(--text); font-weight: 600; font-size: 1rem;
-  border: 1px solid transparent; border-radius: 12px; cursor: pointer;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), inset 0 -1px 0 rgba(255,255,255,0.05), 0 4px 16px rgba(0,0,0,0.25);
-  background-image:
-    linear-gradient(rgba(10,15,13,0.42), rgba(10,15,13,0.42)) padding-box,
-    linear-gradient(135deg, rgba(255,255,255,0.32), rgba(52,211,153,0.18) 50%, rgba(255,255,255,0.08)) border-box;
-  transition: box-shadow 0.25s ease; text-decoration: none;
+  padding: 0.9rem 2rem;
+  background: linear-gradient(165deg, rgba(255,255,255,0.72), rgba(255,255,255,0.42));
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  color: var(--ink); font-weight: 700; font-size: 1rem;
+  border: 1.5px solid rgba(255,255,255,0.75);
+  border-radius: 999px;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.95),
+    inset 0 -2px 0 rgba(255,255,255,0.40),
+    0 8px 28px rgba(180, 110, 60, 0.15),
+    0 2px 6px rgba(180, 110, 60, 0.08);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  text-decoration: none;
+  cursor: pointer;
   overflow: hidden;
 }
-.btn-glass::after {
-  content: "";
-  position: absolute; inset: 0;
-  background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,0.18), transparent 65%);
-  opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+.btn-jelly:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,1),
+    inset 0 -2px 0 rgba(255,255,255,0.45),
+    0 14px 40px rgba(180, 110, 60, 0.20),
+    0 0 32px rgba(52,211,153,0.15);
+  text-decoration: none;
 }
-.btn-glass:hover { text-decoration: none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 0 24px rgba(52,211,153,0.28); }
-.btn-glass:hover::after { opacity: 1; }
+.btn-jelly:active { transform: scale(0.97); }
+
+.btn-accent {
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.9rem 2rem;
+  background: linear-gradient(165deg, #34d399, #10b981 55%, #059669);
+  color: #022c22; font-weight: 800; font-size: 1rem;
+  border: 1.5px solid rgba(255,255,255,0.5);
+  border-radius: 999px;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.45),
+    inset 0 -3px 0 rgba(0,0,0,0.12),
+    0 10px 32px rgba(16,185,129,0.35),
+    0 3px 8px rgba(16,185,129,0.20);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  text-decoration: none;
+  cursor: pointer;
+  overflow: hidden;
+}
+.btn-accent:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.5),
+    inset 0 -3px 0 rgba(0,0,0,0.12),
+    0 16px 44px rgba(16,185,129,0.45),
+    0 0 40px rgba(52,211,153,0.25);
+  text-decoration: none;
+}
+.btn-accent:active { transform: scale(0.97); }
 
 .masked-line { display: block; overflow: hidden; }
 .masked-line > span {
@@ -256,30 +230,28 @@ a:hover { text-decoration: underline; }
   .masked-line > span { transform: none; animation: none; }
   .fade-up { opacity: 1; transform: none; animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
-  .glass-nav::before, .glass-nav::after, .glass::before, .glass-card::before { animation: none; }
+  .glass-card::before, .glass-widget::before { animation: none; }
 }
 
-.tile { position: relative; overflow: hidden; border-radius: 12px; }
+.tile { position: relative; overflow: hidden; border-radius: 20px; }
 .tile img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.6s cubic-bezier(0.16,1,0.3,1); }
 .tile:hover img { transform: scale(1.04); }
 
-a.text-link { color: var(--accent-bright); text-decoration: none; border-bottom: 1px solid rgba(52,211,153,0.3); }
-a.text-link:hover { border-bottom-color: var(--accent-bright); text-decoration: none; }
-a.nav-link { color: var(--muted); font-size: 0.9375rem; text-decoration: none; transition: color 0.2s ease; }
-a.nav-link:hover { color: var(--text); text-decoration: none; }
-a.nav-link.active { color: var(--accent-bright); }
+a.text-link { color: var(--accent-deep); text-decoration: none; border-bottom: 2px solid rgba(16,185,129,0.30); border-radius: 2px; }
+a.text-link:hover { border-bottom-color: var(--accent-deep); text-decoration: none; }
+a.nav-link { color: var(--ink-soft); font-size: 0.9375rem; font-weight: 500; text-decoration: none; transition: color 0.2s ease; }
+a.nav-link:hover { color: var(--ink); text-decoration: none; }
+a.nav-link.active { color: var(--accent-deep); }
 
-::selection { background: var(--accent); color: var(--accent-ink); }
+::selection { background: var(--accent); color: #ffffff; }
 
 input, textarea, select {
   font-family: "Inter", system-ui, sans-serif;
-  background: rgba(255,255,255,0.04);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  color: var(--text); border: 1px solid transparent; border-radius: 12px;
-  padding: 0.8rem 1rem; font-size: 1rem; width: 100%;
-  background-image:
-    linear-gradient(rgba(10,15,13,0.6), rgba(10,15,13,0.6)) padding-box,
-    linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.06)) border-box;
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  color: var(--ink); border: 1.5px solid rgba(255,255,255,0.7); border-radius: 18px;
+  padding: 0.85rem 1.1rem; font-size: 1rem; width: 100%;
+  box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.8), 0 4px 16px rgba(180,110,60,0.07);
 }
-input:focus, textarea:focus, select:focus { outline: none; border-color: rgba(52,211,153,0.55); }
-input::placeholder, textarea::placeholder { color: #6f8d7d; }
+input:focus, textarea:focus, select:focus { outline: none; border-color: rgba(16,185,129,0.55); box-shadow: inset 0 1.5px 0 rgba(255,255,255,0.9), 0 4px 20px rgba(16,185,129,0.15); }
+input::placeholder, textarea::placeholder { color: #8a9a90; }
