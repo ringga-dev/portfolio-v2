@@ -1,88 +1,79 @@
 <template>
-  <div class="min-h-screen bg-[#171717] text-[#fafafa]">
-    <!-- Top bar -->
-    <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-[#171717] border-b border-[#242424]">
-      <NuxtLink to="/" class="text-sm font-medium text-[#fafafa] no-underline">R.S.P.</NuxtLink>
-      <nav class="flex items-center gap-8">
+  <div class="min-h-screen">
+    <!-- Floating glass navbar -->
+    <header class="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 glass rounded-2xl px-5 py-3 flex items-center justify-between">
+      <NuxtLink to="/" class="text-base font-bold tracking-tight text-[#ecfdf5] no-underline flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-[#34d399] shadow-[0_0_12px_rgba(52,211,153,0.8)]"></span>
+        R.S.P.
+      </NuxtLink>
+      <nav class="flex items-center gap-5 md:gap-7">
         <NuxtLink to="/about" class="nav-link">About</NuxtLink>
         <NuxtLink to="/projects" class="nav-link active">Projects</NuxtLink>
         <NuxtLink to="/skills" class="nav-link">Skills</NuxtLink>
-        <NuxtLink to="/contact" class="btn-pill">Contact</NuxtLink>
+        <NuxtLink to="/contact" class="btn-glass !py-2 !px-4 text-sm">Contact</NuxtLink>
       </nav>
     </header>
 
-    <main class="pt-28 px-6 max-w-[1400px] mx-auto">
-      <header class="mb-16">
-        <h1 class="reveal text-[72px] font-normal leading-[1.00] tracking-tight text-[#fafafa]">
+    <main class="pt-32 px-6 md:px-10 max-w-[1400px] mx-auto">
+      <header class="mb-16 flex items-baseline justify-between flex-wrap gap-4">
+        <h1 class="reveal text-[clamp(56px,10vw,140px)] font-black tracking-[-0.04em] leading-[0.85] text-[#ecfdf5]">
           Projects
         </h1>
-        <p class="reveal mt-4 text-[16px] text-[#b4b4b4]">
-          Selected work and open-source contributions.
-        </p>
+        <a :href="profile.github" target="_blank" rel="noopener" class="reveal text-link text-base">GitHub</a>
       </header>
 
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-24">
         <article
           v-for="p in projects.projects"
           :key="p.slug"
-          class="reveal bg-[#171717] border border-[#2e2e2e] rounded-[16px] p-6 hover:border-[#363636] transition-colors"
+          class="reveal glass-card overflow-hidden"
         >
-          <div class="mb-4">
+          <div class="tile h-[220px]">
             <img
               :src="`https://picsum.photos/seed/${p.slug}/800/500`"
               :alt="p.title"
-              class="w-full h-[200px] object-cover rounded-[8px]"
               loading="lazy"
             />
           </div>
-          <h2 class="text-[24px] font-normal leading-[1.33] tracking-[-0.16px] text-[#fafafa] mb-2">{{ p.title }}</h2>
-          <p class="text-[14px] text-[#898989] leading-[1.43] mb-4">{{ p.description }}</p>
-          <div class="flex flex-wrap gap-2 mb-4">
-            <span
-              v-for="t in p.tech"
-              :key="t"
-              class="text-[12px] px-2 py-1 border border-[#2e2e2e] rounded-md text-[#b4b4b4]"
-            >
-              {{ t }}
-            </span>
+          <div class="p-6">
+            <h2 class="text-[20px] font-semibold text-[#ecfdf5] mb-2">{{ p.title }}</h2>
+            <p class="text-sm text-[#a7c4b5] leading-relaxed mb-4">{{ p.description }}</p>
+            <div class="flex flex-wrap gap-2 mb-5">
+              <span
+                v-for="t in p.tech"
+                :key="t"
+                class="text-xs px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-[#a7c4b5]"
+              >
+                {{ t }}
+              </span>
+            </div>
+            <a :href="p.url" target="_blank" rel="noopener" class="text-link text-sm">View on GitHub</a>
           </div>
-          <a :href="p.url" target="_blank" rel="noopener" class="text-[14px] text-[#00c573] hover:text-[#3ecf8e] no-underline">
-            View on GitHub
-          </a>
         </article>
       </div>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-[#fafafa] text-[#171717] min-h-[100svh] flex flex-col justify-between p-6 md:p-10">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-[1400px] mx-auto w-full pt-10">
-        <div>
-          <div class="tech-label mb-3">Navigate</div>
-          <div class="space-y-2">
-            <NuxtLink to="/" class="block text-[15px] text-[#171717] no-underline">Home</NuxtLink>
-            <NuxtLink to="/about" class="block text-[15px] text-[#171717] no-underline">About</NuxtLink>
-            <NuxtLink to="/skills" class="block text-[15px] text-[#171717] no-underline">Skills</NuxtLink>
-            <NuxtLink to="/contact" class="block text-[15px] text-[#171717] no-underline">Contact</NuxtLink>
-          </div>
+    <footer class="bg-[#ecfdf5] text-[#0a0f0d] min-h-[100svh] flex flex-col justify-between p-6 md:p-10 overflow-hidden">
+      <div class="grid md:grid-cols-12 gap-8 max-w-[1400px] mx-auto w-full pt-10">
+        <div class="md:col-span-7">
+          <h3 class="text-[clamp(32px,5vw,72px)] font-light tracking-tight leading-[0.95] text-[#0a0f0d]">
+            Let's work<br/>together.
+          </h3>
+          <a :href="'mailto:' + profile.email" class="btn-solid mt-6">Start a project</a>
         </div>
-        <div>
-          <div class="tech-label mb-3">Social</div>
-          <div class="space-y-2">
-            <a :href="profile.github" target="_blank" rel="noopener" class="block text-[15px] text-[#171717] no-underline">GitHub</a>
-            <a :href="profile.linkedin" target="_blank" rel="noopener" class="block text-[15px] text-[#171717] no-underline">LinkedIn</a>
-          </div>
+        <div class="md:col-span-3 space-y-3">
+          <NuxtLink to="/" class="block text-[16px] text-[#0a0f0d] no-underline">Home</NuxtLink>
+          <NuxtLink to="/about" class="block text-[16px] text-[#0a0f0d] no-underline">About</NuxtLink>
+          <NuxtLink to="/skills" class="block text-[16px] text-[#0a0f0d] no-underline">Skills</NuxtLink>
+          <NuxtLink to="/contact" class="block text-[16px] text-[#0a0f0d] no-underline">Contact</NuxtLink>
         </div>
-        <div>
-          <div class="tech-label mb-3">Contact</div>
-          <a :href="'mailto:' + profile.email" class="block text-[15px] text-[#171717] no-underline">{{ profile.email }}</a>
-        </div>
-        <div>
-          <div class="tech-label mb-3">Legal</div>
-          <div class="text-[15px] text-[#171717]">© {{ new Date().getFullYear() }}</div>
+        <div class="md:col-span-2">
+          <div class="text-[13px] text-[#0a0f0d]/60">© {{ new Date().getFullYear() }}</div>
         </div>
       </div>
       <div class="mt-24 max-w-[1400px] mx-auto w-full">
-        <div class="text-center font-medium tracking-[-0.04em] leading-[1.00] text-[clamp(72px,12vw,180px)] text-[#171717]">
+        <div class="text-center font-black tracking-[-0.04em] leading-[0.82] text-[clamp(72px,26vw,400px)] text-[#0a0f0d] whitespace-nowrap" style="transform: translateY(30%)">
           RINGGA
         </div>
       </div>

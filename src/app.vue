@@ -5,7 +5,10 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, watchEffect } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
 
 onMounted(() => {
   const observer = new IntersectionObserver(
@@ -18,6 +21,9 @@ onMounted(() => {
     },
     { threshold: 0.1 }
   )
-  document.querySelectorAll('.reveal').forEach((el) => observer.observe(el))
+  watchEffect(() => {
+    route.path
+    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el))
+  })
 })
 </script>
