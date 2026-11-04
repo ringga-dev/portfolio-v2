@@ -1,41 +1,78 @@
 <template>
-  <main class="max-w-5xl mx-auto px-6 py-12">
-    <header class="mb-10">
-      <h1 class="text-4xl mb-2 text-[hsl(var(--text))]">Skills</h1>
-      <p class="text-[hsl(var(--muted))]">Proficiency by category.</p>
+  <div class="min-h-screen bg-[#0b0f14] text-[#e6eaf0]">
+    <!-- Top bar -->
+    <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 py-5 bg-[#0b0f14]/90 backdrop-blur-sm">
+      <NuxtLink to="/" class="text-base font-bold tracking-tight text-[#e6eaf0] no-underline">R.S.P.</NuxtLink>
+      <nav class="flex items-center gap-6 md:gap-8">
+        <NuxtLink to="/about" class="text-sm text-[#8a93a3] hover:text-[#e6eaf0] transition-colors no-underline">About</NuxtLink>
+        <NuxtLink to="/projects" class="text-sm text-[#8a93a3] hover:text-[#e6eaf0] transition-colors no-underline">Projects</NuxtLink>
+        <NuxtLink to="/skills" class="text-sm text-[#10b981] font-semibold no-underline">Skills</NuxtLink>
+        <NuxtLink to="/contact" class="text-sm text-[#8a93a3] hover:text-[#e6eaf0] transition-colors no-underline">Contact</NuxtLink>
+      </nav>
     </header>
 
-    <section class="space-y-6">
-      <div
-        v-for="cat in categories"
-        :key="cat.name"
-        class="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--surface))] p-6 md:p-8"
-      >
-        <h2 class="text-xl font-semibold mb-5 text-[hsl(var(--text))]">{{ cat.name }}</h2>
-        <ul class="space-y-5">
-          <li v-for="s in cat.skills" :key="s.name">
-            <div class="flex items-baseline justify-between mb-2">
-              <span class="font-medium text-[hsl(var(--text))]">{{ s.name }}</span>
-              <span class="text-sm tabular-nums text-[hsl(var(--muted))]">{{ s.level }}%</span>
+    <main class="pt-28 px-6 md:px-10 max-w-[1400px] mx-auto">
+      <header class="mb-16">
+        <h1 class="reveal text-[clamp(56px,10vw,140px)] font-black tracking-[-0.04em] leading-[0.85] text-[#e6eaf0]">
+          Skills
+        </h1>
+        <p class="reveal mt-6 text-lg text-[#8a93a3] max-w-2xl">
+          Proficiency by category.
+        </p>
+      </header>
+
+      <section class="mb-24">
+        <div class="md:ml-[20%] space-y-0">
+          <div
+            v-for="cat in categories"
+            :key="cat.name"
+            class="reveal grid grid-cols-12 gap-4 py-8 border-b border-[#242c38]"
+          >
+            <div class="col-span-4 text-[#8a93a3] text-base">{{ cat.name }}</div>
+            <div class="col-span-8 space-y-5">
+              <div v-for="s in cat.skills" :key="s.name">
+                <div class="flex justify-between items-baseline mb-2">
+                  <span class="text-[#e6eaf0] font-medium">{{ s.name }}</span>
+                  <span class="text-[#8a93a3] text-sm tabular-nums">{{ s.level }}%</span>
+                </div>
+                <div
+                  class="h-2 bg-[#242c38] overflow-hidden"
+                  role="progressbar"
+                  :aria-valuenow="s.level"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                  :aria-label="s.name + ' proficiency'"
+                >
+                  <div
+                    class="h-full bg-[#10b981] transition-[width] duration-500"
+                    :style="{ width: s.level + '%' }"
+                  ></div>
+                </div>
+              </div>
             </div>
-            <div
-              class="h-2 bg-[hsl(var(--border))] rounded-full overflow-hidden"
-              role="progressbar"
-              :aria-valuenow="s.level"
-              aria-valuemin="0"
-              aria-valuemax="100"
-              :aria-label="s.name + ' proficiency'"
-            >
-              <div
-                class="h-full rounded-full bg-[hsl(var(--accent))] transition-[width] duration-500"
-                :style="{ width: s.level + '%' }"
-              ></div>
-            </div>
-          </li>
-        </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer (simplified) -->
+    <footer class="bg-[#e6eaf0] text-[#0b0f14] p-6 md:p-10">
+      <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+        <div>
+          <div class="text-sm font-semibold mb-3">Navigate</div>
+          <div class="flex flex-wrap gap-4">
+            <NuxtLink to="/" class="text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">Home</NuxtLink>
+            <NuxtLink to="/about" class="text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">About</NuxtLink>
+            <NuxtLink to="/projects" class="text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">Projects</NuxtLink>
+            <NuxtLink to="/contact" class="text-sm text-[#0b0f14]/70 hover:text-[#0b0f14] no-underline">Contact</NuxtLink>
+          </div>
+        </div>
+        <div class="text-center font-black tracking-[-0.04em] leading-[0.82] text-[clamp(40px,12vw,180px)] text-[#0b0f14]">
+          RINGGA
+        </div>
       </div>
-    </section>
-  </main>
+    </footer>
+  </div>
 </template>
 
 <script setup>
