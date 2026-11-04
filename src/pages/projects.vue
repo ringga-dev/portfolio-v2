@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen">
-    <header class="sticky top-0 z-50 glass-nav px-6 md:px-10 py-4 flex items-center justify-between">
+    <header class="glass-nav px-6 md:px-10 py-4 flex items-center justify-between">
       <NuxtLink to="/" class="text-base font-bold tracking-tight text-[#ecfdf5] no-underline flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-[#34d399] shadow-[0_0_12px_rgba(52,211,153,0.8)]"></span>
         R.S.P.
