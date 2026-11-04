@@ -5,25 +5,22 @@
 </template>
 
 <script setup>
-import { onMounted, watchEffect } from 'vue'
+import { onMounted, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
+let observer
 
-onMounted(() => {
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible')
-        }
-      })
-    },
-    { threshold: 0.1 }
+async function observeReveals() {
+  await nextTick()
+  if (observer) observer.disconnect()
+  observer = new IntersectionObserver(
+    (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add('visible') }),
+    { threshold: 0.08 }
   )
-  watchEffect(() => {
-    route.path
-    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el))
-  })
-})
+  document.querySelectorAll('.reveal').forEach((el) => observer.observe(el))
+}
+
+onMounted(observeReveals)
+watch(() => route.path, observeReveals)
 </script>

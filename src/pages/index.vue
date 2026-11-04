@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen relative">
+  <div class="min-h-screen">
     <!-- Floating glass navbar -->
     <header class="fixed top-4 left-4 right-4 md:left-8 md:right-8 z-50 glass rounded-2xl px-5 py-3 flex items-center justify-between">
       <NuxtLink to="/" class="text-base font-bold tracking-tight text-[#ecfdf5] no-underline flex items-center gap-2">
@@ -14,245 +14,184 @@
       </nav>
     </header>
 
-    <!-- Hero: Photograph for a letter -->
-    <section class="min-h-screen flex flex-col justify-center px-6 md:px-10 pt-28 pb-16 relative">
-      <div class="max-w-[1400px] w-full mx-auto">
-        <!-- Top-left: supporting sentence -->
-        <div class="absolute top-28 left-6 md:left-10 max-w-[36ch]">
-          <p class="fade-up text-[18px] leading-[1.4] text-[#ecfdf5]">
-            {{ profile.tagline }}
-          </p>
-          <div class="fade-up mt-5 flex gap-3">
-            <a :href="'mailto:' + profile.email" class="btn-solid">Get in touch</a>
-            <a :href="profile.github" target="_blank" rel="noopener" class="btn-glass">GitHub</a>
-          </div>
-        </div>
-
-        <!-- Top-right: links -->
-        <div class="absolute top-28 right-6 md:right-10 flex gap-5">
-          <a :href="profile.github" target="_blank" rel="noopener" class="text-[15px] text-[#a7c4b5] hover:text-[#ecfdf5] no-underline">GitHub</a>
-          <a :href="profile.linkedin" target="_blank" rel="noopener" class="text-[15px] text-[#a7c4b5] hover:text-[#ecfdf5] no-underline">LinkedIn</a>
-        </div>
-
-        <!-- Name with photograph for a letter: RINGGA [photo] SEPTIA -->
-        <div class="mt-24 flex items-center justify-center gap-4 md:gap-6 flex-wrap">
-          <h1 class="font-black tracking-[-0.04em] leading-[0.85] text-[clamp(56px,10.5vw,168px)] text-[#ecfdf5] text-center">
-            <span class="masked-line"><span>RINGGA</span></span>
-          </h1>
-          <div class="w-[1.6em] h-[1em] rounded-lg overflow-hidden shrink-0 hidden md:block" style="height: 0.7em">
-            <img src="https://picsum.photos/id/1018/800/500" alt="Mountain lake" class="w-full h-full object-cover" />
-          </div>
-          <h1 class="font-black tracking-[-0.04em] leading-[0.85] text-[clamp(56px,10.5vw,168px)] text-[#ecfdf5] text-center">
-            <span class="masked-line"><span>SEPTIA</span></span>
-          </h1>
-        </div>
-        <h1 class="font-black tracking-[-0.04em] leading-[0.85] text-[clamp(56px,10.5vw,168px)] text-center">
-          <span class="masked-line"><span class="text-[#34d399]" style="text-shadow: 0 0 60px rgba(52,211,153,0.4)">PRIBADI</span></span>
+    <!-- Hero -->
+    <section class="px-6 md:px-10 pt-36 pb-16">
+      <div class="max-w-[1200px] mx-auto">
+        <p class="fade-up text-sm text-[#34d399] font-semibold tracking-widest uppercase mb-6">
+          {{ profile.title }} — {{ profile.location }}
+        </p>
+        <h1 class="font-black tracking-[-0.03em] leading-[0.95] text-[clamp(48px,9vw,128px)] text-[#ecfdf5]">
+          <span class="masked-line"><span>Ringga</span></span>
+          <span class="masked-line"><span class="text-[#34d399]" style="text-shadow: 0 0 50px rgba(52,211,153,0.35)">Septia Pribadi</span></span>
         </h1>
+        <p class="fade-up mt-8 text-xl text-[#c9e5d8] max-w-2xl leading-relaxed">
+          {{ profile.tagline }}
+        </p>
+        <p class="fade-up mt-4 text-base text-[#9db8ab] max-w-2xl leading-relaxed">
+          {{ profile.bio }}
+        </p>
+        <div class="fade-up mt-8 flex flex-wrap gap-3">
+          <a :href="'mailto:' + profile.email" class="btn-solid">Get in touch</a>
+          <NuxtLink to="/projects" class="btn-glass">View projects</NuxtLink>
+          <a :href="profile.github" target="_blank" rel="noopener" class="btn-glass">GitHub</a>
+        </div>
 
-        <!-- Bottom: stats in glass bar -->
-        <div class="mt-16 glass rounded-2xl p-6 grid grid-cols-3 gap-6 max-w-3xl mx-auto">
+        <div class="fade-up mt-12 glass rounded-2xl p-6 grid grid-cols-3 gap-6">
           <div class="text-center">
-            <div class="text-[32px] font-light text-[#34d399]">{{ profile.stats[0].value }}</div>
-            <div class="text-sm text-[#a7c4b5] mt-1">{{ profile.stats[0].label }}</div>
+            <div class="text-3xl font-light text-[#34d399]">{{ profile.stats[0].value }}</div>
+            <div class="text-sm text-[#9db8ab] mt-1">{{ profile.stats[0].label }}</div>
           </div>
           <div class="text-center border-x border-white/10">
-            <div class="text-[32px] font-light text-[#34d399]">{{ profile.stats[1].value }}</div>
-            <div class="text-sm text-[#a7c4b5] mt-1">{{ profile.stats[1].label }}</div>
+            <div class="text-3xl font-light text-[#34d399]">{{ profile.stats[1].value }}</div>
+            <div class="text-sm text-[#9db8ab] mt-1">{{ profile.stats[1].label }}</div>
           </div>
           <div class="text-center">
-            <div class="text-[32px] font-light text-[#34d399]">{{ profile.stats[2].value }}</div>
-            <div class="text-sm text-[#a7c4b5] mt-1">{{ profile.stats[2].label }}</div>
+            <div class="text-3xl font-light text-[#34d399]">{{ profile.stats[2].value }}</div>
+            <div class="text-sm text-[#9db8ab] mt-1">{{ profile.stats[2].label }}</div>
           </div>
         </div>
-      </div>
-    </section>
 
-    <!-- Intro: Title, note, facts row -->
-    <section class="px-6 md:px-10 py-24 md:py-32 relative">
-      <div class="max-w-[1400px] mx-auto">
-        <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <h2 class="reveal text-[clamp(44px,5vw,76px)] font-light tracking-tight leading-[1.05] text-[#ecfdf5]">
-            What I build
-          </h2>
-          <p class="reveal text-base text-[#a7c4b5] max-w-[260px] leading-relaxed">
-            I build mobile, web, and desktop applications with Kotlin and Vue, end to end.
-          </p>
-        </div>
-        <div class="mt-16 flex flex-wrap justify-between gap-8 md:gap-12">
-          <div class="reveal">
-            <div class="text-[clamp(28px,3vw,44px)] font-light text-[#34d399]">{{ profile.stats[0].value }}</div>
-            <div class="text-sm text-[#a7c4b5] mt-1">{{ profile.stats[0].label }}</div>
-          </div>
-          <div class="reveal">
-            <div class="text-[clamp(28px,3vw,44px)] font-light text-[#34d399]">{{ profile.stats[1].value }}</div>
-            <div class="text-sm text-[#a7c4b5] mt-1">{{ profile.stats[1].label }}</div>
-          </div>
-          <div class="reveal">
-            <div class="text-[clamp(28px,3vw,44px)] font-light text-[#34d399]">{{ profile.stats[2].value }}</div>
-            <div class="text-sm text-[#a7c4b5] mt-1">{{ profile.stats[2].label }}</div>
-          </div>
-          <div class="reveal">
-            <div class="text-[clamp(28px,3vw,44px)] font-light text-[#34d399]">Indonesia</div>
-            <div class="text-sm text-[#a7c4b5] mt-1">Based in</div>
-          </div>
-        </div>
-        <div class="mt-16 reveal">
+        <div class="fade-up mt-8">
           <img
-            src="https://picsum.photos/id/1018/1600/900"
-            alt="Mountain lake landscape"
-            class="w-full h-[400px] md:h-[500px] object-cover rounded-2xl"
-            loading="lazy"
+            src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80&fit=crop"
+            alt="Mountain landscape"
+            class="w-full h-[280px] md:h-[420px] object-cover rounded-2xl"
           />
         </div>
       </div>
     </section>
 
-    <!-- Work: Names passing a held square -->
-    <section class="px-6 md:px-10 py-24 md:py-32">
-      <div class="max-w-[1400px] mx-auto">
-        <div class="flex items-baseline justify-between mb-12">
-          <h2 class="reveal text-[clamp(64px,9vw,136px)] font-black uppercase tracking-tight leading-[0.9] text-[#ecfdf5]">
-            Work
-          </h2>
-          <NuxtLink to="/projects" class="reveal text-link text-base">Full archive</NuxtLink>
+    <!-- Selected work -->
+    <section class="px-6 md:px-10 py-20">
+      <div class="max-w-[1200px] mx-auto">
+        <div class="flex items-end justify-between mb-10 flex-wrap gap-4">
+          <div>
+            <p class="text-sm text-[#34d399] font-semibold tracking-widest uppercase mb-2">Selected work</p>
+            <h2 class="reveal text-4xl md:text-5xl font-light tracking-tight text-[#ecfdf5]">Projects I have shipped</h2>
+          </div>
+          <NuxtLink to="/projects" class="reveal text-link">All projects</NuxtLink>
         </div>
 
-        <div class="relative">
-          <!-- Sticky image frame -->
-          <div class="hidden lg:block sticky top-[calc(50svh-225px)] mx-auto w-[450px] h-[450px] z-0 pointer-events-none">
-            <img
-              :src="`https://picsum.photos/id/${activeImageId}/900/900`"
-              alt=""
-              class="w-full h-full object-cover rounded-2xl"
-              style="opacity: 0.5"
-            />
-          </div>
-
-          <!-- Names list -->
-          <div class="relative z-10 lg:-mt-[450px]">
-            <a
-              v-for="(p, i) in projects.projects"
-              :key="p.slug"
-              :href="p.url"
-              target="_blank"
-              rel="noopener"
-              class="block text-center text-[clamp(64px,10vw,150px)] font-black uppercase tracking-[-0.04em] leading-[0.9] py-6 no-underline transition-colors duration-200"
-              :class="activeProject === i ? 'text-[#ecfdf5]' : 'text-[#a7c4b5]/40 hover:text-[#ecfdf5]/70'"
-              @mouseenter="activeProject = i; activeImageId = projectImages[i]"
-            >
-              {{ p.title }}
-            </a>
-          </div>
+        <div class="grid md:grid-cols-2 gap-6">
+          <article v-for="p in projects.projects.slice(0, 4)" :key="p.slug" class="reveal glass-card overflow-hidden">
+            <div class="tile h-[220px]">
+              <img :src="`https://picsum.photos/seed/${p.slug}/900/600`" :alt="p.title" loading="lazy" />
+            </div>
+            <div class="p-6">
+              <h3 class="text-xl font-semibold text-[#ecfdf5] mb-2">{{ p.title }}</h3>
+              <p class="text-sm text-[#9db8ab] leading-relaxed mb-4">{{ p.description }}</p>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span v-for="t in p.tech" :key="t" class="text-xs px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-[#9db8ab]">{{ t }}</span>
+              </div>
+              <a :href="p.url" target="_blank" rel="noopener" class="text-link text-sm">View on GitHub</a>
+            </div>
+          </article>
         </div>
       </div>
     </section>
 
-    <!-- Skills: Poster lines -->
-    <section class="px-6 md:px-10 py-24 md:py-32">
-      <div class="max-w-[1400px] mx-auto">
+    <!-- Skills -->
+    <section class="px-6 md:px-10 py-20">
+      <div class="max-w-[1200px] mx-auto">
+        <p class="text-sm text-[#34d399] font-semibold tracking-widest uppercase mb-2">What I use</p>
+        <h2 class="reveal text-4xl md:text-5xl font-light tracking-tight text-[#ecfdf5] mb-10">Skills</h2>
+
         <div class="space-y-0">
-          <div class="reveal flex justify-between items-baseline py-8 border-b border-white/10 group cursor-default">
-            <span class="text-[clamp(48px,8vw,120px)] font-black uppercase tracking-[-0.04em] leading-[0.92] text-[#ecfdf5] group-hover:text-[#34d399] transition-colors">Kotlin</span>
-            <span class="text-[20px] text-[#a7c4b5] tabular-nums">90%</span>
+          <div v-for="group in groupedSkills" :key="group.category" class="reveal grid md:grid-cols-12 gap-4 py-6 border-b border-white/10">
+            <div class="md:col-span-3 text-sm text-[#9db8ab] uppercase tracking-wider pt-1">{{ group.category }}</div>
+            <div class="md:col-span-9 space-y-4">
+              <div v-for="s in group.items" :key="s.name">
+                <div class="flex justify-between mb-1.5">
+                  <span class="text-[#ecfdf5] font-medium">{{ s.name }}</span>
+                  <span class="text-sm text-[#9db8ab] tabular-nums">{{ s.level }}%</span>
+                </div>
+                <div class="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                  <div class="h-full rounded-full bg-gradient-to-r from-[#10b981] to-[#34d399]" :style="{ width: s.level + '%' }"></div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="reveal flex justify-between items-baseline py-8 border-b border-white/10 group cursor-default">
-            <span class="text-[clamp(48px,8vw,120px)] font-black uppercase tracking-[-0.04em] leading-[0.92] text-[#ecfdf5] group-hover:text-[#34d399] transition-colors">Vue / Nuxt</span>
-            <span class="text-[20px] text-[#a7c4b5] tabular-nums">85%</span>
+        </div>
+
+        <div class="mt-8">
+          <NuxtLink to="/skills" class="btn-glass">All skills</NuxtLink>
+        </div>
+      </div>
+    </section>
+
+    <!-- About strip -->
+    <section class="px-6 md:px-10 py-20">
+      <div class="max-w-[1200px] mx-auto glass rounded-2xl p-8 md:p-12 grid md:grid-cols-12 gap-8">
+        <div class="md:col-span-8">
+          <p class="text-sm text-[#34d399] font-semibold tracking-widest uppercase mb-4">About</p>
+          <p class="reveal text-2xl md:text-3xl font-light leading-snug text-[#ecfdf5]">
+            {{ profile.name }} builds software that ships — from mobile apps with Kotlin to web platforms with Vue, end to end.
+          </p>
+          <div class="mt-6">
+            <NuxtLink to="/about" class="btn-glass">More about me</NuxtLink>
           </div>
-          <div class="reveal flex justify-between items-baseline py-8 border-b border-white/10 group cursor-default">
-            <span class="text-[clamp(48px,8vw,120px)] font-black uppercase tracking-[-0.04em] leading-[0.92] text-[#ecfdf5] group-hover:text-[#34d399] transition-colors">TypeScript</span>
-            <span class="text-[20px] text-[#a7c4b5] tabular-nums">80%</span>
+        </div>
+        <div class="md:col-span-4 space-y-4">
+          <div class="reveal">
+            <div class="text-sm text-[#9db8ab]">Location</div>
+            <div class="text-[#ecfdf5] font-medium">{{ profile.location }}</div>
           </div>
-          <div class="reveal flex justify-between items-baseline py-8 border-b border-white/10 group cursor-default">
-            <span class="text-[clamp(48px,8vw,120px)] font-black uppercase tracking-[-0.04em] leading-[0.92] text-[#ecfdf5] group-hover:text-[#34d399] transition-colors">Rust</span>
-            <span class="text-[20px] text-[#a7c4b5] tabular-nums">70%</span>
+          <div class="reveal">
+            <div class="text-sm text-[#9db8ab]">Focus</div>
+            <div class="text-[#ecfdf5] font-medium">Kotlin · Vue · Rust</div>
+          </div>
+          <div class="reveal">
+            <div class="text-sm text-[#9db8ab]">Since</div>
+            <div class="text-[#ecfdf5] font-medium">2020</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- About: Portrait as drop cap -->
-    <section class="px-6 md:px-10 py-24 md:py-32">
-      <div class="max-w-[1400px] mx-auto">
-        <div class="md:ml-[16%] max-w-3xl">
-          <img
-            src="https://picsum.photos/id/1015/400/400"
-            alt="Portrait"
-            class="float-left w-[100px] h-[100px] md:w-[120px] md:h-[120px] object-cover rounded-2xl mr-5 mb-3 glass"
-          />
-          <p class="reveal text-[clamp(24px,2.5vw,38px)] leading-[1.2] text-[#ecfdf5]">
-            Ringga Septia Pribadi builds software that ships. {{ profile.bio }}
-          </p>
-          <p class="reveal mt-6 text-[clamp(20px,2vw,28px)] leading-[1.3] text-[#a7c4b5]">
-            Focused on Kotlin Multiplatform and Vue since 2020, with a bias for systems that run in production.
-          </p>
-        </div>
-        <div class="mt-16 md:ml-[16%] grid grid-cols-3 gap-6 max-w-3xl">
-          <div class="reveal glass-card p-5">
-            <div class="text-sm text-[#a7c4b5]">Location</div>
-            <div class="text-base text-[#ecfdf5] mt-1 font-medium">Indonesia</div>
-          </div>
-          <div class="reveal glass-card p-5">
-            <div class="text-sm text-[#a7c4b5]">Since</div>
-            <div class="text-base text-[#ecfdf5] mt-1 font-medium">2020</div>
-          </div>
-          <div class="reveal glass-card p-5">
-            <div class="text-sm text-[#a7c4b5]">Email</div>
-            <a :href="'mailto:' + profile.email" class="text-link text-base mt-1 inline-block">{{ profile.email }}</a>
-          </div>
+    <!-- CTA -->
+    <section class="px-6 md:px-10 py-20">
+      <div class="max-w-[1200px] mx-auto glass rounded-2xl p-10 md:p-14 text-center reveal">
+        <h2 class="text-4xl md:text-5xl font-light tracking-tight text-[#ecfdf5]">Let's build something together</h2>
+        <p class="mt-4 text-[#9db8ab] max-w-xl mx-auto">Open to freelance work, collaborations, and full-time roles. Drop me a line.</p>
+        <div class="mt-8 flex flex-wrap justify-center gap-3">
+          <a :href="'mailto:' + profile.email" class="btn-solid">Email me</a>
+          <a :href="profile.linkedin" target="_blank" rel="noopener" class="btn-glass">LinkedIn</a>
         </div>
       </div>
     </section>
 
-    <!-- CTA: One word is the button -->
-    <a :href="'mailto:' + profile.email" class="block bg-gradient-to-br from-[#10b981] to-[#059669] no-underline group">
-      <div class="min-h-[50svh] md:min-h-[60svh] flex flex-col justify-between p-6 md:p-10 max-w-[1400px] mx-auto">
-        <div class="flex justify-between items-start">
-          <p class="text-[#022c22] text-lg md:text-xl font-medium max-w-[30ch]">Open to freelance, collaborations, and full-time roles.</p>
-          <svg class="w-10 h-10 md:w-12 md:h-12 text-[#022c22] group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
-          </svg>
+    <!-- Footer -->
+    <footer class="mt-8 border-t border-white/10">
+      <div class="max-w-[1200px] mx-auto px-6 md:px-10 py-10 flex flex-col md:flex-row justify-between gap-6">
+        <div>
+          <div class="text-base font-bold text-[#ecfdf5]">R.S.P.</div>
+          <div class="text-sm text-[#9db8ab] mt-1">© {{ new Date().getFullYear() }} {{ profile.name }}</div>
         </div>
-        <div class="text-[#022c22] font-black tracking-[-0.04em] leading-[0.82] text-[clamp(64px,24vw,360px)] text-center">
-          HELLO
-        </div>
-      </div>
-    </a>
-
-    <!-- Footer: Invitation over cropped name -->
-    <footer class="bg-[#ecfdf5] text-[#0a0f0d] min-h-[100svh] flex flex-col justify-between p-6 md:p-10 overflow-hidden">
-      <div class="grid md:grid-cols-12 gap-8 max-w-[1400px] mx-auto w-full pt-10">
-        <div class="md:col-span-7">
-          <h3 class="text-[clamp(32px,5vw,72px)] font-light tracking-tight leading-[0.95] text-[#0a0f0d]">
-            Let's work<br/>together.
-          </h3>
-          <a :href="'mailto:' + profile.email" class="btn-solid mt-6">Start a project</a>
-        </div>
-        <div class="md:col-span-3 space-y-3">
-          <a :href="profile.github" target="_blank" rel="noopener" class="block text-[16px] text-[#0a0f0d] no-underline">GitHub</a>
-          <a :href="profile.linkedin" target="_blank" rel="noopener" class="block text-[16px] text-[#0a0f0d] no-underline">LinkedIn</a>
-          <a :href="'mailto:' + profile.email" class="block text-[16px] text-[#0a0f0d] no-underline">{{ profile.email }}</a>
-        </div>
-        <div class="md:col-span-2">
-          <div class="text-[13px] text-[#0a0f0d]/60">© {{ new Date().getFullYear() }} Ringga Septia Pribadi</div>
-        </div>
-      </div>
-      <div class="mt-24 max-w-[1400px] mx-auto w-full">
-        <div class="text-center font-black tracking-[-0.04em] leading-[0.82] text-[clamp(72px,26vw,400px)] text-[#0a0f0d] whitespace-nowrap" style="transform: translateY(30%)">
-          RINGGA
-        </div>
+        <nav class="flex flex-wrap gap-6">
+          <NuxtLink to="/about" class="nav-link">About</NuxtLink>
+          <NuxtLink to="/projects" class="nav-link">Projects</NuxtLink>
+          <NuxtLink to="/skills" class="nav-link">Skills</NuxtLink>
+          <NuxtLink to="/contact" class="nav-link">Contact</NuxtLink>
+          <a :href="profile.github" target="_blank" rel="noopener" class="nav-link">GitHub</a>
+          <a :href="profile.linkedin" target="_blank" rel="noopener" class="nav-link">LinkedIn</a>
+        </nav>
       </div>
     </footer>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import profile from "~/data/profile.json"
 import projects from "~/data/projects.json"
-import { ref } from 'vue'
+import skills from "~/data/skills.json"
 
-const activeProject = ref(0)
-const activeImageId = ref(1018)
-const projectImages = [1018, 1015, 1016, 1019]
+const groupedSkills = computed(() => {
+  const map = new Map()
+  for (const s of skills.skills) {
+    if (!map.has(s.category)) map.set(s.category, [])
+    map.get(s.category).push(s)
+  }
+  return [...map.entries()].map(([category, items]) => ({ category, items }))
+})
 </script>
