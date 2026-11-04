@@ -1,7 +1,7 @@
 <template>
-  <div class="relative overflow-hidden" :style="{ width: width + 'px', height: height + 'px' }">
-    <canvas ref="canvasRef" class="absolute inset-0 w-full h-full" />
-    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+  <div class="relative overflow-hidden rounded-[28px]" :style="{ width: width + 'px', height: height + 'px' }">
+    <canvas ref="canvasRef" class="absolute inset-0 w-full h-full block" />
+    <div v-if="$slots.default" class="absolute inset-0 flex items-center justify-center pointer-events-none">
       <slot />
     </div>
   </div>
@@ -9,38 +9,40 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
-import { LiquidGlass } from '~/liquidGlassEngine'
+import { LiquidGlassStudio } from '~/utils/LiquidGlassStudio'
 
 const props = defineProps({
   width: { type: Number, required: true },
   height: { type: Number, required: true },
-  shapeWidth: { type: Number, default: 400 },
+  shapeWidth: { type: Number, default: 200 },
   shapeHeight: { type: Number, default: 200 },
-  shapeRadius: { type: Number, default: 60 },
-  shapeRoundness: { type: Number, default: 4 },
-  mouseFollow: { type: Boolean, default: true },
+  shapeRadius: { type: Number, default: 80 },
+  shapeRoundness: { type: Number, default: 5 },
+  bgImage: { type: String, default: 'https://picsum.photos/id/1018/1200/600' },
 })
 
 const canvasRef = ref(null)
 let engine = null
 
-onMounted(() => {
-  const checkTheme = () => document.documentElement.getAttribute('data-theme') === 'dark'
-  engine = new LiquidGlass(canvasRef.value, {
+function createEngine() {
+  if (engine) engine.destroy()
+  engine = new LiquidGlassStudio(canvasRef.value, {
     width: props.width,
     height: props.height,
-    shapeWidth: props.shapeWidth,
-    shapeHeight: props.shapeHeight,
-    shapeRadius: props.shapeRadius,
-    shapeRoundness: props.shapeRoundness,
-    mouseFollow: props.mouseFollow,
-    dark: checkTheme(),
+    bgImage: props.bgImage,
+    controls: {
+      shapeWidth: props.shapeWidth,
+      shapeHeight: props.shapeHeight,
+      shapeRadius: props.shapeRadius,
+      shapeRoundness: props.shapeRoundness,
+    },
   })
-  // Watch theme changes
-  const observer = new MutationObserver(() => {
-    if (engine) engine.setTheme(checkTheme())
-  })
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+}
+
+onMounted(createEngine)
+
+watch(() => [props.width, props.height], ([w, h]) => {
+  if (engine) engine.resize(w, h)
 })
 
 onBeforeUnmount(() => {

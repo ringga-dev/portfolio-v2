@@ -3,7 +3,7 @@
     <!-- Liquid Glass navbar (WebGL) -->
     <header class="px-4 md:px-8 pt-4">
       <div class="relative">
-        <LiquidGlass :width="navWidth" :height="64" :shape-width="navWidth" :shape-height="64" :shape-radius="32" :shape-roundness="5" :mouse-follow="false" />
+        <LiquidGlass :width="navWidth" :height="64" :shape-width="navWidth" :shape-height="64" :shape-radius="32" :shape-roundness="5" />
         <nav class="absolute inset-0 flex items-center justify-between px-6">
           <NuxtLink to="/" class="text-base font-extrabold tracking-tight text-[var(--ink)] no-underline flex items-center gap-2.5">
             <span class="w-2.5 h-2.5 rounded-full bg-[var(--accent)] shadow-[0_0_12px_rgba(16,185,129,0.6)]"></span>
