@@ -1,22 +1,32 @@
 {
   "projects": [
     {
-      "slug": "system-monitor",
-      "title": "System Monitor",
-      "description": "Real-time server monitoring dashboard with Rust collector, Axum server, and Vue 3 frontend.",
+      "slug": "sarkas-bumk",
+      "title": "Sarkas BUMK",
+      "description": "Situs satire tentang BUMK dan kabut asap \u2014 data nyata dibungkus humor pahit. Karena kenyataan kadang lebih absurd dari fiksi.",
       "tech": [
-        "Rust",
-        "Axum",
+        "Nuxt 4",
         "Vue 3",
-        "SQLite",
-        "uPlot"
+        "TypeScript"
       ],
-      "url": "https://github.com/nyawit-dev/system-monitor-v2"
+      "url": "https://github.com/nyawit-dev/sarkas-bumk"
+    },
+    {
+      "slug": "monopoly-kmp",
+      "title": "Monopoly KMP",
+      "description": "Game Monopoli open-source dengan Kotlin Multiplatform. Warga biasa vs konglomerat \u2014 siapa yang menang?",
+      "tech": [
+        "Kotlin",
+        "KMP",
+        "Compose",
+        "KorGE"
+      ],
+      "url": "https://github.com/nyawit-dev/monopoly-kmp"
     },
     {
       "slug": "pancing-bot",
       "title": "Pancing Bot",
-      "description": "Documentation site for AI account identification and detection methods.",
+      "description": "Dokumentasi identifikasi akun AI \u2014 pancing persona sampai ketahuan aslinya. Untuk bantu warga waspada.",
       "tech": [
         "MkDocs",
         "Python",
@@ -25,27 +35,15 @@
       "url": "https://github.com/nyawit-dev/pancing-bot"
     },
     {
-      "slug": "kmp-printer",
-      "title": "KMP Printer",
-      "description": "Open-source thermal printing library for Kotlin Multiplatform (ESC/POS).",
+      "slug": "hutan-terakhir",
+      "title": "Hutan Terakhir",
+      "description": "Visualisasi data deforestasi Indonesia. Satu pohon ditebang, sejuta napas hilang. Satire yang tidak lucu.",
       "tech": [
-        "Kotlin",
-        "KMP",
-        "ESC/POS"
+        "Vue 3",
+        "D3.js",
+        "MapLibre"
       ],
-      "url": "https://github.com/nyawit-dev/kmp-printer"
-    },
-    {
-      "slug": "hermes-dashboard",
-      "title": "Hermes Agent Dashboard",
-      "description": "Real-time monitoring dashboard for autonomous AI agents with live logs, task queues, and metrics.",
-      "tech": [
-        "Vue",
-        "Nuxt",
-        "TypeScript",
-        "WebSocket"
-      ],
-      "url": "https://github.com/nyawit-dev/hermes-dashboard"
+      "url": "https://github.com/nyawit-dev/hutan-terakhir"
     }
   ]
 }
