@@ -4,7 +4,7 @@
       <nav class="flex items-center justify-between py-3.5 max-w-[1200px] mx-auto">
         <NuxtLink to="/" class="text-base font-bold text-[var(--text-heading)] no-underline flex items-center gap-2.5">
           <span class="w-2.5 h-2.5 rounded-full bg-[var(--accent)]"></span>
-          R.S.P.
+          Nyawit
         </NuxtLink>
         <div class="flex items-center gap-5 md:gap-7">
           <NuxtLink to="/about" class="nav-link">About</NuxtLink>
@@ -33,10 +33,6 @@
               <span class="text-sm" style="color: var(--text-on-dark-muted)">GitHub</span>
               <a :href="profile.github" target="_blank" rel="noopener" class="text-link text-[15px]">{{ profile.github }}</a>
             </div>
-            <div class="flex justify-between items-baseline py-4">
-              <span class="text-sm" style="color: var(--text-on-dark-muted)">LinkedIn</span>
-              <a :href="profile.linkedin" target="_blank" rel="noopener" class="text-link text-[15px]">{{ profile.linkedin }}</a>
-            </div>
           </div>
         </section>
 
@@ -55,7 +51,7 @@
     <footer style="background: var(--surface-overlay)">
       <div class="max-w-[1200px] mx-auto px-6 md:px-10 py-12 flex flex-col md:flex-row justify-between gap-8">
         <div>
-          <div class="text-base font-bold" style="color: var(--surface-base)">R.S.P.</div>
+          <div class="text-base font-bold" style="color: var(--surface-base)">Nyawit</div>
           <div class="text-sm mt-1" style="color: var(--text-on-dark-muted)">© {{ new Date().getFullYear() }} {{ profile.name }}</div>
         </div>
         <nav class="grid grid-cols-2 md:grid-cols-3 gap-x-10 gap-y-3">

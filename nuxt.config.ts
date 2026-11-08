@@ -14,6 +14,6 @@ export default defineNuxtConfig({
     },
   },
   app: {
-    baseURL: '/portfolio-v2/',
+    baseURL: '/nyawit-portfolio/',
   },
 })

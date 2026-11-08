@@ -4,29 +4,48 @@
       "slug": "system-monitor",
       "title": "System Monitor",
       "description": "Real-time server monitoring dashboard with Rust collector, Axum server, and Vue 3 frontend.",
-      "tech": ["Rust", "Axum", "Vue 3", "SQLite", "uPlot"],
-      "url": "https://github.com/ringga-dev/system-monitor-v2"
+      "tech": [
+        "Rust",
+        "Axum",
+        "Vue 3",
+        "SQLite",
+        "uPlot"
+      ],
+      "url": "https://github.com/nyawit-dev/system-monitor-v2"
     },
     {
       "slug": "pancing-bot",
       "title": "Pancing Bot",
       "description": "Documentation site for AI account identification and detection methods.",
-      "tech": ["MkDocs", "Python", "GitHub Actions"],
-      "url": "https://github.com/ringga-dev/pancing-bot"
+      "tech": [
+        "MkDocs",
+        "Python",
+        "GitHub Actions"
+      ],
+      "url": "https://github.com/nyawit-dev/pancing-bot"
     },
     {
       "slug": "kmp-printer",
       "title": "KMP Printer",
       "description": "Open-source thermal printing library for Kotlin Multiplatform (ESC/POS).",
-      "tech": ["Kotlin", "KMP", "ESC/POS"],
-      "url": "https://github.com/ringga-dev/kmp-printer"
+      "tech": [
+        "Kotlin",
+        "KMP",
+        "ESC/POS"
+      ],
+      "url": "https://github.com/nyawit-dev/kmp-printer"
     },
     {
       "slug": "hermes-dashboard",
       "title": "Hermes Agent Dashboard",
       "description": "Real-time monitoring dashboard for autonomous AI agents with live logs, task queues, and metrics.",
-      "tech": ["Vue", "Nuxt", "TypeScript", "WebSocket"],
-      "url": "https://github.com/ringga-dev/hermes-dashboard"
+      "tech": [
+        "Vue",
+        "Nuxt",
+        "TypeScript",
+        "WebSocket"
+      ],
+      "url": "https://github.com/nyawit-dev/hermes-dashboard"
     }
   ]
 }
