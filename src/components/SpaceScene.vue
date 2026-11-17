@@ -234,7 +234,8 @@ const EARTH_FRAG = /* glsl */ `
 
     // Siang: Blue Marble + pencahayaan diffuse.
     float diffuse = clamp(ndl, 0.0, 1.0);
-    vec3 lit = dayCol * (0.15 + 0.85 * diffuse);
+    // Matte: pencahayaan diffuse lembut, tanpa specular sama sekali.
+    vec3 lit = dayCol * (0.18 + 0.72 * diffuse);
 
     // Specular dimatikan total: permukaan matte, tanpa highlight putih berkilau.
     vec3 specCol = vec3(0.0);
@@ -248,7 +249,7 @@ const EARTH_FRAG = /* glsl */ `
 
     // Inner glow (rayleigh) sangat tipis di limb siang saja — tidak menutupi benua.
     float limb = pow(1.0 - max(dot(N, V), 0.0), 6.0) * day;
-    color += vec3(0.10, 0.24, 0.40) * limb * 0.30;
+    color += vec3(0.10, 0.24, 0.40) * limb * 0.18;
 
     gl_FragColor = vec4(linearToSrgb(color), 1.0);
   }

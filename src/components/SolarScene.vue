@@ -432,8 +432,13 @@ function updateLabels() {
       el.style.opacity = '0'
       continue
     }
-    const x = (scratch.x * 0.5 + 0.5) * w
-    const y = (-scratch.y * 0.5 + 0.5) * h
+    let x = (scratch.x * 0.5 + 0.5) * w
+    let y = (-scratch.y * 0.5 + 0.5) * h
+    // Matahari di-offset ke atas agar tidak tumpang tindih dengan Merkurius.
+    if (i === 0) y -= 26
+    // Clamp ke dalam panel supaya label planet terluar (Neptunus) tetap terlihat.
+    x = Math.max(36, Math.min(w - 36, x))
+    y = Math.max(16, Math.min(h - 16, y))
     el.style.opacity = '1'
     el.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`
   }
