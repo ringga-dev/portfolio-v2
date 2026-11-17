@@ -663,6 +663,14 @@ function applyFit(aspect: number) {
   if (!world) return
   const fit = Math.min(1, Math.max(0.55, aspect / 1.25))
   world.scale.setScalar(fit)
+  // Komposisi: di layar lebar Bumi duduk di kanan supaya tipografi besar
+  // di kiri tidak menimpanya. Di layar sempit Bumi turun ke bawah teks.
+  if (tiltGroup) {
+    const wide = aspect >= 1.15
+    const targetX = wide ? (props.variant === 'hero' ? 1.15 : 0.85) : 0
+    const targetY = wide ? -0.12 : -1.05
+    tiltGroup.position.set(targetX / fit, targetY / fit, 0)
+  }
 }
 
 function initScene(threeModule: any) {
