@@ -21,17 +21,6 @@ import dayUrl from '~/assets/textures/earth-day.jpg?url'
 import nightUrl from '~/assets/textures/earth-night.jpg?url'
 import topoUrl from '~/assets/textures/earth-topology.jpg?url'
 import waterUrl from '~/assets/textures/earth-water.jpg?url'
-import cloudsUrl from '~/assets/textures/earth-clouds.jpg?url'
-
-// Tekstur NASA nyata untuk 7 planet latar (+ cincin Saturnus).
-import mercuryUrl from '~/assets/textures/mercury.jpg?url'
-import venusUrl from '~/assets/textures/venus.jpg?url'
-import marsUrl from '~/assets/textures/mars.jpg?url'
-import jupiterUrl from '~/assets/textures/jupiter.jpg?url'
-import saturnUrl from '~/assets/textures/saturn.jpg?url'
-import saturnRingUrl from '~/assets/textures/saturn-ring.jpg?url'
-import uranusUrl from '~/assets/textures/uranus.jpg?url'
-import neptuneUrl from '~/assets/textures/neptune.jpg?url'
 
 import {
   onMounted,
@@ -61,7 +50,7 @@ const props = withDefaults(defineProps<{ variant?: Variant }>(), { variant: 'her
 const attrs = useAttrs()
 
 const CONFIG: Record<Variant, VariantConfig> = {
-  hero: { stars: 1900, dust: 300, radius: 1.5, segW: 64, segH: 48, cameraZ: 6.4, arcs: 28 },
+  hero: { stars: 1900, dust: 300, radius: 2.35, segW: 72, segH: 54, cameraZ: 7.2, arcs: 28 },
   orbital: { stars: 1600, dust: 240, radius: 1.35, segW: 56, segH: 40, cameraZ: 6.2, arcs: 22 },
   mini: { stars: 1500, dust: 140, radius: 1.1, segW: 40, segH: 28, cameraZ: 5.6, arcs: 20 },
 }
@@ -141,28 +130,10 @@ interface ArcData {
   offset: number
 }
 interface RingData { mesh: any; base: number; phase: number }
-interface PlanetBody {
-  key: string
-  name: string
-  meshRadius: number
-  orbit: number
-  depth: number
-  angle: number
-  initialAngle: number
-  orbitSpeed: number
-  spinSpeed: number
-  tilt: number
-  body: any
-  mesh: any
-  ring: any
-}
 
 let arcs: ArcData[] = []
 let rings: RingData[] = []
 let cityVectors: any[] = []
-
-let solarGroup: any = null
-let planets: PlanetBody[] = []
 
 const sunDir: any = { x: 0, y: 0, z: 0, copy(v: any) { this.x = v.x; this.y = v.y; this.z = v.z; return this }, normalize() { const l = Math.hypot(this.x, this.y, this.z) || 1; this.x /= l; this.y /= l; this.z /= l; return this }, set(x: number, y: number, z: number) { this.x = x; this.y = y; this.z = z; return this } }
 let sunAngle = 0.6
@@ -178,6 +149,12 @@ let running = false
 let isVisible = true
 let isDisposed = false
 let lastTime = 0
+
+// Rotasi Bumi: spin dasar + offset scroll (dilembutkan via lerp).
+const SCROLL_SPIN_FACTOR = 0.0016
+let baseSpin = 0
+let scrollTargetY = 0
+let scrollCurrentY = 0
 
 const pointer = { x: 0, y: 0 }
 const pointerTarget = { x: 0, y: 0 }
@@ -259,14 +236,11 @@ const EARTH_FRAG = /* glsl */ `
     float diffuse = clamp(ndl, 0.0, 1.0);
     vec3 lit = dayCol * (0.15 + 0.85 * diffuse);
 
-    // Specular pada laut (water mask). Diredam supaya laut tidak memutih.
-    float water = smoothstep(0.32, 0.75, texture2D(uWater, vUv).r);
-    vec3 H = normalize(L + V);
-    float spec = pow(max(dot(Nb, H), 0.0), 70.0);
-    vec3 specCol = vec3(0.55, 0.78, 1.0) * spec * water * day * 0.6;
+    // Specular dimatikan total: permukaan matte, tanpa highlight putih berkilau.
+    vec3 specCol = vec3(0.0);
 
     // Malam: city lights menyala (dinaikkan ringan, tetap tidak menusam).
-    vec3 city = nightCol * 1.9;
+    vec3 city = nightCol * 1.2;
     vec3 nightAmbient = vec3(0.010, 0.018, 0.045);
     vec3 nightSide = city + nightAmbient;
 
@@ -554,7 +528,7 @@ function createAtmosphere(cfg: VariantConfig) {
   // Glow utama + halo tipis. Intensity diredam agar additive blending tidak
   // menutupi permukaan Bumi dengan cyan/putih.
   const glowGeo = track(new THREE.SphereGeometry(cfg.radius * 1.16, 48, 48))
-  const glow = new THREE.Mesh(glowGeo, makeMat(PALETTE.cyan, 0x2b6cff, 2.6, 0.42))
+  const glow = new THREE.Mesh(glowGeo, makeMat(PALETTE.cyan, 0x2b6cff, 2.6, 0.62))
   tiltGroup.add(glow)
 
   const haloGeo = track(new THREE.SphereGeometry(cfg.radius * 1.3, 48, 48))
@@ -685,357 +659,6 @@ function sampleArc(arc: ArcData, t: number) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  SISTEM TATA SURYA (7 PLANET LATAR)                                         */
-/* -------------------------------------------------------------------------- */
-
-// Defisiensi ringan: Bumi sengaja tidak ada di sini (sudah jadi fokus utama).
-const PLANET_DEFS: Array<{
-  key: string
-  name: string
-  meshRadius: number
-  orbit: number
-  depth: number
-  angle: number
-  orbitSpeed: number
-  spinSpeed: number
-  tilt: number
-  ring?: boolean
-}> = [
-  { key: 'mercury', name: 'Merkurius', meshRadius: 0.16, orbit: 3.2, depth: 2.6, angle: 0.40, orbitSpeed: 0.060, spinSpeed: 0.05, tilt: 0.03 },
-  { key: 'venus',   name: 'Venus',     meshRadius: 0.24, orbit: 3.9, depth: 2.8, angle: 2.10, orbitSpeed: 0.045, spinSpeed: 0.03, tilt: 0.05 },
-  // Bumi (index 2) dilewati.
-  { key: 'mars',    name: 'Mars',      meshRadius: 0.19, orbit: 4.5, depth: 3.0, angle: 3.60, orbitSpeed: 0.036, spinSpeed: 0.08, tilt: 0.44 },
-  { key: 'jupiter', name: 'Jupiter',   meshRadius: 0.52, orbit: 5.2, depth: 3.3, angle: 5.00, orbitSpeed: 0.024, spinSpeed: 0.22, tilt: 0.05 },
-  { key: 'saturn',  name: 'Saturnus',  meshRadius: 0.44, orbit: 5.9, depth: 3.6, angle: 1.20, orbitSpeed: 0.018, spinSpeed: 0.20, tilt: 0.47, ring: true },
-  { key: 'uranus',  name: 'Uranus',    meshRadius: 0.32, orbit: 6.3, depth: 3.9, angle: 4.30, orbitSpeed: 0.013, spinSpeed: 0.14, tilt: 1.71 },
-  { key: 'neptune', name: 'Neptunus',  meshRadius: 0.31, orbit: 6.6, depth: 4.2, angle: 2.90, orbitSpeed: 0.010, spinSpeed: 0.15, tilt: 0.49 },
-]
-
-// Tekstur NASA nyata. Kunci harus sama dengan `key` di PLANET_DEFS.
-const PLANET_TEXTURE_URLS: Record<string, string> = {
-  mercury: mercuryUrl,
-  venus: venusUrl,
-  mars: marsUrl,
-  jupiter: jupiterUrl,
-  saturn: saturnUrl,
-  uranus: uranusUrl,
-  neptune: neptuneUrl,
-}
-
-function hashString(s: string) {
-  let h = 2166136261
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i)
-    h = Math.imul(h, 16777619)
-  }
-  return h >>> 0
-}
-
-function makeRng(seed: number) {
-  let s = seed >>> 0
-  return () => {
-    s = (Math.imul(s, 1664525) + 1013904223) >>> 0
-    return s / 4294967296
-  }
-}
-
-// Tekstur prosedural 256x128 — tidak ada unduhan file baru.
-function makePlanetTexture(kind: string): any {
-  const w = 256
-  const h = 128
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  const ctx = canvas.getContext('2d')!
-  const rnd = makeRng(hashString(kind))
-
-  const bands = (colors: string[], count: number, wavy = true) => {
-    ctx.fillStyle = colors[0]
-    ctx.fillRect(0, 0, w, h)
-    const bandH = h / count
-    for (let i = 0; i < count; i++) {
-      ctx.fillStyle = colors[i % colors.length]
-      ctx.globalAlpha = 0.5 + rnd() * 0.38
-      const y = i * bandH
-      if (wavy) {
-        const segs = 8
-        ctx.beginPath()
-        ctx.moveTo(0, y)
-        for (let s = 0; s <= segs; s++) {
-          ctx.lineTo((s / segs) * w, y + Math.sin(s * 1.7 + i) * 2.5 + (rnd() - 0.5) * 3)
-        }
-        for (let s = segs; s >= 0; s--) {
-          ctx.lineTo((s / segs) * w, y + bandH + Math.sin(s * 1.3 + i) * 2.5 + (rnd() - 0.5) * 3)
-        }
-        ctx.closePath()
-        ctx.fill()
-      } else {
-        ctx.fillRect(0, y, w, bandH + 1)
-      }
-    }
-    ctx.globalAlpha = 1
-  }
-
-  switch (kind) {
-    case 'mercury': {
-      ctx.fillStyle = '#8f8d88'
-      ctx.fillRect(0, 0, w, h)
-      for (let i = 0; i < 240; i++) {
-        ctx.fillStyle = `rgba(60,58,55,${0.05 + rnd() * 0.12})`
-        ctx.beginPath()
-        ctx.arc(rnd() * w, rnd() * h, 1 + rnd() * 7, 0, Math.PI * 2)
-        ctx.fill()
-      }
-      for (let i = 0; i < 90; i++) {
-        const x = rnd() * w
-        const y = rnd() * h
-        const r = 2 + rnd() * 9
-        ctx.fillStyle = `rgba(40,38,36,${0.25 + rnd() * 0.25})`
-        ctx.beginPath()
-        ctx.arc(x, y, r, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.strokeStyle = `rgba(210,208,200,${0.18 + rnd() * 0.22})`
-        ctx.lineWidth = 1 + rnd()
-        ctx.beginPath()
-        ctx.arc(x, y, r, 0, Math.PI * 2)
-        ctx.stroke()
-      }
-      break
-    }
-    case 'venus':
-      bands(['#d9c79a', '#e8d9a8', '#cdb884', '#efe0b5', '#d2bf90'], 18)
-      break
-    case 'mars': {
-      bands(['#b7410e', '#c1440e', '#9e3a12', '#c6531c'], 14, false)
-      for (let i = 0; i < 60; i++) {
-        ctx.fillStyle = `rgba(90,30,12,${0.06 + rnd() * 0.14})`
-        ctx.beginPath()
-        ctx.ellipse(rnd() * w, rnd() * h, 6 + rnd() * 22, 3 + rnd() * 10, rnd() * 3, 0, Math.PI * 2)
-        ctx.fill()
-      }
-      const north = ctx.createLinearGradient(0, 0, 0, h * 0.18)
-      north.addColorStop(0, 'rgba(255,245,235,0.9)')
-      north.addColorStop(1, 'rgba(255,245,235,0)')
-      ctx.fillStyle = north
-      ctx.fillRect(0, 0, w, h * 0.18)
-      const south = ctx.createLinearGradient(0, h, 0, h * 0.82)
-      south.addColorStop(0, 'rgba(255,245,235,0.9)')
-      south.addColorStop(1, 'rgba(255,245,235,0)')
-      ctx.fillStyle = south
-      ctx.fillRect(0, h * 0.82, w, h * 0.18)
-      break
-    }
-    case 'jupiter': {
-      bands(['#d8c19a', '#c9a06f', '#e3d4b0', '#b07d4e', '#d9b98a', '#a86b42', '#e6d8bb'], 22)
-      ctx.save()
-      ctx.translate(w * 0.68, h * 0.62)
-      ctx.scale(1, 0.55)
-      const spot = ctx.createRadialGradient(0, 0, 2, 0, 0, 26)
-      spot.addColorStop(0, 'rgba(178,72,40,0.95)')
-      spot.addColorStop(0.6, 'rgba(190,90,50,0.75)')
-      spot.addColorStop(1, 'rgba(190,90,50,0)')
-      ctx.fillStyle = spot
-      ctx.beginPath()
-      ctx.arc(0, 0, 26, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.restore()
-      break
-    }
-    case 'saturn':
-      bands(['#e6d9a8', '#efe3bd', '#d9c99a', '#f2e8c8', '#dfd0a0'], 16)
-      break
-    case 'uranus':
-      bands(['#a9dfe0', '#bceae8', '#9fd4d8', '#c6eeeb'], 9)
-      break
-    case 'neptune': {
-      bands(['#2b4bc4', '#3458d6', '#223c9e', '#3b5fdb'], 11)
-      ctx.fillStyle = 'rgba(12,20,80,0.45)'
-      ctx.beginPath()
-      ctx.ellipse(w * 0.4, h * 0.55, 18, 9, 0, 0, Math.PI * 2)
-      ctx.fill()
-      break
-    }
-  }
-
-  const tex = track(new THREE.CanvasTexture(canvas))
-  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace
-  tex.needsUpdate = true
-  return tex
-}
-
-// Cincin Saturnus: tekstur radial dengan celah ala Cassini.
-function makeSaturnRingTexture(): any {
-  const size = 256
-  const canvas = document.createElement('canvas')
-  canvas.width = canvas.height = size
-  const ctx = canvas.getContext('2d')!
-  const rnd = makeRng(99)
-  const c = size / 2
-  const g = ctx.createRadialGradient(c, c, c * 0.6, c, c, c)
-  g.addColorStop(0, 'rgba(224,210,170,0)')
-  g.addColorStop(0.05, 'rgba(224,210,170,0.75)')
-  g.addColorStop(0.25, 'rgba(200,182,140,0.85)')
-  g.addColorStop(0.4, 'rgba(150,130,100,0.25)')
-  g.addColorStop(0.55, 'rgba(232,220,185,0.7)')
-  g.addColorStop(0.85, 'rgba(210,195,155,0.4)')
-  g.addColorStop(1, 'rgba(200,185,145,0)')
-  ctx.fillStyle = g
-  ctx.fillRect(0, 0, size, size)
-  for (let i = 0; i < 70; i++) {
-    ctx.strokeStyle = `rgba(255,245,220,${0.02 + rnd() * 0.05})`
-    ctx.lineWidth = 0.5 + rnd() * 1.5
-    ctx.beginPath()
-    ctx.arc(c, c, c * (0.6 + rnd() * 0.39), 0, Math.PI * 2)
-    ctx.stroke()
-  }
-  const tex = track(new THREE.CanvasTexture(canvas))
-  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace
-  tex.needsUpdate = true
-  return tex
-}
-
-// saturn-ring.jpg adalah strip horizontal (profil kecerahan radial). Ubah ke
-// tekstur konsentris agar cocok dengan UV RingGeometry: warna krem + alpha
-// dari kecerahan. Fallback prosedural tetap dipakai bila konversi gagal.
-function radializeRingStrip(srcTex: any, innerRatio = 0.62): any {
-  const img = srcTex?.image
-  if (!img || !img.width || !img.height) return null
-  const sw = img.naturalWidth || img.width
-  const sh = img.naturalHeight || img.height
-  const sample = document.createElement('canvas')
-  sample.width = sw
-  sample.height = sh
-  const sctx = sample.getContext('2d', { willReadFrequently: true } as any)!
-  sctx.drawImage(img, 0, 0)
-  let src: Uint8ClampedArray
-  try {
-    src = sctx.getImageData(0, 0, sw, sh).data
-  } catch {
-    return null
-  }
-
-  const size = 512
-  const out = document.createElement('canvas')
-  out.width = out.height = size
-  const octx = out.getContext('2d')!
-  const dst = octx.createImageData(size, size)
-  const c = size / 2
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const dx = x - c + 0.5
-      const dy = y - c + 0.5
-      const rt = Math.hypot(dx, dy) / c
-      const oi = (y * size + x) * 4
-      if (rt < innerRatio - 0.02 || rt > 1.02) {
-        dst.data[oi + 3] = 0
-        continue
-      }
-      const s = Math.max(0, Math.min(1, (rt - innerRatio) / (1 - innerRatio)))
-      const sx = Math.min(sw - 1, Math.round(s * (sw - 1)))
-      const sy = Math.min(sh - 1, Math.floor(sh / 2))
-      const si = (sy * sw + sx) * 4
-      const lum = (src[si] * 0.299 + src[si + 1] * 0.587 + src[si + 2] * 0.114) / 255
-      dst.data[oi] = 234
-      dst.data[oi + 1] = 220
-      dst.data[oi + 2] = 186
-      dst.data[oi + 3] = Math.round((0.18 + 0.82 * lum) * 255)
-    }
-  }
-  octx.putImageData(dst, 0, 0)
-  return configureTexture(track(new THREE.CanvasTexture(out)), true)
-}
-
-function placePlanet(p: PlanetBody) {
-  const x = Math.cos(p.angle) * p.orbit
-  const y = Math.sin(p.angle) * p.orbit * 0.55
-  const z = -p.depth + Math.sin(p.angle) * p.orbit * 0.2
-  p.body.position.set(x, y, z)
-}
-
-function createPlanets() {
-  solarGroup = new THREE.Group()
-  world.add(solarGroup)
-
-  // Satu bola satuan dipakai bersama (di-scale per planet) agar ringan.
-  const sphereGeo = track(new THREE.SphereGeometry(1, 28, 20))
-  const ringGeo = track(new THREE.RingGeometry(0.62, 1.0, 96))
-  const ringTex = makeSaturnRingTexture()
-
-  planets = PLANET_DEFS.map((def) => {
-    const body = new THREE.Group()
-    body.rotation.z = def.tilt
-    solarGroup.add(body)
-
-    const tex = makePlanetTexture(def.key)
-    const mat = track(new THREE.MeshStandardMaterial({
-      map: tex,
-      emissive: new THREE.Color(0xffffff).multiplyScalar(0.12),
-      emissiveIntensity: 0.22,
-      roughness: 0.92,
-      metalness: 0,
-    }))
-    const mesh = new THREE.Mesh(sphereGeo, mat)
-    mesh.scale.setScalar(def.meshRadius)
-    body.add(mesh)
-
-    let ring: any = null
-    if (def.ring) {
-      const ringMat = track(new THREE.MeshStandardMaterial({
-        map: ringTex,
-        color: 0xffffff,
-        emissive: 0x3a3220,
-        emissiveIntensity: 0.2,
-        transparent: true,
-        opacity: 0.9,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-        roughness: 1,
-        metalness: 0,
-      }))
-      ring = new THREE.Mesh(ringGeo, ringMat)
-      ring.scale.setScalar(def.meshRadius)
-      ring.rotation.x = -Math.PI / 2
-      body.add(ring)
-    }
-
-    const p: PlanetBody = {
-      key: def.key,
-      name: def.name,
-      meshRadius: def.meshRadius,
-      orbit: def.orbit,
-      depth: def.depth,
-      angle: def.angle,
-      initialAngle: def.angle,
-      orbitSpeed: def.orbitSpeed,
-      spinSpeed: def.spinSpeed,
-      tilt: def.tilt,
-      body,
-      mesh,
-      ring,
-    }
-    placePlanet(p)
-    return p
-  })
-}
-
-function updatePlanets(dt: number) {
-  for (const p of planets) {
-    p.angle += dt * p.orbitSpeed
-    placePlanet(p)
-    p.mesh.rotation.y += dt * p.spinSpeed
-  }
-}
-
-function resetPlanets() {
-  for (const p of planets) {
-    p.angle = p.initialAngle
-    p.mesh.rotation.y = 0
-    p.body.rotation.z = p.tilt
-    placePlanet(p)
-  }
-}
-
-/* -------------------------------------------------------------------------- */
 /*  TEKSTUR -> SHADER MATERIAL                                                 */
 /* -------------------------------------------------------------------------- */
 
@@ -1045,26 +668,16 @@ async function upgradeEarthMaterials() {
     loadTexture(nightUrl),    // warna -> sRGB
     loadTexture(topoUrl, false),  // data -> NoColorSpace
     loadTexture(waterUrl, false), // data -> NoColorSpace
-    loadTexture(cloudsUrl, false),// alpha -> NoColorSpace
   ])
   if (isDisposed) {
     results.forEach((t) => t?.dispose?.())
     return
   }
 
-  const [day, night, topo, water, cloudTex] = results
+  const [day, night, topo, water] = results
 
-  // Awan memakai tekstur NASA nyata sebagai alphaMap (bukan prosedural).
-  if (cloudTex && clouds) {
-    track(cloudTex)
-    clouds.material.alphaMap = cloudTex
-    // NASA cloud map ini sangat padat — opacity tinggi menutupi benua.
-    // Sisakan awan tipis saja supaya Bumi tetap terbaca realistik.
-    const cloudOpacity = props.variant === 'mini' ? 0.2 : 0.28
-    clouds.material.opacity = cloudOpacity
-    clouds.material.needsUpdate = true
-    clouds.visible = true
-  }
+  // Awan sengaja tidak dirender: hari cerah = benua biru/hijau bersih.
+  if (clouds) clouds.visible = false
 
   if (!earthMesh) return
 
@@ -1107,45 +720,6 @@ async function upgradeEarthMaterials() {
   earthMesh.material = shaderMat
 }
 
-// Ganti tekstur prosedural 7 planet dengan tekstur NASA nyata. Gagal load ->
-// tekstur prosedural tetap terpasang (fallback).
-async function upgradePlanetMaterials() {
-  const keys = Object.keys(PLANET_TEXTURE_URLS)
-  const results = await Promise.all([
-    ...keys.map((k) => loadTexture(PLANET_TEXTURE_URLS[k])),
-    loadTexture(saturnRingUrl), // terakhir: peta cincin
-  ])
-  if (isDisposed) {
-    results.forEach((t) => t?.dispose?.())
-    return
-  }
-
-  results.slice(0, keys.length).forEach((tex, i) => {
-    if (!tex) return
-    track(tex)
-    const p = planets.find((pl) => pl.key === keys[i])
-    if (!p?.mesh?.material) return
-    p.mesh.material.map = tex
-    p.mesh.material.color.set(0xffffff)
-    p.mesh.material.needsUpdate = true
-  })
-
-  const ringStrip = results[results.length - 1]
-  if (!ringStrip) return
-  const saturn = planets.find((p) => p.key === 'saturn')
-  if (saturn?.ring?.material) {
-    const ringTex = radializeRingStrip(ringStrip)
-    if (ringTex) {
-      const mat = saturn.ring.material
-      mat.map = ringTex
-      mat.color.set(0xffffff)
-      mat.alphaMap = null
-      mat.needsUpdate = true
-    }
-  }
-  ringStrip.dispose?.()
-}
-
 /* -------------------------------------------------------------------------- */
 /*  INISIALISASI                                                               */
 /* -------------------------------------------------------------------------- */
@@ -1158,7 +732,7 @@ function applyFit(aspect: number) {
   // di kiri tidak menimpanya. Di layar sempit Bumi turun ke bawah teks.
   if (tiltGroup) {
     const wide = aspect >= 1.15
-    const targetX = wide ? (props.variant === 'hero' ? 1.15 : 0.85) : 0
+    const targetX = wide ? (props.variant === 'hero' ? 1.45 : 0.85) : 0
     const targetY = wide ? -0.12 : -1.05
     tiltGroup.position.set(targetX / fit, targetY / fit, 0)
   }
@@ -1228,9 +802,12 @@ function initScene(threeModule: any) {
   createEarth(cfg)
   createAtmosphere(cfg)
   createNetwork(cfg)
-  createPlanets()
 
   applyFit(width / height)
+
+  // Pakai posisi scroll awal sebelum event scroll pertama datang.
+  scrollTargetY = scrollCurrentY = window.scrollY || 0
+  applyScrollRotation()
 
   bindEvents()
 
@@ -1250,7 +827,6 @@ function initScene(threeModule: any) {
   webglReady.value = true
   start()
   void upgradeEarthMaterials()
-  void upgradePlanetMaterials()
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1271,16 +847,35 @@ function handlePointerLeave() {
   pointerTarget.y = 0
 }
 
+// Rotasi Bumi = spin dasar + offset scroll. Dipakai loop animasi maupun event
+// scroll saat reduced-motion (tanpa animasi kontinu).
+function applyScrollRotation() {
+  if (!earthSpin) return
+  earthSpin.rotation.y = baseSpin + scrollCurrentY * SCROLL_SPIN_FACTOR
+}
+
+function handleScroll() {
+  scrollTargetY = window.scrollY || window.pageYOffset || 0
+  if (reducedMotion.value) {
+    // Tanpa animasi kontinu: rotasi statis mengikuti posisi scroll.
+    scrollCurrentY = scrollTargetY
+    applyScrollRotation()
+    start() // satu frame statis
+  }
+}
+
 function bindEvents() {
   window.addEventListener('pointermove', handlePointerMove, { passive: true })
   window.addEventListener('pointerleave', handlePointerLeave, { passive: true })
   window.addEventListener('blur', handlePointerLeave)
+  window.addEventListener('scroll', handleScroll, { passive: true })
 }
 
 function unbindEvents() {
   window.removeEventListener('pointermove', handlePointerMove)
   window.removeEventListener('pointerleave', handlePointerLeave)
   window.removeEventListener('blur', handlePointerLeave)
+  window.removeEventListener('scroll', handleScroll)
 }
 
 function handleMotionChange(e: MediaQueryListEvent) {
@@ -1293,7 +888,8 @@ function handleMotionChange(e: MediaQueryListEvent) {
       camera.lookAt(0, 0, 0)
     }
     if (starField) starField.rotation.set(0, 0, 0)
-    resetPlanets()
+    scrollCurrentY = scrollTargetY
+    applyScrollRotation()
     start() // satu frame statis yang rapi
   } else if (isVisible) {
     start()
@@ -1332,9 +928,10 @@ function tick(now: number) {
   if (!reducedMotion.value) {
     const t = now * 0.001
 
-    // Rotasi Bumi + awan lebih cepat.
-    if (earthSpin) earthSpin.rotation.y += dt * 0.2
-    if (clouds) clouds.rotation.y += dt * 0.06
+    // Spin dasar terus jalan; scroll menambah rotasi secara halus.
+    baseSpin += dt * 0.2
+    scrollCurrentY += (scrollTargetY - scrollCurrentY) * Math.min(1, dt * 6)
+    applyScrollRotation()
 
     // Siklus siang/malam: matahari berputar perlahan.
     sunAngle += dt * 0.055
@@ -1349,9 +946,6 @@ function tick(now: number) {
     }
     starTimeUniform.value = t
     if (starMaterial) starMaterial.opacity = 0.86 + Math.sin(t * 0.9) * 0.04
-
-    // Planet latar: orbit + rotasi sumbu sendiri (planet dalam lebih cepat).
-    updatePlanets(dt)
 
     // Cincin node berdenyut.
     for (let i = 0; i < rings.length; i++) {
@@ -1473,8 +1067,6 @@ onUnmounted(() => {
   nodePoints = null
   pulsePoints = null
   pulsePositions = null
-  planets = []
-  solarGroup = null
   roundSprite = null
   starTimeUniform.value = 0
   THREE = null

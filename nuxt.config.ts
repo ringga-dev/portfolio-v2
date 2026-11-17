@@ -10,7 +10,7 @@ export default defineNuxtConfig({
   },
   nitro: {
     prerender: {
-      routes: ['/', '/about', '/projects', '/skills', '/contact'],
+      routes: ['/', '/about', '/projects', '/skills', '/contact', '/tata-surya'],
     },
   },
   app: {

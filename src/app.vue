@@ -11,6 +11,7 @@
           <NuxtLink to="/about" class="nav-link" :class="{ active: isActive('/about') }">About</NuxtLink>
           <NuxtLink to="/projects" class="nav-link" :class="{ active: isActive('/projects') }">Work</NuxtLink>
           <NuxtLink to="/skills" class="nav-link" :class="{ active: isActive('/skills') }">Skills</NuxtLink>
+          <NuxtLink to="/tata-surya" class="nav-link" :class="{ active: isActive('/tata-surya') }">Tata Surya</NuxtLink>
           <NuxtLink to="/contact" class="btn-primary" style="padding: 9px 18px; font-size: 13px;">Contact</NuxtLink>
         </nav>
       </div>
