@@ -1,22 +1,33 @@
 <script setup lang="ts">
 /**
- * SpaceScene — self-contained, SSR-safe 3D / CSS antariksa background.
+ * SpaceScene — Bumi realistik, SSR-safe, self-contained.
  *
- * - Hero:        <SpaceScene variant="hero" class="absolute inset-0" />
- * - Widget kecil: <SpaceScene variant="mini" class="h-48 w-full" />
+ * API (jangan diubah):
+ *   <SpaceScene variant="hero" style="position:absolute; inset:0; z-index:0" />
+ *   variant: 'hero' | 'orbital' | 'mini'
+ *   class / atribut pemakai diteruskan ke elemen akar (inheritAttrs: false).
  *
- * Dependensi `three` bersifat opsional. Jika tidak terpasang / WebGL tidak
- * tersedia / impor gagal, layer fallback CSS (bintang + planet) tetap tampil.
+ * Arsitektur:
+ *  - Semua akses window/document/THREE terjadi di dalam onMounted / dynamic
+ *    import. Tidak ada efek samping di SSR.
+ *  - Tekstur NASA (day / night / topology / water) diimpor sebagai URL Vite,
+ *    dimuat dengan TextureLoader di client. Jika gagal -> material biru +
+ *    wireframe tetap tampil.
+ *  - Jika three gagal diimpor / WebGL tidak ada -> fallback CSS tetap rapi.
  */
 
+// URL Vite (string pada SSR; tidak menyentuh DOM). Nama file sesuai kontrak.
+import dayUrl from '~/assets/textures/earth-day.jpg?url'
+import nightUrl from '~/assets/textures/earth-night.jpg?url'
+import topoUrl from '~/assets/textures/earth-topology.jpg?url'
+import waterUrl from '~/assets/textures/earth-water.jpg?url'
+import cloudsUrl from '~/assets/textures/earth-clouds.jpg?url'
+
 import {
-  defineOptions,
   onMounted,
   onUnmounted,
   ref,
   useAttrs,
-  withDefaults,
-  defineProps,
 } from 'vue'
 
 defineOptions({
@@ -29,30 +40,21 @@ type Variant = 'hero' | 'orbital' | 'mini'
 interface VariantConfig {
   stars: number
   dust: number
-  orbits: number
-  planetRadius: number
-  planetDetail: number
+  radius: number
+  segW: number
+  segH: number
   cameraZ: number
+  arcs: number
 }
 
-const props = withDefaults(
-  defineProps<{ variant?: Variant }>(),
-  { variant: 'hero' },
-)
-
-// class (dan atribut lain) dari pemakai diteruskan ke elemen akar
+const props = withDefaults(defineProps<{ variant?: Variant }>(), { variant: 'hero' })
 const attrs = useAttrs()
 
 const CONFIG: Record<Variant, VariantConfig> = {
-  hero: { stars: 1800, dust: 320, orbits: 3, planetRadius: 1.65, planetDetail: 3, cameraZ: 7.4 },
-  orbital: { stars: 1500, dust: 240, orbits: 3, planetRadius: 1.35, planetDetail: 3, cameraZ: 7.0 },
-  mini: { stars: 1200, dust: 140, orbits: 1, planetRadius: 1.15, planetDetail: 2, cameraZ: 6.6 },
+  hero: { stars: 1900, dust: 300, radius: 1.5, segW: 64, segH: 48, cameraZ: 6.4, arcs: 28 },
+  orbital: { stars: 1600, dust: 240, radius: 1.35, segW: 56, segH: 40, cameraZ: 6.2, arcs: 22 },
+  mini: { stars: 1500, dust: 140, radius: 1.1, segW: 40, segH: 28, cameraZ: 5.6, arcs: 20 },
 }
-
-const containerRef = ref<HTMLElement | null>(null)
-const canvasHostRef = ref<HTMLElement | null>(null)
-const webglReady = ref(false)
-const reducedMotion = ref(false)
 
 const PALETTE = {
   star: 0xe8ecf8,
@@ -60,27 +62,83 @@ const PALETTE = {
   violet: 0xa78bfa,
 }
 
-/* ---------- state runtime (disimpan agar bisa dibersihkan saat unmount) ---------- */
+const containerRef = ref<HTMLElement | null>(null)
+const canvasHostRef = ref<HTMLElement | null>(null)
+const webglReady = ref(false)
+const reducedMotion = ref(false)
+
+/* -------------------------------------------------------------------------- */
+/*  DATA KOTA & RUTE                                                           */
+/* -------------------------------------------------------------------------- */
+
+const CITIES: Array<{ lat: number; lon: number }> = [
+  { lat: -6.21, lon: 106.85 }, // Jakarta
+  { lat: 1.35, lon: 103.82 },  // Singapore
+  { lat: 35.68, lon: 139.69 }, // Tokyo
+  { lat: 51.51, lon: -0.13 },  // London
+  { lat: 40.71, lon: -74.01 }, // New York
+  { lat: 37.77, lon: -122.42 },// San Francisco
+  { lat: -33.87, lon: 151.21 },// Sydney
+  { lat: 25.20, lon: 55.27 },  // Dubai
+  { lat: 19.08, lon: 72.88 },  // Mumbai
+  { lat: -23.55, lon: -46.63 },// São Paulo
+  { lat: 6.52, lon: 3.38 },    // Lagos
+  { lat: 50.11, lon: 8.68 },   // Frankfurt
+  { lat: 37.57, lon: 126.98 }, // Seoul
+  { lat: 22.32, lon: 114.17 }, // Hong Kong
+  { lat: 55.76, lon: 37.62 },  // Moscow
+  { lat: -26.20, lon: 28.05 }, // Johannesburg
+]
+
+// 28 rute masuk akal (index城市). Dipangkas sesuai config.arcs untuk mini.
+const ROUTES: Array<[number, number]> = [
+  [0, 1], [0, 2], [1, 2], [1, 13], [2, 12], [2, 4], [2, 5],
+  [3, 4], [3, 11], [3, 9], [3, 14], [4, 5], [4, 9], [5, 6],
+  [1, 7], [1, 8], [7, 8], [7, 3], [7, 14], [8, 10], [9, 10],
+  [10, 15], [11, 14], [13, 2], [12, 13], [6, 1], [14, 2], [15, 7],
+]
+
+/* -------------------------------------------------------------------------- */
+/*  STATE RUNTIME                                                              */
+/* -------------------------------------------------------------------------- */
+
 let THREE: any = null
 let renderer: any = null
 let scene: any = null
 let camera: any = null
 let world: any = null
+let tiltGroup: any = null
+let earthSpin: any = null
+
 let starField: any = null
 let starMaterial: any = null
 let dustField: any = null
-let planet: any = null
-let planetGlow: any = null
+let sunLight: any = null
 
-interface OrbitNode {
-  group: any
-  satellite: any
-  rx: number
-  rz: number
+let earthMesh: any = null
+let earthUniforms: any = null
+let fallbackWire: any = null
+let clouds: any = null
+
+let networkGroup: any = null
+let nodePoints: any = null
+let pulsePoints: any = null
+let pulsePositions: Float32Array | null = null
+
+interface ArcData {
+  pts: any[] // Vector3[]
   speed: number
-  phase: number
+  offset: number
 }
-let orbitNodes: OrbitNode[] = []
+interface RingData { mesh: any; base: number; phase: number }
+
+let arcs: ArcData[] = []
+let rings: RingData[] = []
+let cityVectors: any[] = []
+
+const sunDir: any = { x: 0, y: 0, z: 0, copy(v: any) { this.x = v.x; this.y = v.y; this.z = v.z; return this }, normalize() { const l = Math.hypot(this.x, this.y, this.z) || 1; this.x /= l; this.y /= l; this.z /= l; return this }, set(x: number, y: number, z: number) { this.x = x; this.y = y; this.z = z; return this } }
+let sunAngle = 0.6
+
 let disposables: Array<{ dispose(): void }> = []
 
 let resizeObserver: ResizeObserver | null = null
@@ -113,6 +171,175 @@ function supportsWebGL(): boolean {
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/*  SHADER SOURCE                                                              */
+/* -------------------------------------------------------------------------- */
+
+const EARTH_VERT = /* glsl */ `
+  varying vec2 vUv;
+  varying vec3 vWorldNormal;
+  varying vec3 vWorldPos;
+  void main() {
+    vUv = uv;
+    vWorldNormal = normalize(mat3(modelMatrix) * normal);
+    vec4 wp = modelMatrix * vec4(position, 1.0);
+    vWorldPos = wp.xyz;
+    gl_Position = projectionMatrix * viewMatrix * wp;
+  }
+`
+
+const EARTH_FRAG = /* glsl */ `
+  uniform sampler2D uDay;
+  uniform sampler2D uNight;
+  uniform sampler2D uTopo;
+  uniform sampler2D uWater;
+  uniform vec3 uSunDirection;
+  uniform float uTexel;
+  varying vec2 vUv;
+  varying vec3 vWorldNormal;
+  varying vec3 vWorldPos;
+
+  vec3 srgbToLinear(vec3 c) { return pow(c, vec3(2.2)); }
+  vec3 linearToSrgb(vec3 c) { return pow(c, vec3(1.0 / 2.2)); }
+
+  void main() {
+    vec3 N = normalize(vWorldNormal);
+    vec3 L = normalize(uSunDirection);
+    vec3 V = normalize(cameraPosition - vWorldPos);
+
+    // Topografi -> normal kasar (bump) lewat turunan tekstur.
+    vec3 T = normalize(cross(vec3(0.0, 1.0, 0.0), N) + vec3(1e-5));
+    vec3 B = cross(N, T);
+    float hL = texture2D(uTopo, vUv - vec2(uTexel, 0.0)).r;
+    float hR = texture2D(uTopo, vUv + vec2(uTexel, 0.0)).r;
+    float hD = texture2D(uTopo, vUv - vec2(0.0, uTexel)).r;
+    float hU = texture2D(uTopo, vUv + vec2(0.0, uTexel)).r;
+    vec3 Nb = normalize(N - ((hR - hL) * T + (hU - hD) * B) * 0.55);
+
+    float ndl = dot(Nb, L);
+    float day = smoothstep(-0.18, 0.28, ndl); // terminator lembut
+
+    vec3 dayCol = srgbToLinear(texture2D(uDay, vUv).rgb);
+    vec3 nightCol = srgbToLinear(texture2D(uNight, vUv).rgb);
+
+    // Siang: Blue Marble + pencahayaan diffuse.
+    float diffuse = clamp(ndl, 0.0, 1.0);
+    vec3 lit = dayCol * (0.16 + 0.92 * diffuse);
+
+    // Specular pada laut (water mask).
+    float water = smoothstep(0.32, 0.75, texture2D(uWater, vUv).r);
+    vec3 H = normalize(L + V);
+    float spec = pow(max(dot(Nb, H), 0.0), 70.0);
+    vec3 specCol = vec3(0.55, 0.78, 1.0) * spec * water * day * 1.2;
+
+    // Malam: city lights menyala.
+    vec3 city = nightCol * 1.75;
+    vec3 nightAmbient = vec3(0.010, 0.018, 0.045);
+    vec3 nightSide = city + nightAmbient;
+
+    vec3 color = mix(nightSide, lit + specCol, day);
+
+    // Glow tipis di terminator / tepi.
+    float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0) * day;
+    color += vec3(0.10, 0.28, 0.42) * rim * 0.55;
+
+    gl_FragColor = vec4(linearToSrgb(color), 1.0);
+  }
+`
+
+const ATMO_VERT = /* glsl */ `
+  varying vec3 vViewNormal;
+  varying vec3 vViewPos;
+  void main() {
+    vViewNormal = normalize(normalMatrix * normal);
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    vViewPos = mv.xyz;
+    gl_Position = projectionMatrix * mv;
+  }
+`
+
+const ATMO_FRAG = /* glsl */ `
+  uniform vec3 uColorA;
+  uniform vec3 uColorB;
+  uniform float uPower;
+  uniform float uIntensity;
+  varying vec3 vViewNormal;
+  varying vec3 vViewPos;
+  void main() {
+    vec3 V = normalize(-vViewPos);
+    // BackSide: normal menjauhi kamera -> 1+dot tinggi hanya di siluet.
+    float f = clamp(1.0 + dot(normalize(vViewNormal), V), 0.0, 1.0);
+    float rim = pow(f, uPower);
+    vec3 col = mix(uColorA, uColorB, clamp(vViewNormal.y * 0.5 + 0.5, 0.0, 1.0));
+    gl_FragColor = vec4(col, 1.0) * rim * uIntensity;
+  }
+`
+
+/* -------------------------------------------------------------------------- */
+/*  HELPERS GEOMETRI                                                           */
+/* -------------------------------------------------------------------------- */
+
+function slerpUnit(a: any, b: any, t: number) {
+  const dot = Math.max(-1, Math.min(1, a.dot(b)))
+  const omega = Math.acos(dot)
+  if (omega < 1e-4) return a.clone().lerp(b, t).normalize()
+  const so = Math.sin(omega)
+  return a.clone()
+    .multiplyScalar(Math.sin((1 - t) * omega) / so)
+    .add(b.clone().multiplyScalar(Math.sin(t * omega) / so))
+    .normalize()
+}
+
+function latLonToVector3(lat: number, lon: number, radius: number) {
+  const phi = (90 - lat) * (Math.PI / 180)
+  const theta = (lon + 180) * (Math.PI / 180)
+  return new THREE.Vector3(
+    -(radius * Math.sin(phi) * Math.cos(theta)),
+    radius * Math.cos(phi),
+    radius * Math.sin(phi) * Math.sin(theta),
+  )
+}
+
+function makeGlowSprite() {
+  const c = document.createElement('canvas')
+  c.width = c.height = 64
+  const ctx = c.getContext('2d')!
+  const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
+  g.addColorStop(0, 'rgba(255,255,255,1)')
+  g.addColorStop(0.25, 'rgba(190,244,255,0.9)')
+  g.addColorStop(1, 'rgba(110,231,249,0)')
+  ctx.fillStyle = g
+  ctx.fillRect(0, 0, 64, 64)
+  return track(new THREE.CanvasTexture(c))
+}
+
+function makeSolidTexture(r: number, g: number, b: number) {
+  const tex = track(new THREE.DataTexture(new Uint8Array([r, g, b, 255]), 1, 1, THREE.RGBAFormat))
+  tex.needsUpdate = true
+  return tex
+}
+
+function loadTexture(url: string): Promise<any> {
+  return new Promise((resolve) => {
+    const loader = new THREE.TextureLoader()
+    loader.load(
+      url,
+      (t: any) => {
+        if (renderer?.capabilities?.getMaxAnisotropy) {
+          t.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy())
+        }
+        resolve(t)
+      },
+      undefined,
+      () => resolve(null),
+    )
+  })
+}
+
+/* -------------------------------------------------------------------------- */
+/*  PEMBANGUNAN OBJEK                                                          */
+/* -------------------------------------------------------------------------- */
+
 function createStarfield(count: number, isDust = false) {
   const geometry = track(new THREE.BufferGeometry())
   const positions = new Float32Array(count * 3)
@@ -125,17 +352,14 @@ function createStarfield(count: number, isDust = false) {
 
   for (let i = 0; i < count; i++) {
     const i3 = i * 3
-
     if (isDust) {
-      // Debu antariksa: awan pipih dekat planet
-      const r = 2.4 + Math.random() * 4.6
+      const r = 2.2 + Math.random() * 4.4
       const theta = Math.random() * Math.PI * 2
       const phi = (Math.random() - 0.5) * 0.9
       positions[i3] = Math.cos(theta) * Math.cos(phi) * r
-      positions[i3 + 1] = Math.sin(phi) * r * 0.6
+      positions[i3 + 1] = Math.sin(phi) * r * 0.55
       positions[i3 + 2] = Math.sin(theta) * Math.cos(phi) * r
     } else {
-      // Bintang: kulit bola besar di sekeliling kamera
       const r = 12 + Math.random() * 26
       const theta = Math.random() * Math.PI * 2
       const u = Math.random() * 2 - 1
@@ -156,151 +380,287 @@ function createStarfield(count: number, isDust = false) {
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
 
-  const material = track(
-    new THREE.PointsMaterial({
-      size: isDust ? 0.055 : 0.085,
-      sizeAttenuation: true,
-      vertexColors: true,
-      transparent: true,
-      opacity: isDust ? 0.55 : 0.9,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-    }),
-  )
+  const material = track(new THREE.PointsMaterial({
+    size: isDust ? 0.055 : 0.085,
+    sizeAttenuation: true,
+    vertexColors: true,
+    transparent: true,
+    opacity: isDust ? 0.5 : 0.9,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  }))
 
   const points = new THREE.Points(geometry, material)
   points.frustumCulled = false
   return { points, material }
 }
 
-function createPlanet(radius: number, detail: number) {
-  const group = new THREE.Group()
+function createEarth(cfg: VariantConfig) {
+  // Material biru + wireframe sebagai fallback (diganti saat tekstur termuat).
+  const geo = track(new THREE.SphereGeometry(cfg.radius, cfg.segW, cfg.segH))
+  const mat = track(new THREE.MeshStandardMaterial({
+    color: 0x14306b,
+    emissive: 0x0a1a3a,
+    emissiveIntensity: 0.55,
+    metalness: 0.12,
+    roughness: 0.85,
+  }))
+  earthMesh = new THREE.Mesh(geo, mat)
+  earthSpin.add(earthMesh)
 
-  const geo = track(new THREE.IcosahedronGeometry(radius, detail))
-  const mat = track(
-    new THREE.MeshStandardMaterial({
-      color: 0x10183f,
-      emissive: 0x16265e,
-      emissiveIntensity: 0.65,
-      metalness: 0.45,
-      roughness: 0.5,
-      flatShading: true,
-    }),
-  )
-  planet = new THREE.Mesh(geo, mat)
-  group.add(planet)
+  const wireGeo = track(new THREE.SphereGeometry(cfg.radius * 1.006, 28, 20))
+  const wireMat = track(new THREE.MeshBasicMaterial({
+    color: PALETTE.cyan,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.12,
+    depthWrite: false,
+  }))
+  fallbackWire = new THREE.Mesh(wireGeo, wireMat)
+  earthSpin.add(fallbackWire)
 
-  // Jaring halus memberi kesan "tech" pada permukaan
-  const wireGeo = track(new THREE.IcosahedronGeometry(radius * 1.012, detail))
-  const wireMat = track(
-    new THREE.MeshBasicMaterial({
-      color: PALETTE.cyan,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.07,
-      depthWrite: false,
-    }),
-  )
-  group.add(new THREE.Mesh(wireGeo, wireMat))
+  // Awan: sphere transparan sedikit lebih besar; alphaMap dari tekstur NASA
+  // (grayscale fair-weather clouds) dipasang saat tekstur termuat.
+  const cloudGeo = track(new THREE.SphereGeometry(cfg.radius * 1.016, cfg.segW, cfg.segH))
+  const cloudMat = track(new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0, // tidak tampil sampai alphaMap nyata tersedia
+    alphaMap: null,
+    depthWrite: false,
+    roughness: 1,
+    metalness: 0,
+  }))
+  clouds = new THREE.Mesh(cloudGeo, cloudMat)
+  clouds.visible = false
+  earthSpin.add(clouds)
+}
 
-  // Atmosfer / glow dengan shader fresnel sederhana
-  const glowGeo = track(new THREE.SphereGeometry(radius * 1.28, 48, 48))
-  const glowMat = track(
+function createAtmosphere(cfg: VariantConfig) {
+  const makeMat = (a: number, b: number, power: number, intensity: number) => track(
     new THREE.ShaderMaterial({
       uniforms: {
-        glowColor: { value: new THREE.Color(PALETTE.cyan) },
-        glowColor2: { value: new THREE.Color(PALETTE.violet) },
+        uColorA: { value: new THREE.Color(a) },
+        uColorB: { value: new THREE.Color(b) },
+        uPower: { value: power },
+        uIntensity: { value: intensity },
       },
-      vertexShader: `
-        varying vec3 vNormal;
-        varying vec3 vPos;
-        void main() {
-          vNormal = normalize(normalMatrix * normal);
-          vPos = position;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform vec3 glowColor;
-        uniform vec3 glowColor2;
-        varying vec3 vNormal;
-        varying vec3 vPos;
-        void main() {
-          float d = max(0.0, 0.72 - dot(vNormal, vec3(0.0, 0.0, 1.0)));
-          float rim = pow(d, 3.0);
-          vec3 col = mix(glowColor, glowColor2, clamp(vPos.y * 0.35 + 0.5, 0.0, 1.0));
-          gl_FragColor = vec4(col, 1.0) * rim * 0.9;
-        }
-      `,
+      vertexShader: ATMO_VERT,
+      fragmentShader: ATMO_FRAG,
       side: THREE.BackSide,
       blending: THREE.AdditiveBlending,
       transparent: true,
       depthWrite: false,
     }),
   )
-  planetGlow = new THREE.Mesh(glowGeo, glowMat)
-  group.add(planetGlow)
 
-  return group
+  // Glow utama + halo tipis.
+  const glowGeo = track(new THREE.SphereGeometry(cfg.radius * 1.16, 48, 48))
+  const glow = new THREE.Mesh(glowGeo, makeMat(PALETTE.cyan, 0x2b6cff, 2.6, 0.95))
+  tiltGroup.add(glow)
+
+  const haloGeo = track(new THREE.SphereGeometry(cfg.radius * 1.3, 48, 48))
+  const halo = new THREE.Mesh(haloGeo, makeMat(0x2b6cff, PALETTE.violet, 3.6, 0.32))
+  tiltGroup.add(halo)
 }
 
-function createOrbits(count: number, baseRadius: number): OrbitNode[] {
-  const nodes: OrbitNode[] = []
+function createNetwork(cfg: VariantConfig) {
+  networkGroup = new THREE.Group()
+  earthSpin.add(networkGroup)
 
-  for (let i = 0; i < count; i++) {
-    const group = new THREE.Group()
-    const rx = baseRadius * (1.7 + i * 0.62)
-    const rz = rx * (0.78 - i * 0.05)
+  const surfaceR = cfg.radius * 1.012
+  cityVectors = CITIES.map((c) => latLonToVector3(c.lat, c.lon, surfaceR))
 
-    const pts: number[] = []
-    const segments = 160
-    for (let a = 0; a <= segments; a++) {
-      const t = (a / segments) * Math.PI * 2
-      pts.push(Math.cos(t) * rx, 0, Math.sin(t) * rz)
+  const sprite = makeGlowSprite()
+
+  // Node: titik menyala + cincin pulsing.
+  const nodeGeo = track(new THREE.BufferGeometry())
+  const nodePos = new Float32Array(CITIES.length * 3)
+  const nodeCol = new Float32Array(CITIES.length * 3)
+  const cCyan = new THREE.Color(PALETTE.cyan)
+  const cViolet = new THREE.Color(PALETTE.violet)
+  cityVectors.forEach((v, i) => {
+    nodePos[i * 3] = v.x
+    nodePos[i * 3 + 1] = v.y
+    nodePos[i * 3 + 2] = v.z
+    const c = i % 3 === 0 ? cViolet : cCyan
+    nodeCol[i * 3] = c.r
+    nodeCol[i * 3 + 1] = c.g
+    nodeCol[i * 3 + 2] = c.b
+  })
+  nodeGeo.setAttribute('position', new THREE.BufferAttribute(nodePos, 3))
+  nodeGeo.setAttribute('color', new THREE.BufferAttribute(nodeCol, 3))
+  const nodeMat = track(new THREE.PointsMaterial({
+    size: 0.085,
+    map: sprite,
+    vertexColors: true,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    sizeAttenuation: true,
+  }))
+  nodePoints = new THREE.Points(nodeGeo, nodeMat)
+  networkGroup.add(nodePoints)
+
+  rings = []
+  const ringGeo = track(new THREE.RingGeometry(0.032, 0.046, 24))
+  cityVectors.forEach((v, i) => {
+    const ringMat = track(new THREE.MeshBasicMaterial({
+      color: i % 3 === 0 ? PALETTE.violet : PALETTE.cyan,
+      transparent: true,
+      opacity: 0.42,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }))
+    const ring = new THREE.Mesh(ringGeo, ringMat)
+    ring.position.copy(v).multiplyScalar(1.004)
+    ring.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 0, 1),
+      v.clone().normalize(),
+    )
+    networkGroup.add(ring)
+    rings.push({ mesh: ring, base: 1 + (i % 3) * 0.15, phase: i * 0.7 })
+  })
+
+  // Busur great-circle + pulse cahaya bergerak.
+  arcs = []
+  const routeCount = Math.min(ROUTES.length, cfg.arcs)
+  for (let i = 0; i < routeCount; i++) {
+    const [ia, ib] = ROUTES[i]
+    const va = cityVectors[ia].clone().normalize()
+    const vb = cityVectors[ib].clone().normalize()
+    const angle = va.angleTo(vb)
+    const bulge = 0.12 + angle * 0.2
+    const segments = 40
+    const pts: any[] = []
+    for (let s = 0; s <= segments; s++) {
+      const t = s / segments
+      const dir = slerpUnit(va, vb, t)
+      const r = cfg.radius * (1 + Math.sin(Math.PI * t) * bulge)
+      pts.push(dir.multiplyScalar(r))
     }
 
     const g = track(new THREE.BufferGeometry())
-    g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3))
-    const lineMat = track(
-      new THREE.LineBasicMaterial({
-        color: i % 2 === 0 ? PALETTE.cyan : PALETTE.violet,
-        transparent: true,
-        opacity: 0.26 - i * 0.04,
-        depthWrite: false,
-      }),
-    )
-    group.add(new THREE.LineLoop(g, lineMat))
+    g.setAttribute('position', new THREE.Float32BufferAttribute(
+      pts.flatMap((p) => [p.x, p.y, p.z]), 3,
+    ))
+    const lineMat = track(new THREE.LineBasicMaterial({
+      color: i % 2 === 0 ? PALETTE.cyan : PALETTE.violet,
+      transparent: true,
+      opacity: props.variant === 'mini' ? 0.16 : 0.22,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    }))
+    networkGroup.add(new THREE.Line(g, lineMat))
 
-    const satGeo = track(new THREE.SphereGeometry(0.075, 14, 14))
-    const satMat = track(
-      new THREE.MeshBasicMaterial({
-        color: i % 2 === 0 ? PALETTE.cyan : PALETTE.star,
-      }),
-    )
-    const satellite = new THREE.Mesh(satGeo, satMat)
-    satellite.position.set(rx, 0, 0)
-    group.add(satellite)
-
-    group.rotation.x = 0.42 + i * 0.17
-    group.rotation.y = i * 0.55
-    scene.add(group)
-
-    nodes.push({
-      group,
-      satellite,
-      rx,
-      rz,
-      speed: 0.24 - i * 0.06,
-      phase: i * 1.9,
-    })
+    arcs.push({ pts, speed: 0.14 + Math.random() * 0.12, offset: (i * 0.37) % 1 })
   }
 
-  return nodes
+  // Satu Points untuk semua pulse (satu vertex per busur).
+  const pulseGeo = track(new THREE.BufferGeometry())
+  pulsePositions = new Float32Array(arcs.length * 3)
+  arcs.forEach((a, i) => {
+    const p = sampleArc(a, a.offset)
+    pulsePositions![i * 3] = p.x
+    pulsePositions![i * 3 + 1] = p.y
+    pulsePositions![i * 3 + 2] = p.z
+  })
+  pulseGeo.setAttribute('position', new THREE.BufferAttribute(pulsePositions, 3))
+  const pulseMat = track(new THREE.PointsMaterial({
+    size: 0.15,
+    map: sprite,
+    color: 0xa8f4ff,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    sizeAttenuation: true,
+  }))
+  pulsePoints = new THREE.Points(pulseGeo, pulseMat)
+  networkGroup.add(pulsePoints)
 }
+
+function sampleArc(arc: ArcData, t: number) {
+  const f = Math.max(0, Math.min(0.99999, t))
+  const idx = Math.floor(f * (arc.pts.length - 1))
+  return arc.pts[idx].clone().lerp(arc.pts[idx + 1], f * (arc.pts.length - 1) - idx)
+}
+
+/* -------------------------------------------------------------------------- */
+/*  TEKSTUR -> SHADER MATERIAL                                                 */
+/* -------------------------------------------------------------------------- */
+
+async function upgradeEarthMaterials() {
+  const results = await Promise.all([
+    loadTexture(dayUrl),
+    loadTexture(nightUrl),
+    loadTexture(topoUrl),
+    loadTexture(waterUrl),
+    loadTexture(cloudsUrl),
+  ])
+  if (isDisposed) {
+    results.forEach((t) => t?.dispose?.())
+    return
+  }
+
+  const [day, night, topo, water, cloudTex] = results
+
+  // Awan memakai tekstur NASA nyata sebagai alphaMap (bukan prosedural).
+  if (cloudTex && clouds) {
+    track(cloudTex)
+    clouds.material.alphaMap = cloudTex
+    clouds.material.opacity = 0.9
+    clouds.material.needsUpdate = true
+    clouds.visible = true
+  }
+
+  if (!earthMesh) return
+
+  // Tanpa day/night: pertahankan fallback biru + wireframe.
+  if (!day || !night) {
+    [day, night, topo, water].forEach((t) => t?.dispose?.())
+    return
+  }
+
+  // Bersihkan material fallback.
+  if (fallbackWire) {
+    earthSpin.remove(fallbackWire)
+    fallbackWire = null
+  }
+  const oldMat = earthMesh.material
+  earthMesh.material = null
+  oldMat?.dispose?.()
+
+  const topoTex = topo ?? makeSolidTexture(0, 0, 0)
+  const waterTex = water ?? makeSolidTexture(0, 0, 0)
+  if (topo) track(topo)
+  if (water) track(water)
+  track(day)
+  track(night)
+
+  earthUniforms = {
+    uDay: { value: day },
+    uNight: { value: night },
+    uTopo: { value: topoTex },
+    uWater: { value: waterTex },
+    uSunDirection: { value: new THREE.Vector3(sunDir.x, sunDir.y, sunDir.z) },
+    uTexel: { value: 1 / 1024 },
+  }
+
+  const shaderMat = track(new THREE.ShaderMaterial({
+    uniforms: earthUniforms,
+    vertexShader: EARTH_VERT,
+    fragmentShader: EARTH_FRAG,
+  }))
+  earthMesh.material = shaderMat
+}
+
+/* -------------------------------------------------------------------------- */
+/*  INISIALISASI                                                               */
+/* -------------------------------------------------------------------------- */
 
 function applyFit(aspect: number) {
   if (!world) return
-  // Mengecilkan dunia pada container sempit agar orbit tidak terpotong
   const fit = Math.min(1, Math.max(0.55, aspect / 1.25))
   world.scale.setScalar(fit)
 }
@@ -330,18 +690,17 @@ function initScene(threeModule: any) {
   if (THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace
   host.appendChild(renderer.domElement)
 
-  // Cahaya: ambient + point (cyan) + directional (ungu) + fill
-  const ambient = new THREE.AmbientLight(0x93a7dd, 0.8)
-  const key = new THREE.PointLight(PALETTE.cyan, 30, 60)
-  key.position.set(5, 3.5, 6)
-  const rim = new THREE.DirectionalLight(PALETTE.violet, 1.6)
-  rim.position.set(-5, -2, -4)
-  const fill = new THREE.PointLight(PALETTE.violet, 14, 40)
+  // Cahaya: ambient rendah + matahari (mengikuti sunDirection) + fill.
+  const ambient = new THREE.AmbientLight(0x2a3a66, 0.45)
+  sunLight = new THREE.DirectionalLight(0xfff3e0, 2.1)
+  const fill = new THREE.PointLight(PALETTE.violet, 8, 40)
   fill.position.set(-4, 2, 3)
-  for (const light of [ambient, key, rim, fill]) {
+  for (const light of [ambient, sunLight, fill]) {
     scene.add(light)
     if (typeof light.dispose === 'function') track(light)
   }
+  sunDir.set(Math.cos(sunAngle), 0.18, Math.sin(sunAngle)).normalize()
+  sunLight.position.set(sunDir.x * 8, sunDir.y * 8, sunDir.z * 8)
 
   world = new THREE.Group()
   scene.add(world)
@@ -355,8 +714,17 @@ function initScene(threeModule: any) {
   dustField = dust.points
   world.add(dustField)
 
-  world.add(createPlanet(cfg.planetRadius, cfg.planetDetail))
-  orbitNodes = createOrbits(cfg.orbits, cfg.planetRadius)
+  // Bumi: kemiringan sumbu ~23.4 derajat.
+  tiltGroup = new THREE.Group()
+  tiltGroup.rotation.z = 23.4 * (Math.PI / 180)
+  world.add(tiltGroup)
+
+  earthSpin = new THREE.Group()
+  tiltGroup.add(earthSpin)
+
+  createEarth(cfg)
+  createAtmosphere(cfg)
+  createNetwork(cfg)
 
   applyFit(width / height)
 
@@ -376,10 +744,14 @@ function initScene(threeModule: any) {
   intersectionObserver.observe(container)
 
   webglReady.value = true
-  start() // tick pertama merender; reduced-motion berhenti setelah satu frame
+  start()
+  void upgradeEarthMaterials()
 }
 
-/* ---------- event ---------- */
+/* -------------------------------------------------------------------------- */
+/*  EVENT                                                                      */
+/* -------------------------------------------------------------------------- */
+
 function handlePointerMove(e: PointerEvent) {
   const container = containerRef.value
   if (!container) return
@@ -436,7 +808,10 @@ function handleResize() {
   if (reducedMotion.value) start()
 }
 
-/* ---------- loop ---------- */
+/* -------------------------------------------------------------------------- */
+/*  LOOP                                                                       */
+/* -------------------------------------------------------------------------- */
+
 function tick(now: number) {
   if (!running || isDisposed || !renderer) return
   rafId = requestAnimationFrame(tick)
@@ -444,7 +819,6 @@ function tick(now: number) {
   const dt = Math.min(0.05, (now - lastTime) / 1000 || 0)
   lastTime = now
 
-  // Parallax pointer yang dihaluskan
   const ease = Math.min(1, dt * 4)
   pointer.x += (pointerTarget.x - pointer.x) * ease
   pointer.y += (pointerTarget.y - pointer.y) * ease
@@ -452,31 +826,49 @@ function tick(now: number) {
   if (!reducedMotion.value) {
     const t = now * 0.001
 
-    if (planet) {
-      planet.rotation.y += dt * 0.22
-      planet.rotation.x += dt * 0.05
-    }
-    if (planetGlow) planetGlow.rotation.y -= dt * 0.08
+    // Rotasi Bumi + awan lebih cepat.
+    if (earthSpin) earthSpin.rotation.y += dt * 0.2
+    if (clouds) clouds.rotation.y += dt * 0.06
 
+    // Siklus siang/malam: matahari berputar perlahan.
+    sunAngle += dt * 0.055
+    sunDir.set(Math.cos(sunAngle), 0.18, Math.sin(sunAngle)).normalize()
+    if (sunLight) sunLight.position.set(sunDir.x * 8, sunDir.y * 8, sunDir.z * 8)
+    if (earthUniforms) earthUniforms.uSunDirection.value.set(sunDir.x, sunDir.y, sunDir.z)
+
+    // Latar.
     if (starField) {
       starField.rotation.y = t * 0.008 + pointer.x * 0.12
       starField.rotation.x = -pointer.y * 0.08
     }
-    if (starMaterial) {
-      starMaterial.opacity = 0.72 + Math.sin(t * 1.6) * 0.16 // kedip
-    }
+    if (starMaterial) starMaterial.opacity = 0.72 + Math.sin(t * 1.6) * 0.16
     if (dustField) {
       dustField.rotation.y = -t * 0.018
       dustField.rotation.x = pointer.y * 0.04
     }
 
-    for (let i = 0; i < orbitNodes.length; i++) {
-      const o = orbitNodes[i]
-      const a = t * o.speed + o.phase
-      o.satellite.position.set(Math.cos(a) * o.rx, 0, Math.sin(a) * o.rz)
-      o.group.rotation.z = Math.sin(t * 0.22 + i) * 0.06
+    // Cincin node berdenyut.
+    for (let i = 0; i < rings.length; i++) {
+      const r = rings[i]
+      const p = (t * 0.6 + r.phase) % 1
+      const s = r.base * (1 + p * 0.9)
+      r.mesh.scale.setScalar(s)
+      r.mesh.material.opacity = 0.42 * (1 - p)
     }
 
+    // Pulse cahaya sepanjang busur.
+    if (pulsePositions) {
+      for (let i = 0; i < arcs.length; i++) {
+        const a = arcs[i]
+        const p = sampleArc(a, (t * a.speed + a.offset) % 1)
+        pulsePositions[i * 3] = p.x
+        pulsePositions[i * 3 + 1] = p.y
+        pulsePositions[i * 3 + 2] = p.z
+      }
+      if (pulsePoints) pulsePoints.geometry.attributes.position.needsUpdate = true
+    }
+
+    // Parallax pointer.
     if (camera) {
       camera.position.x = pointer.x * 0.85
       camera.position.y = -pointer.y * 0.6
@@ -502,9 +894,12 @@ function stop() {
   rafId = 0
 }
 
-/* ---------- siklus hidup ---------- */
+/* -------------------------------------------------------------------------- */
+/*  SIKLUS HIDUP                                                               */
+/* -------------------------------------------------------------------------- */
+
 onMounted(async () => {
-  // SSR aman: seluruh akses window/document ada di dalam onMounted
+  // SSR aman: seluruh akses window/document ada di dalam onMounted.
   if (typeof window === 'undefined') return
 
   if (typeof window.matchMedia === 'function') {
@@ -516,12 +911,12 @@ onMounted(async () => {
   if (!supportsWebGL()) return // biarkan fallback CSS tampil
 
   try {
-    // @ts-ignore -- 'three' opsional; fallback CSS menutupi ketiadaannya
+    // @ts-ignore -- 'three' opsional; fallback CSS menutupi ketiadaannya.
     const threeModule = await import('three')
     if (isDisposed || !threeModule) return
     initScene(threeModule)
   } catch {
-    // Impor gagal -> fallback CSS tetap terlihat
+    // Impor gagal -> fallback CSS tetap terlihat.
   }
 })
 
@@ -544,7 +939,9 @@ onUnmounted(() => {
     try { item.dispose() } catch { /* abaikan */ }
   }
   disposables = []
-  orbitNodes = []
+  arcs = []
+  rings = []
+  cityVectors = []
 
   if (renderer) {
     try { renderer.dispose() } catch { /* abaikan */ }
@@ -556,11 +953,20 @@ onUnmounted(() => {
   scene = null
   camera = null
   world = null
+  tiltGroup = null
+  earthSpin = null
   starField = null
   starMaterial = null
   dustField = null
-  planet = null
-  planetGlow = null
+  sunLight = null
+  earthMesh = null
+  earthUniforms = null
+  fallbackWire = null
+  clouds = null
+  networkGroup = null
+  nodePoints = null
+  pulsePoints = null
+  pulsePositions = null
   THREE = null
 })
 </script>
@@ -589,6 +995,15 @@ onUnmounted(() => {
         <div class="space-fallback__orbit space-fallback__orbit--two"></div>
         <div class="space-fallback__orbit space-fallback__orbit--three"></div>
         <div class="space-fallback__planet"></div>
+        <div class="space-fallback__net">
+          <span class="space-fallback__link space-fallback__link--a"></span>
+          <span class="space-fallback__link space-fallback__link--b"></span>
+          <span class="space-fallback__link space-fallback__link--c"></span>
+          <span class="space-fallback__node space-fallback__node--a"></span>
+          <span class="space-fallback__node space-fallback__node--b"></span>
+          <span class="space-fallback__node space-fallback__node--c"></span>
+          <span class="space-fallback__node space-fallback__node--d"></span>
+        </div>
       </div>
     </div>
   </div>
@@ -596,7 +1011,7 @@ onUnmounted(() => {
 
 <style scoped>
 .space-scene {
-  /* Grid membuat semua layer bertumpuk tanpa perlu position:relative,
+  /* Grid membuat semua layer bertumpuk tanpa position:relative,
      sehingga class 'absolute inset-0' dari pemakai tetap bekerja. */
   display: grid;
   width: 100%;
@@ -769,14 +1184,14 @@ onUnmounted(() => {
   border-radius: 50%;
   overflow: hidden;
   background:
-    radial-gradient(circle at 30% 26%, rgba(110, 231, 249, .55), transparent 40%),
-    radial-gradient(circle at 70% 72%, rgba(167, 139, 250, .5), transparent 46%),
-    radial-gradient(circle at 48% 45%, #1a2454 0%, #0c1231 55%, #05060d 100%);
+    radial-gradient(circle at 30% 26%, rgba(110, 231, 249, .5), transparent 42%),
+    radial-gradient(circle at 74% 72%, rgba(167, 139, 250, .38), transparent 48%),
+    radial-gradient(circle at 46% 44%, #16427a 0%, #0c1e46 52%, #05060d 100%);
   box-shadow:
-    inset -16px -12px 38px rgba(0, 0, 0, .78),
-    inset 10px 8px 30px rgba(110, 231, 249, .08),
-    0 0 48px rgba(110, 231, 249, .22),
-    0 0 110px rgba(167, 139, 250, .16);
+    inset -16px -12px 38px rgba(0, 0, 0, .82),
+    inset 10px 8px 30px rgba(110, 231, 249, .1),
+    0 0 48px rgba(110, 231, 249, .24),
+    0 0 110px rgba(167, 139, 250, .18);
   animation: planet-spin 28s linear infinite;
 }
 .space-fallback__planet::before {
@@ -801,6 +1216,36 @@ onUnmounted(() => {
   background: radial-gradient(circle at 33% 27%, rgba(255, 255, 255, .16), transparent 34%);
   mix-blend-mode: screen;
 }
+
+/* Jaringan dekoratif di fallback. */
+.space-fallback__net {
+  position: absolute;
+  inset: 0;
+}
+.space-fallback__link {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(110, 231, 249, .45), rgba(167, 139, 250, .35));
+  transform-origin: left center;
+  opacity: .65;
+  animation: link-pulse 4s ease-in-out infinite alternate;
+}
+.space-fallback__link--a { top: 30%; left: 28%; width: 46%; transform: rotate(18deg); }
+.space-fallback__link--b { top: 62%; left: 30%; width: 40%; transform: rotate(-24deg); animation-delay: -1.4s; }
+.space-fallback__link--c { top: 44%; left: 22%; width: 56%; transform: rotate(-6deg); animation-delay: -2.6s; }
+.space-fallback__node {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6ee7f9;
+  box-shadow: 0 0 8px #6ee7f9, 0 0 18px rgba(110, 231, 249, .7);
+  animation: node-pulse 3s ease-in-out infinite alternate;
+}
+.space-fallback__node--a { top: 30%; left: 28%; }
+.space-fallback__node--b { top: 44%; left: 76%; background: #a78bfa; box-shadow: 0 0 8px #a78bfa, 0 0 18px rgba(167, 139, 250, .7); animation-delay: -.8s; }
+.space-fallback__node--c { top: 62%; left: 32%; animation-delay: -1.6s; }
+.space-fallback__node--d { top: 33%; left: 66%; background: #e8ecf8; box-shadow: 0 0 8px #e8ecf8; animation-delay: -2.2s; }
 
 /* --------------------------- KEYFRAMES --------------------------- */
 @keyframes star-drift {
@@ -830,6 +1275,14 @@ onUnmounted(() => {
 @keyframes bands-slide {
   from { transform: translateX(-12%); }
   to { transform: translateX(12%); }
+}
+@keyframes link-pulse {
+  from { opacity: .3; }
+  to { opacity: .8; }
+}
+@keyframes node-pulse {
+  from { opacity: .5; transform: scale(.85); }
+  to { opacity: 1; transform: scale(1.15); }
 }
 
 /* --------------------------- REDUCED MOTION --------------------------- */
