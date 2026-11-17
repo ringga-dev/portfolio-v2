@@ -2,7 +2,6 @@
   <div>
     <section style="position: relative; min-height: min(92dvh, 900px); display: flex; align-items: center; overflow: hidden;">
       <SpaceScene variant="hero" style="position: absolute; inset: 0; z-index: 0;" />
-      <div class="scanline" aria-hidden="true"></div>
       <div class="wrap" style="position: relative; z-index: 1; padding-block: 96px 64px;">
         <p class="eyebrow rise-in">{{ profile.title }} · {{ profile.location }}</p>
         <h1 class="rise-in" style="font-size: clamp(52px, 11vw, 150px); max-width: 15ch; margin-top: 20px;">

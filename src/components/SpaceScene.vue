@@ -136,7 +136,7 @@ let rings: RingData[] = []
 let cityVectors: any[] = []
 
 const sunDir: any = { x: 0, y: 0, z: 0, copy(v: any) { this.x = v.x; this.y = v.y; this.z = v.z; return this }, normalize() { const l = Math.hypot(this.x, this.y, this.z) || 1; this.x /= l; this.y /= l; this.z /= l; return this }, set(x: number, y: number, z: number) { this.x = x; this.y = y; this.z = z; return this } }
-let sunAngle = 0.6
+let sunAngle = Math.PI - 0.28 // matahari dari kiri-atas -> separuh Bumi malam, lampu kota terlihat
 
 let disposables: Array<{ dispose(): void }> = []
 
@@ -240,16 +240,16 @@ const EARTH_FRAG = /* glsl */ `
     // Specular dimatikan total: permukaan matte, tanpa highlight putih berkilau.
     vec3 specCol = vec3(0.0);
 
-    // Malam: city lights menyala (dinaikkan ringan, tetap tidak menusam).
-    vec3 city = nightCol * 1.2;
+    // Malam: city lights dari tekstur NASA. Cukup terang untuk terlihat,
+    // tapi tetap tipis — bukan noda putih.
+    vec3 city = nightCol * 1.55;
     vec3 nightAmbient = vec3(0.010, 0.018, 0.045);
     vec3 nightSide = city + nightAmbient;
 
     vec3 color = mix(nightSide, lit + specCol, day);
 
-    // Inner glow (rayleigh) sangat tipis di limb siang saja — tidak menutupi benua.
-    float limb = pow(1.0 - max(dot(N, V), 0.0), 6.0) * day;
-    color += vec3(0.10, 0.24, 0.40) * limb * 0.18;
+    // Tanpa specular / inner-glow tambahan: permukaan matte bersih.
+    // Atmosfer sudah ditangani oleh mesh glow di tepi siluet saja.
 
     gl_FragColor = vec4(linearToSrgb(color), 1.0);
   }
@@ -529,11 +529,11 @@ function createAtmosphere(cfg: VariantConfig) {
   // Glow utama + halo tipis. Intensity diredam agar additive blending tidak
   // menutupi permukaan Bumi dengan cyan/putih.
   const glowGeo = track(new THREE.SphereGeometry(cfg.radius * 1.16, 48, 48))
-  const glow = new THREE.Mesh(glowGeo, makeMat(PALETTE.cyan, 0x2b6cff, 2.6, 0.62))
+  const glow = new THREE.Mesh(glowGeo, makeMat(PALETTE.cyan, 0x2b6cff, 2.6, 0.42))
   tiltGroup.add(glow)
 
   const haloGeo = track(new THREE.SphereGeometry(cfg.radius * 1.3, 48, 48))
-  const halo = new THREE.Mesh(haloGeo, makeMat(0x2b6cff, PALETTE.violet, 3.6, 0.18))
+  const halo = new THREE.Mesh(haloGeo, makeMat(0x2b6cff, PALETTE.violet, 3.6, 0.10))
   tiltGroup.add(halo)
 }
 

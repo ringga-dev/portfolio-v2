@@ -196,7 +196,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-16px); } }
 @keyframes rise { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-@keyframes scan { 0% { transform: translateY(-100%); } 100% { transform: translateY(100vh); } }
 
 .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s cubic-bezier(0.2,0.7,0.2,1), transform 0.7s cubic-bezier(0.2,0.7,0.2,1); }
 .reveal.visible { opacity: 1; transform: translateY(0); }
@@ -205,22 +204,11 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .rise-in { animation: rise 0.8s cubic-bezier(0.2,0.7,0.2,1) both; }
 .float { animation: float 6s ease-in-out infinite; }
 .typed {
-  background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent));
-  background-size: 200% auto;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: shimmer 6s linear infinite;
 }
-.scanline {
-  position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: inherit;
-}
-.scanline::after {
-  content: ""; position: absolute; left: 0; right: 0; height: 120px;
-  background: linear-gradient(to bottom, transparent, rgba(110,231,249,0.06), transparent);
-  animation: scan 7s linear infinite;
-}
-
 /* progress bars in orbital style */
 .bar-track { height: 4px; border-radius: 999px; background: rgba(232,236,248,0.1); overflow: hidden; }
 .bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); box-shadow: var(--glow); transform-origin: left; animation: grow 1s cubic-bezier(0.2,0.7,0.2,1) both; }
