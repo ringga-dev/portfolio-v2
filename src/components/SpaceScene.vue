@@ -23,6 +23,16 @@ import topoUrl from '~/assets/textures/earth-topology.jpg?url'
 import waterUrl from '~/assets/textures/earth-water.jpg?url'
 import cloudsUrl from '~/assets/textures/earth-clouds.jpg?url'
 
+// Tekstur NASA nyata untuk 7 planet latar (+ cincin Saturnus).
+import mercuryUrl from '~/assets/textures/mercury.jpg?url'
+import venusUrl from '~/assets/textures/venus.jpg?url'
+import marsUrl from '~/assets/textures/mars.jpg?url'
+import jupiterUrl from '~/assets/textures/jupiter.jpg?url'
+import saturnUrl from '~/assets/textures/saturn.jpg?url'
+import saturnRingUrl from '~/assets/textures/saturn-ring.jpg?url'
+import uranusUrl from '~/assets/textures/uranus.jpg?url'
+import neptuneUrl from '~/assets/textures/neptune.jpg?url'
+
 import {
   onMounted,
   onUnmounted,
@@ -171,6 +181,7 @@ let lastTime = 0
 
 const pointer = { x: 0, y: 0 }
 const pointerTarget = { x: 0, y: 0 }
+const starTimeUniform = { value: 0 } // dipakai onBeforeCompile PointsMaterial bintang
 
 function track<T extends { dispose(): void }>(item: T): T {
   disposables.push(item)
@@ -217,7 +228,6 @@ const EARTH_FRAG = /* glsl */ `
   varying vec3 vWorldNormal;
   varying vec3 vWorldPos;
 
-  vec3 srgbToLinear(vec3 c) { return pow(c, vec3(2.2)); }
   vec3 linearToSrgb(vec3 c) { return pow(c, vec3(1.0 / 2.2)); }
 
   void main() {
@@ -237,29 +247,34 @@ const EARTH_FRAG = /* glsl */ `
     float ndl = dot(Nb, L);
     float day = smoothstep(-0.18, 0.28, ndl); // terminator lembut
 
-    vec3 dayCol = srgbToLinear(texture2D(uDay, vUv).rgb);
-    vec3 nightCol = srgbToLinear(texture2D(uNight, vUv).rgb);
+    // Tekstur warna memakai SRGBColorSpace -> GPU sudah linearisasi saat
+    // sampling (internalFormat SRGB8_ALPHA8). Jangan srgbToLinear di sini.
+    vec3 dayCol = texture2D(uDay, vUv).rgb;
+    vec3 nightCol = texture2D(uNight, vUv).rgb;
+
+    // Unsharp ringan: angkat kontras lokal, jangan sampai over-saturasi.
+    dayCol = mix(dayCol, smoothstep(0.02, 0.98, dayCol), 0.18);
 
     // Siang: Blue Marble + pencahayaan diffuse.
     float diffuse = clamp(ndl, 0.0, 1.0);
-    vec3 lit = dayCol * (0.16 + 0.92 * diffuse);
+    vec3 lit = dayCol * (0.15 + 0.85 * diffuse);
 
-    // Specular pada laut (water mask).
+    // Specular pada laut (water mask). Diredam supaya laut tidak memutih.
     float water = smoothstep(0.32, 0.75, texture2D(uWater, vUv).r);
     vec3 H = normalize(L + V);
     float spec = pow(max(dot(Nb, H), 0.0), 70.0);
-    vec3 specCol = vec3(0.55, 0.78, 1.0) * spec * water * day * 1.2;
+    vec3 specCol = vec3(0.55, 0.78, 1.0) * spec * water * day * 0.6;
 
-    // Malam: city lights menyala.
-    vec3 city = nightCol * 1.75;
+    // Malam: city lights menyala (dinaikkan ringan, tetap tidak menusam).
+    vec3 city = nightCol * 1.9;
     vec3 nightAmbient = vec3(0.010, 0.018, 0.045);
     vec3 nightSide = city + nightAmbient;
 
     vec3 color = mix(nightSide, lit + specCol, day);
 
-    // Glow tipis di terminator / tepi.
-    float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0) * day;
-    color += vec3(0.10, 0.28, 0.42) * rim * 0.55;
+    // Inner glow (rayleigh) sangat tipis di limb siang saja — tidak menutupi benua.
+    float limb = pow(1.0 - max(dot(N, V), 0.0), 6.0) * day;
+    color += vec3(0.10, 0.24, 0.40) * limb * 0.30;
 
     gl_FragColor = vec4(linearToSrgb(color), 1.0);
   }
@@ -285,9 +300,11 @@ const ATMO_FRAG = /* glsl */ `
   varying vec3 vViewPos;
   void main() {
     vec3 V = normalize(-vViewPos);
-    // BackSide: normal menjauhi kamera -> 1+dot tinggi hanya di siluet.
-    float f = clamp(1.0 + dot(normalize(vViewNormal), V), 0.0, 1.0);
-    float rim = pow(f, uPower);
+    // BackSide: normal outward menjauhi kamera. rim hanya muncul di siluet,
+    // di mana normal tegak lurus arah pandang (|dot| -> 0). Di tengah bola
+    // |dot| -> 1 sehingga glow = 0 (dulu rumus 1+dot membuat seluruh bola putih).
+    float ndv = abs(dot(normalize(vViewNormal), V));
+    float rim = pow(clamp(1.0 - ndv, 0.0, 1.0), uPower);
     vec3 col = mix(uColorA, uColorB, clamp(vViewNormal.y * 0.5 + 0.5, 0.0, 1.0));
     gl_FragColor = vec4(col, 1.0) * rim * uIntensity;
   }
@@ -337,17 +354,27 @@ function makeSolidTexture(r: number, g: number, b: number) {
   return tex
 }
 
-function loadTexture(url: string): Promise<any> {
+// Peta warna (day/night/planet) -> SRGBColorSpace; peta data (topo/water/
+// clouds alpha) -> NoColorSpace. Semua pakai mipmap + filtering anisotropik.
+function configureTexture(tex: any, isColor = true): any {
+  if (!tex) return tex
+  if (isColor && THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace
+  if (!isColor && THREE.NoColorSpace) tex.colorSpace = THREE.NoColorSpace
+  tex.generateMipmaps = true
+  if (THREE.LinearMipmapLinearFilter) tex.minFilter = THREE.LinearMipmapLinearFilter
+  if (THREE.LinearFilter) tex.magFilter = THREE.LinearFilter
+  const maxAniso = renderer?.capabilities?.getMaxAnisotropy?.() ?? 1
+  tex.anisotropy = Math.min(8, maxAniso)
+  tex.needsUpdate = true
+  return tex
+}
+
+function loadTexture(url: string, isColor = true): Promise<any> {
   return new Promise((resolve) => {
     const loader = new THREE.TextureLoader()
     loader.load(
       url,
-      (t: any) => {
-        if (renderer?.capabilities?.getMaxAnisotropy) {
-          t.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy())
-        }
-        resolve(t)
-      },
+      (t: any) => resolve(configureTexture(t, isColor)),
       undefined,
       () => resolve(null),
     )
@@ -372,7 +399,7 @@ function getRoundSprite(): any {
   g.addColorStop(1, 'rgba(255,255,255,0)')
   ctx.fillStyle = g
   ctx.fillRect(0, 0, size, size)
-  roundSprite = new THREE.CanvasTexture(canvas)
+  roundSprite = track(new THREE.CanvasTexture(canvas))
   return roundSprite
 }
 
@@ -380,6 +407,8 @@ function createStarfield(count: number, isDust = false) {
   const geometry = track(new THREE.BufferGeometry())
   const positions = new Float32Array(count * 3)
   const colors = new Float32Array(count * 3)
+  const sizes = new Float32Array(count)
+  const phases = new Float32Array(count)
 
   const white = new THREE.Color(PALETTE.star)
   const cyan = new THREE.Color(PALETTE.cyan)
@@ -411,22 +440,52 @@ function createStarfield(count: number, isDust = false) {
     colors[i3] = tmp.r * shade
     colors[i3 + 1] = tmp.g * shade
     colors[i3 + 2] = tmp.b * shade
+
+    // Distribusi ukuran alami: mayoritas kecil, sebagian sedang, sedikit besar.
+    const sizeRoll = Math.random()
+    sizes[i] = isDust
+      ? 0.6 + Math.random() * 0.4
+      : sizeRoll < 0.82 ? 0.55 + Math.random() * 0.45
+        : sizeRoll < 0.96 ? 1.0 + Math.random() * 0.5
+          : 1.5 + Math.random() * 0.7
+    phases[i] = Math.random() * Math.PI * 2
   }
 
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+  geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1))
+  geometry.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1))
 
   const material = track(new THREE.PointsMaterial({
     size: isDust ? 0.055 : 0.085,
     sizeAttenuation: true,
     vertexColors: true,
     transparent: true,
-    opacity: isDust ? 0.5 : 0.9,
+    opacity: isDust ? 0.5 : 0.88,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
     map: getRoundSprite(),
     alphaTest: 0.01,
   }))
+
+  // Ukuran per-bintang + kedip halus per-fase. Fallback aman: bila pola
+  // shader three berubah, replace tidak cocok dan bintang tetap bulat.
+  material.onBeforeCompile = (shader: any) => {
+    shader.uniforms.uStarTime = starTimeUniform
+    const vs = 'attribute float aSize;\nattribute float aPhase;\nvarying float vTwinkle;\nuniform float uStarTime;\n'
+    const patchedVs = shader.vertexShader.replace(
+      'gl_PointSize = size;',
+      'gl_PointSize = size * aSize;\n\tvTwinkle = 0.88 + 0.12 * sin(uStarTime * 1.6 + aPhase);',
+    )
+    shader.vertexShader = vs + (patchedVs === shader.vertexShader
+      ? shader.vertexShader.replace('void main() {', 'void main() {\n\tvTwinkle = 0.88 + 0.12 * sin(uStarTime * 1.6 + aPhase);')
+      : patchedVs)
+    const patchedFs = shader.fragmentShader.replace(
+      'vec4 diffuseColor = vec4( diffuse, opacity );',
+      'vec4 diffuseColor = vec4( diffuse, opacity * vTwinkle );',
+    )
+    shader.fragmentShader = 'varying float vTwinkle;\n' + patchedFs
+  }
 
   const points = new THREE.Points(geometry, material)
   points.frustumCulled = false
@@ -492,13 +551,14 @@ function createAtmosphere(cfg: VariantConfig) {
     }),
   )
 
-  // Glow utama + halo tipis.
+  // Glow utama + halo tipis. Intensity diredam agar additive blending tidak
+  // menutupi permukaan Bumi dengan cyan/putih.
   const glowGeo = track(new THREE.SphereGeometry(cfg.radius * 1.16, 48, 48))
-  const glow = new THREE.Mesh(glowGeo, makeMat(PALETTE.cyan, 0x2b6cff, 2.6, 0.95))
+  const glow = new THREE.Mesh(glowGeo, makeMat(PALETTE.cyan, 0x2b6cff, 2.6, 0.42))
   tiltGroup.add(glow)
 
   const haloGeo = track(new THREE.SphereGeometry(cfg.radius * 1.3, 48, 48))
-  const halo = new THREE.Mesh(haloGeo, makeMat(0x2b6cff, PALETTE.violet, 3.6, 0.32))
+  const halo = new THREE.Mesh(haloGeo, makeMat(0x2b6cff, PALETTE.violet, 3.6, 0.18))
   tiltGroup.add(halo)
 }
 
@@ -650,6 +710,17 @@ const PLANET_DEFS: Array<{
   { key: 'uranus',  name: 'Uranus',    meshRadius: 0.32, orbit: 6.3, depth: 3.9, angle: 4.30, orbitSpeed: 0.013, spinSpeed: 0.14, tilt: 1.71 },
   { key: 'neptune', name: 'Neptunus',  meshRadius: 0.31, orbit: 6.6, depth: 4.2, angle: 2.90, orbitSpeed: 0.010, spinSpeed: 0.15, tilt: 0.49 },
 ]
+
+// Tekstur NASA nyata. Kunci harus sama dengan `key` di PLANET_DEFS.
+const PLANET_TEXTURE_URLS: Record<string, string> = {
+  mercury: mercuryUrl,
+  venus: venusUrl,
+  mars: marsUrl,
+  jupiter: jupiterUrl,
+  saturn: saturnUrl,
+  uranus: uranusUrl,
+  neptune: neptuneUrl,
+}
 
 function hashString(s: string) {
   let h = 2166136261
@@ -823,6 +894,57 @@ function makeSaturnRingTexture(): any {
   return tex
 }
 
+// saturn-ring.jpg adalah strip horizontal (profil kecerahan radial). Ubah ke
+// tekstur konsentris agar cocok dengan UV RingGeometry: warna krem + alpha
+// dari kecerahan. Fallback prosedural tetap dipakai bila konversi gagal.
+function radializeRingStrip(srcTex: any, innerRatio = 0.62): any {
+  const img = srcTex?.image
+  if (!img || !img.width || !img.height) return null
+  const sw = img.naturalWidth || img.width
+  const sh = img.naturalHeight || img.height
+  const sample = document.createElement('canvas')
+  sample.width = sw
+  sample.height = sh
+  const sctx = sample.getContext('2d', { willReadFrequently: true } as any)!
+  sctx.drawImage(img, 0, 0)
+  let src: Uint8ClampedArray
+  try {
+    src = sctx.getImageData(0, 0, sw, sh).data
+  } catch {
+    return null
+  }
+
+  const size = 512
+  const out = document.createElement('canvas')
+  out.width = out.height = size
+  const octx = out.getContext('2d')!
+  const dst = octx.createImageData(size, size)
+  const c = size / 2
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const dx = x - c + 0.5
+      const dy = y - c + 0.5
+      const rt = Math.hypot(dx, dy) / c
+      const oi = (y * size + x) * 4
+      if (rt < innerRatio - 0.02 || rt > 1.02) {
+        dst.data[oi + 3] = 0
+        continue
+      }
+      const s = Math.max(0, Math.min(1, (rt - innerRatio) / (1 - innerRatio)))
+      const sx = Math.min(sw - 1, Math.round(s * (sw - 1)))
+      const sy = Math.min(sh - 1, Math.floor(sh / 2))
+      const si = (sy * sw + sx) * 4
+      const lum = (src[si] * 0.299 + src[si + 1] * 0.587 + src[si + 2] * 0.114) / 255
+      dst.data[oi] = 234
+      dst.data[oi + 1] = 220
+      dst.data[oi + 2] = 186
+      dst.data[oi + 3] = Math.round((0.18 + 0.82 * lum) * 255)
+    }
+  }
+  octx.putImageData(dst, 0, 0)
+  return configureTexture(track(new THREE.CanvasTexture(out)), true)
+}
+
 function placePlanet(p: PlanetBody) {
   const x = Math.cos(p.angle) * p.orbit
   const y = Math.sin(p.angle) * p.orbit * 0.55
@@ -919,11 +1041,11 @@ function resetPlanets() {
 
 async function upgradeEarthMaterials() {
   const results = await Promise.all([
-    loadTexture(dayUrl),
-    loadTexture(nightUrl),
-    loadTexture(topoUrl),
-    loadTexture(waterUrl),
-    loadTexture(cloudsUrl),
+    loadTexture(dayUrl),      // warna -> sRGB
+    loadTexture(nightUrl),    // warna -> sRGB
+    loadTexture(topoUrl, false),  // data -> NoColorSpace
+    loadTexture(waterUrl, false), // data -> NoColorSpace
+    loadTexture(cloudsUrl, false),// alpha -> NoColorSpace
   ])
   if (isDisposed) {
     results.forEach((t) => t?.dispose?.())
@@ -985,6 +1107,45 @@ async function upgradeEarthMaterials() {
   earthMesh.material = shaderMat
 }
 
+// Ganti tekstur prosedural 7 planet dengan tekstur NASA nyata. Gagal load ->
+// tekstur prosedural tetap terpasang (fallback).
+async function upgradePlanetMaterials() {
+  const keys = Object.keys(PLANET_TEXTURE_URLS)
+  const results = await Promise.all([
+    ...keys.map((k) => loadTexture(PLANET_TEXTURE_URLS[k])),
+    loadTexture(saturnRingUrl), // terakhir: peta cincin
+  ])
+  if (isDisposed) {
+    results.forEach((t) => t?.dispose?.())
+    return
+  }
+
+  results.slice(0, keys.length).forEach((tex, i) => {
+    if (!tex) return
+    track(tex)
+    const p = planets.find((pl) => pl.key === keys[i])
+    if (!p?.mesh?.material) return
+    p.mesh.material.map = tex
+    p.mesh.material.color.set(0xffffff)
+    p.mesh.material.needsUpdate = true
+  })
+
+  const ringStrip = results[results.length - 1]
+  if (!ringStrip) return
+  const saturn = planets.find((p) => p.key === 'saturn')
+  if (saturn?.ring?.material) {
+    const ringTex = radializeRingStrip(ringStrip)
+    if (ringTex) {
+      const mat = saturn.ring.material
+      mat.map = ringTex
+      mat.color.set(0xffffff)
+      mat.alphaMap = null
+      mat.needsUpdate = true
+    }
+  }
+  ringStrip.dispose?.()
+}
+
 /* -------------------------------------------------------------------------- */
 /*  INISIALISASI                                                               */
 /* -------------------------------------------------------------------------- */
@@ -1026,6 +1187,10 @@ function initScene(threeModule: any) {
   renderer.setSize(width, height)
   renderer.setClearColor(0x05060d, 0)
   if (THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace
+  if (THREE.ACESFilmicToneMapping) {
+    renderer.toneMapping = THREE.ACESFilmicToneMapping
+    renderer.toneMappingExposure = 1.05
+  }
   host.appendChild(renderer.domElement)
 
   // Cahaya: ambient rendah + matahari (mengikuti sunDirection) + fill.
@@ -1085,6 +1250,7 @@ function initScene(threeModule: any) {
   webglReady.value = true
   start()
   void upgradeEarthMaterials()
+  void upgradePlanetMaterials()
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1181,7 +1347,8 @@ function tick(now: number) {
       starField.rotation.y = t * 0.008 + pointer.x * 0.12
       starField.rotation.x = -pointer.y * 0.08
     }
-    if (starMaterial) starMaterial.opacity = 0.72 + Math.sin(t * 1.6) * 0.16
+    starTimeUniform.value = t
+    if (starMaterial) starMaterial.opacity = 0.86 + Math.sin(t * 0.9) * 0.04
 
     // Planet latar: orbit + rotasi sumbu sendiri (planet dalam lebih cepat).
     updatePlanets(dt)
@@ -1308,6 +1475,8 @@ onUnmounted(() => {
   pulsePositions = null
   planets = []
   solarGroup = null
+  roundSprite = null
+  starTimeUniform.value = 0
   THREE = null
 })
 </script>
