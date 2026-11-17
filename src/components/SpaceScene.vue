@@ -229,13 +229,13 @@ const EARTH_FRAG = /* glsl */ `
     vec3 dayCol = texture2D(uDay, vUv).rgb;
     vec3 nightCol = texture2D(uNight, vUv).rgb;
 
-    // Unsharp ringan: angkat kontras lokal, jangan sampai over-saturasi.
-    dayCol = mix(dayCol, smoothstep(0.02, 0.98, dayCol), 0.18);
+    // Unsharp lebih tegas: angkat kontras lokal supaya benua tajam di globe besar.
+    dayCol = mix(dayCol, smoothstep(0.03, 0.97, dayCol), 0.32);
 
     // Siang: Blue Marble + pencahayaan diffuse.
     float diffuse = clamp(ndl, 0.0, 1.0);
-    // Matte: pencahayaan diffuse lembut, tanpa specular sama sekali.
-    vec3 lit = dayCol * (0.18 + 0.72 * diffuse);
+    // Matte tapi cerah: jangan meredam tekstur dengan ambient berlebih.
+    vec3 lit = dayCol * (0.06 + 0.94 * diffuse);
 
     // Specular dimatikan total: permukaan matte, tanpa highlight putih berkilau.
     vec3 specCol = vec3(0.0);
@@ -339,7 +339,7 @@ function configureTexture(tex: any, isColor = true): any {
   if (THREE.LinearMipmapLinearFilter) tex.minFilter = THREE.LinearMipmapLinearFilter
   if (THREE.LinearFilter) tex.magFilter = THREE.LinearFilter
   const maxAniso = renderer?.capabilities?.getMaxAnisotropy?.() ?? 1
-  tex.anisotropy = Math.min(8, maxAniso)
+  tex.anisotropy = Math.min(16, maxAniso)
   tex.needsUpdate = true
   return tex
 }
@@ -763,8 +763,9 @@ function initScene(threeModule: any) {
   renderer.setClearColor(0x05060d, 0)
   if (THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace
   if (THREE.ACESFilmicToneMapping) {
-    renderer.toneMapping = THREE.ACESFilmicToneMapping
-    renderer.toneMappingExposure = 1.05
+    // Tone mapping netral (tanpa ACES) supaya warna tidak kusam/kabut.
+    if (THREE.NoToneMapping !== undefined) renderer.toneMapping = THREE.NoToneMapping
+    renderer.toneMappingExposure = 1.0
   }
   host.appendChild(renderer.domElement)
 
