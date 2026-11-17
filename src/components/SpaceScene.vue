@@ -136,7 +136,7 @@ let rings: RingData[] = []
 let cityVectors: any[] = []
 
 const sunDir: any = { x: 0, y: 0, z: 0, copy(v: any) { this.x = v.x; this.y = v.y; this.z = v.z; return this }, normalize() { const l = Math.hypot(this.x, this.y, this.z) || 1; this.x /= l; this.y /= l; this.z /= l; return this }, set(x: number, y: number, z: number) { this.x = x; this.y = y; this.z = z; return this } }
-let sunAngle = Math.PI - 0.28 // matahari dari kiri-atas -> separuh Bumi malam, lampu kota terlihat
+let sunAngle = Math.PI + 0.45 // matahari dari kiri-BELAKANG: separuh depan Bumi gelap, lampu kota jelas
 
 let disposables: Array<{ dispose(): void }> = []
 
@@ -242,7 +242,7 @@ const EARTH_FRAG = /* glsl */ `
 
     // Malam: city lights dari tekstur NASA. Cukup terang untuk terlihat,
     // tapi tetap tipis — bukan noda putih.
-    vec3 city = nightCol * 1.55;
+    vec3 city = nightCol * 2.0;
     vec3 nightAmbient = vec3(0.010, 0.018, 0.045);
     vec3 nightSide = city + nightAmbient;
 
