@@ -1,130 +1,69 @@
 <template>
-  <div class="min-h-screen">
-    <header class="sticky top-0 z-50 px-4 md:px-8 border-b border-[var(--line)] bg-[var(--surface-base)]" style="padding-top: max(0px, env(safe-area-inset-top))">
-      <nav class="flex items-center justify-between py-3.5 max-w-[1200px] mx-auto">
-        <NuxtLink to="/" class="text-base font-bold text-[var(--text-heading)] no-underline flex items-center gap-2.5">
-          <span class="w-2.5 h-2.5 rounded-full bg-[var(--accent)]"></span>
-          Nyawit
-        </NuxtLink>
-        <div class="flex items-center gap-5 md:gap-7">
-          <NuxtLink to="/about" class="nav-link active">About</NuxtLink>
-          <NuxtLink to="/projects" class="nav-link">Projects</NuxtLink>
-          <NuxtLink to="/skills" class="nav-link">Skills</NuxtLink>
-          <NuxtLink to="/contact" class="btn-primary !py-2 !px-5 text-sm">Contact</NuxtLink>
-          <button class="btn-theme" @click="toggleTheme" :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'">{{ isDark ? '☀️' : '🌙' }}</button>
-        </div>
-      </nav>
-    </header>
+  <div>
+    <section style="position: relative; min-height: 62dvh; display: flex; align-items: center; overflow: hidden;">
+      <SpaceScene variant="orbital" style="position: absolute; inset: 0; z-index: 0; opacity: 0.9;" />
+      <div class="wrap" style="position: relative; z-index: 1; padding-block: 96px 56px;">
+        <p class="eyebrow rise-in">Mission log</p>
+        <h1 class="rise-in" style="font-size: clamp(48px, 9vw, 110px); max-width: 12ch; margin-top: 16px;">About the engineer</h1>
+        <p class="rise-in" style="font-size: clamp(17px, 2vw, 21px); color: var(--ink); max-width: 52ch; margin-top: 22px;">{{ profile.title }} based in {{ profile.location }}.</p>
+      </div>
+    </section>
 
-    <main class="pt-14 px-6 md:px-10 max-w-[1200px] mx-auto">
-      <p class="text-xs font-semibold uppercase text-[var(--text-secondary)] mb-3">About</p>
-      <h1 class="reveal font-bold leading-[1.05] text-[clamp(48px,6vw,88px)] text-[var(--text-heading)]">{{ profile.name }}</h1>
-      <p class="reveal mt-3 text-[18px] font-medium text-[var(--text-primary)]">{{ profile.title }} · {{ profile.location }}</p>
-
-      <div class="mt-10 grid md:grid-cols-12 gap-8">
-        <div class="md:col-span-8">
-          <p class="reveal text-[20px] leading-relaxed text-[var(--text-heading)] font-medium">{{ profile.bio }}</p>
-          <p class="reveal mt-5 text-[15px] leading-relaxed text-[var(--text-secondary)]">
-            Focused on Kotlin Multiplatform and Vue since 2020, with a bias for systems that run in production. Currently building monitoring tools, POS systems, and developer tooling.
-          </p>
-          <div class="mt-8 flex flex-wrap gap-3">
+    <section class="section">
+      <div class="wrap" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: clamp(28px, 6vw, 80px);">
+        <div>
+          <p class="eyebrow reveal">Briefing</p>
+          <h2 class="section-title reveal" style="margin-top: 12px;">What I do</h2>
+          <p class="reveal" style="font-size: 18px; color: var(--ink); max-width: 54ch; margin-top: 20px;">{{ profile.bio }}</p>
+          <p class="reveal" style="font-size: 16px; max-width: 54ch; margin-top: 18px;">My work spans Kotlin Multiplatform and Vue — from mobile interfaces to system-level integrations. I care about software that actually ships and keeps running.</p>
+          <div class="reveal" style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px;">
             <a :href="'mailto:' + profile.email" class="btn-primary">Email me</a>
             <a :href="profile.github" target="_blank" rel="noopener" class="btn-ghost">GitHub</a>
           </div>
         </div>
-        <div class="md:col-span-4 space-y-4">
-          <div class="reveal card p-5">
-            <div class="text-xs text-[var(--text-on-dark-muted)]">Location</div>
-            <div class="font-medium text-[15px] mt-1">{{ profile.location }}</div>
-          </div>
-          <div class="reveal card p-5">
-            <div class="text-xs text-[var(--text-on-dark-muted)]">Since</div>
-            <div class="font-medium text-[15px] mt-1">2020</div>
-          </div>
-          <div class="reveal card p-5">
-            <div class="text-xs text-[var(--text-on-dark-muted)]">Email</div>
-            <a :href="'mailto:' + profile.email" class="text-link text-[15px] mt-1 inline-block">{{ profile.email }}</a>
+        <div class="panel reveal" style="padding: 30px; align-self: start;">
+          <div style="font-family: var(--display); color: var(--accent); font-size: 14px; letter-spacing: 0.14em; margin-bottom: 22px;">FLIGHT DATA</div>
+          <div v-for="row in flightData" :key="row.label" style="display: flex; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line-soft);">
+            <span style="color: var(--muted); font-size: 14px;">{{ row.label }}</span>
+            <span style="color: var(--ink); font-size: 14px; text-align: right;">{{ row.value }}</span>
           </div>
         </div>
       </div>
+    </section>
 
-      <section class="mt-20">
-        <h2 class="reveal text-[28px] font-bold text-[var(--text-heading)] mb-8">Skills</h2>
-        <div class="grid md:grid-cols-2 gap-6">
-          <div v-for="group in groupedSkills" :key="group.category" class="reveal card p-6">
-            <div class="text-xs uppercase font-semibold mb-4" style="color: var(--text-on-dark-muted)">{{ group.category }}</div>
-            <div class="space-y-4">
-              <div v-for="s in group.items" :key="s.name">
-                <div class="flex justify-between mb-1.5">
-                  <span class="font-medium text-[15px]" style="color: var(--text-on-dark)">{{ s.name }}</span>
-                  <span class="text-sm tabular-nums" style="color: var(--text-on-dark-muted)">{{ s.level }}%</span>
-                </div>
-                <div class="bar-track">
-                  <div class="bar-fill" :style="{ width: s.level + '%' }"></div>
-                </div>
-              </div>
+    <section class="section" style="background: rgba(10,13,28,0.5);">
+      <div class="wrap">
+        <p class="eyebrow reveal">Missions</p>
+        <h2 class="section-title reveal" style="margin-top: 12px;">Experience</h2>
+        <div style="margin-top: 40px; position: relative; padding-left: 28px;">
+          <div style="position: absolute; left: 6px; top: 8px; bottom: 8px; width: 1px; background: linear-gradient(var(--accent), var(--accent-2), transparent);"></div>
+          <div v-for="(e, i) in profile.experience" :key="i" class="card reveal" style="padding: 28px; margin-bottom: 20px; position: relative;">
+            <div style="position: absolute; left: -28px; top: 32px; width: 11px; height: 11px; border-radius: 50%; background: var(--accent); box-shadow: var(--glow);"></div>
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;">
+              <h3 style="font-size: 22px; margin: 0;">{{ e.role }}</h3>
+              <span style="font-family: var(--display); font-size: 14px; color: var(--accent-2);">{{ e.period }}</span>
             </div>
+            <p style="color: var(--muted); margin: 6px 0 14px;">{{ e.company }}</p>
+            <p style="color: var(--ink); margin: 0; font-size: 15px;">{{ e.description }}</p>
           </div>
         </div>
-      </section>
-
-      <section class="mt-20 mb-24">
-        <h2 class="reveal text-[28px] font-bold text-[var(--text-heading)] mb-8">Experience</h2>
-        <div class="space-y-6">
-          <div v-for="(e, i) in profile.experience" :key="i" class="reveal card p-6">
-            <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
-              <div class="flex-1">
-                <h3 class="text-[18px] font-bold">{{ e.role }}</h3>
-                <p class="text-sm mt-1" style="color: var(--text-on-dark-muted)">{{ e.company }}</p>
-                <p class="mt-3 text-[15px] leading-relaxed" style="color: var(--text-on-dark-muted)">{{ e.description }}</p>
-              </div>
-              <div class="text-sm font-semibold text-[var(--accent)] whitespace-nowrap">{{ e.period }}</div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer style="background: var(--surface-overlay)">
-      <div class="max-w-[1200px] mx-auto px-6 md:px-10 py-12 flex flex-col md:flex-row justify-between gap-8">
-        <div>
-          <div class="text-base font-bold" style="color: var(--surface-base)">Nyawit</div>
-          <div class="text-sm mt-1" style="color: var(--text-on-dark-muted)">© {{ new Date().getFullYear() }} {{ profile.name }}</div>
-        </div>
-        <nav class="grid grid-cols-2 md:grid-cols-3 gap-x-10 gap-y-3">
-          <NuxtLink to="/" class="text-sm" style="color: var(--text-on-dark-muted)">Home</NuxtLink>
-          <NuxtLink to="/projects" class="text-sm" style="color: var(--text-on-dark-muted)">Projects</NuxtLink>
-          <NuxtLink to="/skills" class="text-sm" style="color: var(--text-on-dark-muted)">Skills</NuxtLink>
-          <NuxtLink to="/contact" class="text-sm" style="color: var(--text-on-dark-muted)">Contact</NuxtLink>
-        </nav>
       </div>
-    </footer>
+    </section>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
 import profile from '~/data/profile.json'
-import skills from '~/data/skills.json'
 
-const isDark = ref(false)
+const flightData = [
+  { label: 'Role', value: profile.title },
+  { label: 'Base', value: profile.location },
+  { label: 'Focus', value: 'Kotlin · Vue · Rust' },
+  { label: 'Email', value: profile.email },
+]
 
-function toggleTheme() {
-  isDark.value = !isDark.value
-  document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
-  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
-}
-
-onMounted(() => {
-  isDark.value = document.documentElement.getAttribute('data-theme') === 'dark'
-})
-
-const groupedSkills = computed(() => {
-  const map = new Map()
-  for (const s of skills.skills) {
-    if (!map.has(s.category)) map.set(s.category, [])
-    map.get(s.category).push(s)
-  }
-  return [...map.entries()].map(([category, items]) => ({ category, items }))
+useSeoMeta({
+  title: 'About — Ringga Septia Pribadi',
+  description: 'Mission log of Ringga Septia Pribadi, a multi-platform engineer based in Batam, Indonesia.',
 })
 </script>

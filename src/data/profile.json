@@ -1,24 +1,16 @@
 {
-  "name": "Nyawit",
-  "title": "Satire Developer",
-  "tagline": "Saya membangun aplikasi open-source untuk menyindir kehidupan Indonesia \u2014 dengan kode.",
-  "bio": "Developer open-source yang menggunakan teknologi untuk menyindir \u2014 isu sosial, politik, dan budaya Indonesia. Semua konten di sini adalah satire, dibuat dengan data nyata dan humor yang kadang pahit.",
-  "location": "Indonesia",
-  "email": "sarkas@nyawit.dev",
-  "github": "https://github.com/nyawit-dev",
+  "name": "Ringga Septia Pribadi",
+  "title": "Multi-Platform Engineer",
+  "tagline": "I build mobile, web, and desktop applications with Kotlin and Vue.",
+  "bio": "I build mobile, web, and desktop applications with Kotlin and Vue. Specialized in Kotlin Multiplatform, Jetpack Compose, and system-level integrations.",
+  "location": "Batam, Kepulauan Riau, Indonesia",
+  "email": "contact@ringga.dev",
+  "github": "https://github.com/ringga-dev",
+  "linkedin": "https://linkedin.com/in/ringgadev",
   "stats": [
-    {
-      "value": "100%",
-      "label": "Satire"
-    },
-    {
-      "value": "0",
-      "label": "Sensor"
-    },
-    {
-      "value": "\u221e",
-      "label": "Nyawa sawit"
-    }
+    { "value": "5+", "label": "Years experience" },
+    { "value": "30+", "label": "Projects shipped" },
+    { "value": "12", "label": "Open source repos" }
   ],
   "experience": [
     {

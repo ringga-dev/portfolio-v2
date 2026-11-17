@@ -10,10 +10,10 @@ export default defineNuxtConfig({
   },
   nitro: {
     prerender: {
-      routes: ['/'],
+      routes: ['/', '/about', '/projects', '/skills', '/contact'],
     },
   },
   app: {
-    baseURL: '/nyawit-portfolio/',
+    baseURL: '/portfolio-v2/',
   },
 })

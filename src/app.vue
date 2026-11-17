@@ -1,29 +1,53 @@
 <template>
   <div class="min-h-screen">
-    <header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 py-4" style="background: var(--bg);">
-      <NuxtLink to="/" class="font-bold text-xl tracking-tight" style="font-family:'Barlow Condensed',sans-serif; color: var(--ink);">Nyawit</NuxtLink>
-      <nav class="flex gap-6">
-        <NuxtLink to="/" class="nav-link">Home</NuxtLink>
-        <NuxtLink to="/about" class="nav-link">About</NuxtLink>
-        <NuxtLink to="/projects" class="nav-link">Work</NuxtLink>
-        <NuxtLink to="/skills" class="nav-link">Skills</NuxtLink>
-        <NuxtLink to="/contact" class="nav-link">Contact</NuxtLink>
-      </nav>
+    <header class="site-nav" style="padding-top: max(0px, env(safe-area-inset-top))">
+      <div class="wrap">
+        <NuxtLink to="/" class="brand">
+          <span class="brand-dot" aria-hidden="true"></span>
+          <span>RINGGA<span style="color: var(--accent)">.SPACE</span></span>
+        </NuxtLink>
+        <nav class="nav-links" aria-label="Main">
+          <NuxtLink to="/" class="nav-link" :class="{ active: isActive('/') }">Home</NuxtLink>
+          <NuxtLink to="/about" class="nav-link" :class="{ active: isActive('/about') }">About</NuxtLink>
+          <NuxtLink to="/projects" class="nav-link" :class="{ active: isActive('/projects') }">Work</NuxtLink>
+          <NuxtLink to="/skills" class="nav-link" :class="{ active: isActive('/skills') }">Skills</NuxtLink>
+          <NuxtLink to="/contact" class="btn-primary" style="padding: 9px 18px; font-size: 13px;">Contact</NuxtLink>
+        </nav>
+      </div>
     </header>
+
     <main>
       <NuxtPage />
     </main>
-    <footer class="px-4 md:px-8 py-12 text-center" style="background: var(--bg); color: var(--muted);">
-      <p class="text-sm">© Nyawit · open-source satire · imagery: picsum.photos</p>
+
+    <footer class="site-footer">
+      <div class="wrap" style="padding-block: clamp(40px, 7vw, 72px) 32px;">
+        <a :href="'mailto:' + profile.email" class="big-name" style="display: block; text-decoration: none;">RINGGA.</a>
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px; margin-top: 32px;">
+          <div>
+            <p style="color: var(--muted); font-size: 14px; margin: 0;">{{ profile.title }} · {{ profile.location }}</p>
+            <p style="color: var(--faint); font-size: 13px; margin: 6px 0 0;">© {{ year }} {{ profile.name }}. Built in orbit.</p>
+          </div>
+          <nav class="nav-links" aria-label="Footer">
+            <a :href="profile.github" target="_blank" rel="noopener">GitHub</a>
+            <a :href="profile.linkedin" target="_blank" rel="noopener">LinkedIn</a>
+            <a :href="'mailto:' + profile.email">Email</a>
+          </nav>
+        </div>
+      </div>
     </footer>
   </div>
 </template>
 
 <script setup>
-import { onMounted, nextTick, watch } from 'vue'
+import { computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import profile from '~/data/profile.json'
 
 const route = useRoute()
+const year = computed(() => new Date().getFullYear())
+const isActive = (path) => route.path === path || (path !== '/' && route.path.startsWith(path))
+
 let observer
 async function observeReveals() {
   await nextTick()

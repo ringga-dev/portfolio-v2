@@ -1,95 +1,72 @@
 <template>
-  <div class="min-h-screen">
-    <header class="sticky top-0 z-50 px-4 md:px-8 border-b border-[var(--line)] bg-[var(--surface-base)]" style="padding-top: max(0px, env(safe-area-inset-top))">
-      <nav class="flex items-center justify-between py-3.5 max-w-[1200px] mx-auto">
-        <NuxtLink to="/" class="text-base font-bold text-[var(--text-heading)] no-underline flex items-center gap-2.5">
-          <span class="w-2.5 h-2.5 rounded-full bg-[var(--accent)]"></span>
-          Nyawit
-        </NuxtLink>
-        <div class="flex items-center gap-5 md:gap-7">
-          <NuxtLink to="/about" class="nav-link">About</NuxtLink>
-          <NuxtLink to="/projects" class="nav-link">Projects</NuxtLink>
-          <NuxtLink to="/skills" class="nav-link">Skills</NuxtLink>
-          <NuxtLink to="/contact" class="btn-primary !py-2 !px-5 text-sm active">Contact</NuxtLink>
-          <button class="btn-theme" @click="toggleTheme" :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'">{{ isDark ? '☀️' : '🌙' }}</button>
-        </div>
-      </nav>
-    </header>
+  <div>
+    <section style="position: relative; min-height: 58dvh; display: flex; align-items: center; overflow: hidden;">
+      <SpaceScene variant="mini" style="position: absolute; inset: 0; z-index: 0; opacity: 0.8;" />
+      <div class="wrap" style="position: relative; z-index: 1; padding-block: 96px 56px;">
+        <p class="eyebrow rise-in">Open channel</p>
+        <h1 class="rise-in" style="font-size: clamp(52px, 10vw, 128px); margin-top: 16px;">Send a signal</h1>
+        <p class="rise-in" style="font-size: clamp(17px, 2vw, 21px); color: var(--ink); max-width: 52ch; margin-top: 20px;">Open to freelance work, collaborations, and full-time roles. Pick a channel.</p>
+      </div>
+    </section>
 
-    <main class="pt-14 px-6 md:px-10 max-w-[1200px] mx-auto">
-      <p class="text-xs font-semibold uppercase text-[var(--text-secondary)] mb-3">Get in touch</p>
-      <h1 class="reveal font-bold leading-[1.05] text-[clamp(48px,6vw,88px)] text-[var(--text-heading)]">Contact</h1>
-      <p class="reveal mt-3 text-[18px] font-medium text-[var(--text-primary)] max-w-2xl">Have a project in mind or just want to say hi? Reach out through any of these.</p>
+    <section class="section" style="padding-top: 24px;">
+      <div class="wrap" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+        <a v-for="ch in channels" :key="ch.label" :href="ch.href" :target="ch.external ? '_blank' : undefined" rel="noopener" class="card reveal" style="padding: 28px; display: block;">
+          <div style="font-family: var(--display); font-size: 13px; letter-spacing: 0.14em; color: var(--accent);">{{ ch.label }}</div>
+          <div style="font-size: 17px; color: var(--ink); margin-top: 12px; word-break: break-word;">{{ ch.value }}</div>
+          <div style="font-size: 13px; color: var(--muted); margin-top: 18px;">{{ ch.note }} →</div>
+        </a>
+      </div>
+    </section>
 
-      <div class="grid md:grid-cols-2 gap-6 mt-12 mb-24">
-        <section class="reveal panel p-8">
-          <h2 class="text-[18px] font-bold mb-6">Channels</h2>
-          <div class="space-y-0">
-            <div class="flex justify-between items-baseline py-4 border-b border-[var(--border-default)]">
-              <span class="text-sm" style="color: var(--text-on-dark-muted)">Email</span>
-              <a :href="'mailto:' + profile.email" class="text-link text-[15px]">{{ profile.email }}</a>
-            </div>
-            <div class="flex justify-between items-baseline py-4 border-b border-[var(--border-default)]">
-              <span class="text-sm" style="color: var(--text-on-dark-muted)">GitHub</span>
-              <a :href="profile.github" target="_blank" rel="noopener" class="text-link text-[15px]">{{ profile.github }}</a>
-            </div>
-          </div>
-        </section>
-
-        <section class="reveal panel p-8">
-          <h2 class="text-[18px] font-bold mb-6">Send a message</h2>
-          <form @submit.prevent="handleSubmit" class="space-y-4">
-            <input v-model="name" type="text" required placeholder="Your Name" />
-            <input v-model="email" type="email" required placeholder="email@example.com" />
-            <textarea v-model="message" required rows="5" placeholder="Drop your message here..." class="resize-y"></textarea>
-            <button type="submit" class="btn-primary w-full justify-center">Send Message</button>
+    <section class="section" style="padding-top: 0;">
+      <div class="wrap">
+        <div class="panel reveal" style="padding: clamp(26px, 5vw, 44px); max-width: 720px;">
+          <h2 style="font-size: 28px;">Write a message</h2>
+          <p style="font-size: 14px;">This opens your email app with the message pre-filled — no form backend, no data stored.</p>
+          <form @submit.prevent="handleSubmit" style="display: grid; gap: 14px; margin-top: 24px;">
+            <label>
+              <span style="display: block; font-size: 13px; color: var(--muted); margin-bottom: 7px;">Your name</span>
+              <input v-model="name" type="text" required placeholder="Name" style="width: 100%; padding: 13px 16px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px; color: var(--ink);" />
+            </label>
+            <label>
+              <span style="display: block; font-size: 13px; color: var(--muted); margin-bottom: 7px;">Your email</span>
+              <input v-model="email" type="email" required placeholder="you@example.com" style="width: 100%; padding: 13px 16px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px; color: var(--ink);" />
+            </label>
+            <label>
+              <span style="display: block; font-size: 13px; color: var(--muted); margin-bottom: 7px;">Message</span>
+              <textarea v-model="message" required rows="5" placeholder="What are we building?" style="width: 100%; padding: 13px 16px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px; color: var(--ink); resize: vertical;"></textarea>
+            </label>
+            <button type="submit" class="btn-primary" style="justify-self: start; margin-top: 8px;">Open in email app →</button>
           </form>
-        </section>
-      </div>
-    </main>
-
-    <footer style="background: var(--surface-overlay)">
-      <div class="max-w-[1200px] mx-auto px-6 md:px-10 py-12 flex flex-col md:flex-row justify-between gap-8">
-        <div>
-          <div class="text-base font-bold" style="color: var(--surface-base)">Nyawit</div>
-          <div class="text-sm mt-1" style="color: var(--text-on-dark-muted)">© {{ new Date().getFullYear() }} {{ profile.name }}</div>
         </div>
-        <nav class="grid grid-cols-2 md:grid-cols-3 gap-x-10 gap-y-3">
-          <NuxtLink to="/" class="text-sm" style="color: var(--text-on-dark-muted)">Home</NuxtLink>
-          <NuxtLink to="/about" class="text-sm" style="color: var(--text-on-dark-muted)">About</NuxtLink>
-          <NuxtLink to="/projects" class="text-sm" style="color: var(--text-on-dark-muted)">Projects</NuxtLink>
-          <NuxtLink to="/skills" class="text-sm" style="color: var(--text-on-dark-muted)">Skills</NuxtLink>
-        </nav>
       </div>
-    </footer>
+    </section>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import profile from '~/data/profile.json'
 
-const isDark = ref(false)
-
-function toggleTheme() {
-  isDark.value = !isDark.value
-  document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
-  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
-}
-
-onMounted(() => {
-  isDark.value = document.documentElement.getAttribute('data-theme') === 'dark'
-})
+const channels = [
+  { label: 'EMAIL', value: profile.email, href: 'mailto:' + profile.email, note: 'Direct line', external: false },
+  { label: 'GITHUB', value: profile.github, href: profile.github, note: 'Repositories', external: true },
+  { label: 'LINKEDIN', value: profile.linkedin, href: profile.linkedin, note: 'Professional profile', external: true },
+]
 
 const name = ref('')
 const email = ref('')
 const message = ref('')
 
 function handleSubmit() {
-  const subject = encodeURIComponent('Contact from ' + name.value)
-  const body = encodeURIComponent(
-    message.value + '\n\n— ' + name.value + ' (' + email.value + ')'
-  )
+  const subject = encodeURIComponent('Portfolio signal from ' + name.value)
+  const body = encodeURIComponent(message.value + '\n\n— ' + name.value + ' (' + email.value + ')')
   window.location.href = `mailto:${profile.email}?subject=${subject}&body=${body}`
 }
+
+useSeoMeta({
+  title: 'Contact — Ringga Septia Pribadi',
+  description: 'Get in touch with Ringga Septia Pribadi for freelance work, collaborations, and full-time roles.',
+})
 </script>

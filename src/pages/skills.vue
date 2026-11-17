@@ -1,85 +1,55 @@
 <template>
-  <div class="min-h-screen">
-    <header class="sticky top-0 z-50 px-4 md:px-8 border-b border-[var(--line)] bg-[var(--surface-base)]" style="padding-top: max(0px, env(safe-area-inset-top))">
-      <nav class="flex items-center justify-between py-3.5 max-w-[1200px] mx-auto">
-        <NuxtLink to="/" class="text-base font-bold text-[var(--text-heading)] no-underline flex items-center gap-2.5">
-          <span class="w-2.5 h-2.5 rounded-full bg-[var(--accent)]"></span>
-          Nyawit
-        </NuxtLink>
-        <div class="flex items-center gap-5 md:gap-7">
-          <NuxtLink to="/about" class="nav-link">About</NuxtLink>
-          <NuxtLink to="/projects" class="nav-link">Projects</NuxtLink>
-          <NuxtLink to="/skills" class="nav-link active">Skills</NuxtLink>
-          <NuxtLink to="/contact" class="btn-primary !py-2 !px-5 text-sm">Contact</NuxtLink>
-          <button class="btn-theme" @click="toggleTheme" :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'">{{ isDark ? '☀️' : '🌙' }}</button>
-        </div>
-      </nav>
-    </header>
+  <div>
+    <section style="position: relative; min-height: 56dvh; display: flex; align-items: center; overflow: hidden;">
+      <SpaceScene variant="orbital" style="position: absolute; inset: 0; z-index: 0; opacity: 0.85;" />
+      <div class="wrap" style="position: relative; z-index: 1; padding-block: 96px 56px;">
+        <p class="eyebrow rise-in">Signal map</p>
+        <h1 class="rise-in" style="font-size: clamp(52px, 10vw, 128px); margin-top: 16px;">Skills</h1>
+        <p class="rise-in" style="font-size: clamp(17px, 2vw, 21px); color: var(--ink); max-width: 52ch; margin-top: 20px;">Proficiency by orbital band — mobile, web, backend, and DevOps.</p>
+      </div>
+    </section>
 
-    <main class="pt-14 px-6 md:px-10 max-w-[1200px] mx-auto">
-      <p class="text-xs font-semibold uppercase text-[var(--text-secondary)] mb-3">What I use</p>
-      <h1 class="reveal font-bold leading-[1.05] text-[clamp(48px,6vw,88px)] text-[var(--text-heading)]">Skills</h1>
-      <p class="reveal mt-3 text-[18px] font-medium text-[var(--text-primary)]">Proficiency by category.</p>
-
-      <div class="grid md:grid-cols-2 gap-6 mt-12 mb-24">
-        <div v-for="cat in categories" :key="cat.name" class="reveal card p-6">
-          <div class="text-xs uppercase font-semibold mb-5" style="color: var(--text-on-dark-muted)">{{ cat.name }}</div>
-          <div class="space-y-5">
-            <div v-for="s in cat.skills" :key="s.name">
-              <div class="flex justify-between items-baseline mb-1.5">
-                <span class="font-medium text-[15px]" style="color: var(--text-on-dark)">{{ s.name }}</span>
-                <span class="text-sm tabular-nums" style="color: var(--text-on-dark-muted)">{{ s.level }}%</span>
-              </div>
-              <div class="bar-track" role="progressbar" :aria-valuenow="s.level" aria-valuemin="0" aria-valuemax="100" :aria-label="s.name + ' proficiency'">
-                <div class="bar-fill" :style="{ width: s.level + '%' }"></div>
+    <section class="section" style="padding-top: 24px;">
+      <div class="wrap">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+          <div v-for="cat in categories" :key="cat.name" class="panel reveal" style="padding: 30px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: var(--glow);"></span>
+              <h2 style="font-size: 22px; margin: 0;">{{ cat.name }}</h2>
+            </div>
+            <div style="margin-top: 26px;">
+              <div v-for="s in cat.skills" :key="s.name" style="margin-bottom: 22px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                  <span style="font-size: 15px; color: var(--ink);">{{ s.name }}</span>
+                  <span style="font-family: var(--display); font-size: 14px; color: var(--accent);">{{ s.level }}%</span>
+                </div>
+                <div class="bar-track" role="progressbar" :aria-valuenow="s.level" aria-valuemin="0" aria-valuemax="100" :aria-label="s.name + ' proficiency'">
+                  <div class="bar-fill" :style="{ width: s.level + '%' }"></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </main>
-
-    <footer style="background: var(--surface-overlay)">
-      <div class="max-w-[1200px] mx-auto px-6 md:px-10 py-12 flex flex-col md:flex-row justify-between gap-8">
-        <div>
-          <div class="text-base font-bold" style="color: var(--surface-base)">Nyawit</div>
-          <div class="text-sm mt-1" style="color: var(--text-on-dark-muted)">© {{ new Date().getFullYear() }} {{ profile.name }}</div>
-        </div>
-        <nav class="grid grid-cols-2 md:grid-cols-3 gap-x-10 gap-y-3">
-          <NuxtLink to="/" class="text-sm" style="color: var(--text-on-dark-muted)">Home</NuxtLink>
-          <NuxtLink to="/about" class="text-sm" style="color: var(--text-on-dark-muted)">About</NuxtLink>
-          <NuxtLink to="/projects" class="text-sm" style="color: var(--text-on-dark-muted)">Projects</NuxtLink>
-          <NuxtLink to="/contact" class="text-sm" style="color: var(--text-on-dark-muted)">Contact</NuxtLink>
-        </nav>
-      </div>
-    </footer>
+    </section>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed } from 'vue'
 import skills from '~/data/skills.json'
-import profile from '~/data/profile.json'
-
-const isDark = ref(false)
-
-function toggleTheme() {
-  isDark.value = !isDark.value
-  document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
-  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
-}
-
-onMounted(() => {
-  isDark.value = document.documentElement.getAttribute('data-theme') === 'dark'
-})
 
 const categories = computed(() => {
-  const map = {}
+  const map = new Map()
   for (const s of skills.skills) {
-    const c = s.category || 'Other'
-    if (!map[c]) map[c] = { name: c, skills: [] }
-    map[c].skills.push(s)
+    if (!map.has(s.category)) map.set(s.category, [])
+    map.get(s.category).push(s)
   }
-  return Object.values(map)
+  return [...map.entries()].map(([name, skills]) => ({ name, skills }))
+})
+
+useSeoMeta({
+  title: 'Skills — Ringga Septia Pribadi',
+  description: 'Skill map of Ringga Septia Pribadi: Kotlin, Compose, KMP, Vue/Nuxt, TypeScript, Rust, Axum, Docker, and GitHub Actions.',
 })
 </script>
