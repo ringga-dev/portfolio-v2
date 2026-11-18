@@ -1329,7 +1329,14 @@ onUnmounted(() => {
         <div class="space-fallback__orbit space-fallback__orbit--one"></div>
         <div class="space-fallback__orbit space-fallback__orbit--two"></div>
         <div class="space-fallback__orbit space-fallback__orbit--three"></div>
-        <div class="space-fallback__planet"></div>
+        <!-- Fallback memakai FOTO TEKSTUR ASLI, bukan gradien/wireframe.
+             Dibungkus lingkaran + shading supaya tetap terbaca sebagai bola. -->
+        <div
+          class="space-fallback__planet"
+          :style="{ '--planet-map': `url('${planetCfg().color}')` }"
+        >
+          <div class="space-fallback__globe"></div>
+        </div>
         <div class="space-fallback__net">
           <span class="space-fallback__link space-fallback__link--a"></span>
           <span class="space-fallback__link space-fallback__link--b"></span>
@@ -1592,38 +1599,33 @@ onUnmounted(() => {
   aspect-ratio: 1 / 1;
   border-radius: 50%;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 30% 26%, var(--planet-glow), transparent 44%),
-    radial-gradient(circle at 74% 72%, var(--planet-glow), transparent 50%),
-    radial-gradient(circle at 46% 44%, var(--planet-color) 0%, #0c1e46 58%, #05060d 100%);
+  background: #05060d;
   box-shadow:
-    inset -16px -12px 38px rgba(0, 0, 0, .82),
-    inset 10px 8px 30px var(--planet-glow),
-    0 0 48px var(--planet-glow),
+    0 0 42px var(--planet-glow),
     0 0 110px var(--planet-glow);
-  animation: planet-spin 28s linear infinite;
 }
-.space-fallback__planet::before {
-  content: '';
+/* Bola dari FOTO TEKSTUR NASA asli. background-size 200% = peta dunia penuh,
+   diposisikan ke tengah sehingga benua terlihat, lalu diputar perlahan. */
+.space-fallback__globe {
   position: absolute;
-  inset: -20%;
+  inset: 0;
   border-radius: 50%;
-  background: repeating-linear-gradient(
-    118deg,
-    transparent 0 12px,
-    rgba(110, 231, 249, .09) 13px 15px,
-    transparent 16px 26px,
-    rgba(167, 139, 250, .07) 27px 29px
-  );
-  animation: bands-slide 18s linear infinite;
+  background-image: var(--planet-map);
+  background-size: 200% 100%;
+  background-position: 50% 50%;
+  animation: globe-pan 60s linear infinite alternate;
 }
+/* Shading bola: tepi gelap + terminator terang-kiri/gelap-kanan dari cahaya. */
 .space-fallback__planet::after {
   content: '';
   position: absolute;
-  inset: -18%;
+  inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle at 33% 27%, rgba(255, 255, 255, .16), transparent 34%);
-  mix-blend-mode: screen;
+  background:
+    linear-gradient(105deg, rgba(255,255,255,0.10) 0%, transparent 34%, rgba(0,0,0,0.72) 78%),
+    radial-gradient(circle at 30% 26%, rgba(255,255,255,0.12), transparent 42%),
+    radial-gradient(circle at 50% 50%, transparent 58%, rgba(0,0,0,0.88) 100%);
+  pointer-events: none;
 }
 
 /* Jaringan dekoratif di fallback. */
@@ -1680,6 +1682,10 @@ onUnmounted(() => {
 @keyframes planet-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+@keyframes globe-pan {
+  from { background-position: 20% 50%; }
+  to { background-position: 80% 50%; }
 }
 @keyframes bands-slide {
   from { transform: translateX(-12%); }
