@@ -21,6 +21,7 @@
         <div class="cyber-stage">
           <CyberGlobe3D
             :events="arcEvents"
+            :attackers="data.attackers || []"
             :focus="focus"
             :paused="paused"
             @select="onSelect"
@@ -68,6 +69,39 @@
             </ul>
           </details>
         </div>
+      </div>
+    </section>
+
+    <section class="cyber-section">
+      <div class="wrap cyber-grid">
+        <div class="cyber-section__head">
+          <h2>Asal serangan terobservasi</h2>
+          <p>IP yang menyerang honeypot DShield hari ini. Negara berasal dari ASN (<code>ascountry</code>), bukan geolokasi IP presisi.</p>
+        </div>
+        <ul class="cyber-attackers">
+          <li v-for="a in (data.attackers || [])" :key="a.id">
+            <span class="cyber-attacker__flag">{{ a.country }}</span>
+            <span class="cyber-attacker__ip">{{ a.ip }}</span>
+            <span class="cyber-attacker__asn">{{ a.asname || 'AS' + a.asn }}</span>
+            <strong>{{ a.attacks.toLocaleString('id-ID') }}</strong>
+            <span class="cyber-attacker__unit">serangan</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="cyber-section cyber-section--alt">
+      <div class="wrap cyber-grid">
+        <div class="cyber-section__head">
+          <h2>Linimasa insiden</h2>
+          <p>Tanggal kejadian sebenarnya dari arsip ransomware.live — bukan tanggal saat data dimasukkan.</p>
+        </div>
+        <ol class="cyber-timeline">
+          <li v-for="t in (data.timeline || []).slice(0, 14)" :key="t.id">
+            <time>{{ t.date }}</time>
+            <span><b>{{ t.victim }}</b> · {{ countryName(t.country) }}</span>
+          </li>
+        </ol>
       </div>
     </section>
 
@@ -243,12 +277,28 @@ function onSelect(name) {
 .cyber-phases h3 { margin: 8px 0 6px; }
 .cyber-credit { padding-block: 60px; border-top: 1px solid var(--line-soft); color: var(--faint); font-size: 13px; }
 .cyber-credit a { color: var(--accent); }
+.cyber-attackers, .cyber-timeline { list-style: none; margin: 0; padding: 0; }
+.cyber-attackers li { display: grid; grid-template-columns: 34px minmax(0,1fr) minmax(0,1fr) auto auto; align-items: baseline; gap: 10px; padding: 11px 0; border-top: 1px solid var(--line-soft); font-size: 13px; }
+.cyber-attackers li:first-child, .cyber-timeline li:first-child { border-top: none; padding-top: 0; }
+.cyber-attacker__flag { font-weight: 700; color: #ff8a9a; }
+.cyber-attacker__ip { font-variant-numeric: tabular-nums; color: var(--ink); }
+.cyber-attacker__asn { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cyber-attackers strong { color: var(--accent); font-family: var(--display); }
+.cyber-attacker__unit { color: var(--faint); font-size: 11px; }
+.cyber-timeline li { display: grid; grid-template-columns: 100px 1fr; gap: 14px; padding: 10px 0; border-top: 1px solid var(--line-soft); font-size: 13px; color: var(--muted); }
+.cyber-timeline time { font-variant-numeric: tabular-nums; color: var(--faint); }
+.cyber-timeline b { color: var(--ink); font-weight: 500; }
+.cyber-section__head code { font-size: 12px; color: var(--accent); }
 @media (max-width: 820px) { .cyber-grid { grid-template-columns: 1fr; gap: 40px; } .cyber-stage { height: 540px; } }
 @media (max-width: 640px) {
   .cyber-stage { height: 480px; }
   .cyber-controls { left: 12px; right: 12px; bottom: 42px; }
   .cyber-feed li { flex-wrap: wrap; gap: 4px 10px; }
   .cyber-feed__type { min-width: 0; }
+  .cyber-attackers li { grid-template-columns: 30px 1fr auto; gap: 6px 10px; }
+  .cyber-attacker__asn { grid-column: 2 / 4; }
+  .cyber-attacker__unit { display: none; }
+  .cyber-timeline li { grid-template-columns: 1fr; gap: 2px; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 </style>

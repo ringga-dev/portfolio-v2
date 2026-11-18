@@ -18,6 +18,7 @@
     <div class="cyber-globe__legend" aria-hidden="true">
       <span><i class="dot"></i> korban ransomware</span>
       <span><i class="arc"></i> korban satu grup</span>
+      <span><i class="ring"></i> asal serangan (DShield)</span>
       <span class="cyber-globe__legend-note">grup ransomware tidak dipetakan ke negara asal</span>
     </div>
   </div>
@@ -32,6 +33,7 @@ import earthTopoUrl from '~/assets/textures/earth-topology.jpg?url'
 
 const props = defineProps({
   events: { type: Array, default: () => [] },
+  attackers: { type: Array, default: () => [] },
   focus: { type: String, default: '' },
   paused: { type: Boolean, default: false },
 })
@@ -180,10 +182,26 @@ function addNodes(events) {
   }
 }
 
-function rebuild(events) {
+function addAttackers(list) {
+  for (const a of list) {
+    if (a.lat == null || a.lon == null) continue
+    const v = latLonToVec3(a.lat, a.lon, RADIUS * 1.02)
+    const geo = new THREE.RingGeometry(0.035, 0.055, 16)
+    const mat = new THREE.MeshBasicMaterial({ color: 0xff5d73, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false })
+    const ring = new THREE.Mesh(geo, mat)
+    ring.position.copy(v)
+    ring.lookAt(v.clone().multiplyScalar(2))
+    ring.userData = { name: `${a.country} · ${a.ip}`, country: a.country }
+    globeGroup.add(ring)
+    nodeMeshes.push({ mesh: ring, name: `DShield ${a.country}` })
+  }
+}
+
+function rebuild(events, attackers = []) {
   if (!globeGroup) return
   clearArcs()
   addNodes(events)
+  addAttackers(attackers)
   const slice = events.slice(0, 36)
   slice.forEach((e, i) => {
     const arc = makeArc(e)
@@ -332,7 +350,7 @@ onMounted(async () => {
 
   raycaster = new THREE.Raycaster()
   pointer = new THREE.Vector2()
-  rebuild(props.events)
+  rebuild(props.events, props.attackers)
 
   resize()
   ro = new ResizeObserver(resize)
@@ -366,7 +384,7 @@ onBeforeUnmount(() => {
   }
 })
 
-watch(() => props.events, (v) => rebuild(v), { deep: false })
+watch(() => [props.events, props.attackers], () => rebuild(props.events, props.attackers), { deep: false })
 </script>
 
 <style scoped>
@@ -385,6 +403,7 @@ watch(() => props.events, (v) => rebuild(v), { deep: false })
 .cyber-globe__legend span { display: inline-flex; align-items: center; gap: 6px; }
 .cyber-globe__legend i.dot { width: 7px; height: 7px; border-radius: 50%; background: #6ee7f9; }
 .cyber-globe__legend i.arc { width: 14px; height: 2px; background: #ff9f43; }
+.cyber-globe__legend i.ring { width: 8px; height: 8px; border-radius: 50%; border: 2px solid #ff5d73; background: transparent; }
 .cyber-globe__legend-note { color: var(--faint); font-size: 9px; margin-top: 2px; }
 @media (max-width: 640px) { .cyber-globe { min-height: 380px; } .cyber-globe__fallback-img { width: 78%; } }
 </style>
