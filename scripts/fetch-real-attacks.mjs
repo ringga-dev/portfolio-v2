@@ -15,6 +15,28 @@ const EXTRA = {
 }
 const coord = Object.assign({}, CENTROIDS, EXTRA)
 
+// Grid daratan Natural Earth 110m (360x180, 1 derajat) untuk memastikan
+// tidak ada titik yang jatuh di laut/samudra.
+const LAND = fs.readFileSync(path.join(ROOT, 'src/data/land-grid.txt'), 'utf8').trim().split('\n')
+function isLand(lat, lon) {
+  const x = ((Math.round(lon + 180) % 360) + 360) % 360
+  const y = Math.max(0, Math.min(179, Math.round(90 - lat)))
+  return LAND[y][x] === '1'
+}
+function snapToLand(lat, lon) {
+  if (isLand(lat, lon)) return [lat, lon]
+  for (let r = 1; r <= 14; r++) {
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue
+        const t = lat + dy, n = ((lon + dx + 540) % 360) - 180
+        if (isLand(t, n)) return [t, n]
+      }
+    }
+  }
+  return [lat, lon]
+}
+
 const UA = {
   'User-Agent': 'Mozilla/5.0 (compatible; portfolio-siber/1.0; +https://ringga-dev.github.io/portfolio-v2/)',
   'Accept': 'application/json',
@@ -39,13 +61,20 @@ function iso(c) {
   return ''
 }
 function geo(code) { const c = coord[code]; return c ? { lat: c[0], lon: c[1] } : null }
+function landPoint(code) {
+  const g = geo(code)
+  if (!g) return null
+  const [lat, lon] = snapToLand(g.lat, g.lon)
+  return { lat, lon }
+}
 
 /* -------------------------------------------------------------------------- */
 /*  1. KORBAN RANSOMWARE — ransomware.live v2 (attackdate lebih segar)          */
 /* -------------------------------------------------------------------------- */
 function normaliseVictim(v, i, ver) {
   const code = iso(v.country)
-  const g = geo(code)
+  const g = landPoint(code)
+  const snapped = g && (g.lat !== geo(code)?.lat || g.lon !== geo(code)?.lon)
   const group = v.group || v.group_name || 'tidak diketahui'
   return {
     id: `rl-${ver}-${i}-${(v.attackdate || v.discovered || '').slice(0, 10)}`,
@@ -56,6 +85,7 @@ function normaliseVictim(v, i, ver) {
     country: code,
     lat: g ? g.lat : null,
     lon: g ? g.lon : null,
+    coordSnapped: !!snapped,
     attackdate: v.attackdate || null,
     discovered: v.discovered || v.published || null,
     description: (v.description || '').slice(0, 500),
@@ -93,7 +123,7 @@ async function ransomwareTimeline() {
     if (!Array.isArray(raw)) return []
     return raw.map((v, i) => {
       const code = iso(v.country)
-      const g = geo(code)
+      const g = landPoint(code)
       return {
         id: `t-${i}-${v.date || ''}`,
         victim: v.victim || v.title || '(tidak diketahui)',
@@ -132,7 +162,7 @@ async function dshieldSources() {
         })
         const node = d?.ip || {}
         const code = iso(node.ascountry)
-        const g = geo(code)
+        const g = landPoint(code)
         if (!g) continue
         if (/censys|shodan|scanner|googlebot/i.test(node.asname || '')) continue // scanner, bukan penyerang
         out.push({

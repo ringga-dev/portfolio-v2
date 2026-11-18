@@ -101,7 +101,6 @@ const FRAG = /* glsl */ `
 let THREE, OrbitControlsCtor, renderer, scene, camera, controls, globeGroup
 let earthMesh, raf = 0, ro, disposed = false, reduced = false
 let arcs = [], nodeMeshes = [], raycaster, pointer, lastHover = null
-let flashes = [], flashIdx = 0
 let sunDir, W = 0, H = 0
 
 const RADIUS = 2.0
@@ -159,11 +158,11 @@ function makeArc(event) {
   const trailMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false })
   const trail = new THREE.Line(trailGeo, trailMat)
 
-  const headGeo = new THREE.SphereGeometry(0.024, 8, 8)
+  const headGeo = new THREE.SphereGeometry(0.018, 8, 8)
   const headMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1, depthWrite: false })
   const head = new THREE.Mesh(headGeo, headMat)
-  const glowGeo = new THREE.SphereGeometry(0.055, 8, 8)
-  const glowMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending })
+  const glowGeo = new THREE.SphereGeometry(0.032, 8, 8)
+  const glowMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.12, depthWrite: false, blending: THREE.AdditiveBlending })
   const glow = new THREE.Mesh(glowGeo, glowMat)
 
   globeGroup.add(line, head, glow, trail)
@@ -172,7 +171,7 @@ function makeArc(event) {
   return {
     curve, line, head, glow, trail, event, color, SEG,
     epoch: performance.now() + Math.random() * (dur + gap),
-    dur, gap, prevT: 0,
+    dur, gap,
   }
 }
 
@@ -238,32 +237,6 @@ function rebuild(events, attackers = []) {
   }
 }
 
-function initFlashes() {
-  for (const f of flashes) {
-    globeGroup.remove(f.mesh)
-    f.mesh.geometry.dispose(); f.mesh.material.dispose()
-  }
-  flashes = []
-  for (let i = 0; i < 18; i++) {
-    const geo = new THREE.RingGeometry(0.035, 0.052, 20)
-    const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending })
-    const mesh = new THREE.Mesh(geo, mat)
-    mesh.visible = false
-    globeGroup.add(mesh)
-    flashes.push({ mesh, start: -1, dur: 760 })
-  }
-}
-
-function triggerFlash(pos, color) {
-  if (!flashes.length) return
-  const f = flashes[flashIdx++ % flashes.length]
-  f.mesh.position.copy(pos)
-  f.mesh.lookAt(pos.clone().multiplyScalar(2))
-  f.mesh.material.color.copy(color)
-  f.mesh.visible = true
-  f.start = performance.now()
-}
-
 function draw(now) {
   if (!renderer || disposed) return
   for (const a of arcs) {
@@ -276,14 +249,13 @@ function draw(now) {
     a.head.visible = active
     a.glow.visible = active
     a.trail.visible = active
-    if (!active) { a.prevT = 0; continue }
+    if (!active) continue
 
     // ease-out: cepat di awal, melambat di akhir
     const et = 1 - Math.pow(1 - t, 1.6)
     const head = a.curve.getPoint(et)
     a.head.position.copy(head)
     a.glow.position.copy(head)
-    a.glow.scale.setScalar(1 + 0.25 * Math.sin(now / 140 + a.epoch))
 
     const arr = a.trail.geometry.attributes.position.array
     const col = a.trail.geometry.attributes.color.array
@@ -300,18 +272,6 @@ function draw(now) {
     }
     a.trail.geometry.attributes.position.needsUpdate = true
     a.trail.geometry.attributes.color.needsUpdate = true
-
-    if (a.prevT < 0.97 && t >= 0.97) triggerFlash(a.curve.getPoint(1), a.color)
-    a.prevT = t
-  }
-
-  // flash kedatangan: cincin membesar lalu memudar
-  for (const f of flashes) {
-    if (f.start < 0) continue
-    const age = (now - f.start) / f.dur
-    if (age >= 1) { f.mesh.visible = false; f.start = -1; continue }
-    f.mesh.scale.setScalar(1 + age * 3.2)
-    f.mesh.material.opacity = (1 - age) * 0.85
   }
 
   if (!props.paused && !reduced) globeGroup.rotation.y += 0.00055
@@ -390,7 +350,6 @@ onMounted(async () => {
   globeGroup = new THREE.Group()
   globeGroup.rotation.y = -0.35
   scene.add(globeGroup)
-  initFlashes()
 
   const loader = new THREE.TextureLoader()
   const load = (url, srgb) => new Promise((resolve) => {
