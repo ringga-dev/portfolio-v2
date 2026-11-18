@@ -101,6 +101,7 @@ const FRAG = /* glsl */ `
 let THREE, OrbitControlsCtor, renderer, scene, camera, controls, globeGroup
 let earthMesh, raf = 0, ro, disposed = false, reduced = false
 let arcs = [], nodeMeshes = [], raycaster, pointer, lastHover = null
+let flashes = [], flashIdx = 0
 let sunDir, W = 0, H = 0
 
 const RADIUS = 2.0
@@ -115,48 +116,72 @@ function latLonToVec3(lat, lon, r = RADIUS) {
   )
 }
 
+// Interpolasi great-circle: setiap titik dijamin di atas permukaan bola.
+function slerpDir(a, b, t) {
+  const dot = Math.max(-1, Math.min(1, a.dot(b)))
+  const omega = Math.acos(dot)
+  if (omega < 1e-4) return a.clone().lerp(b, t).normalize()
+  const s = Math.sin(omega)
+  return a.clone().multiplyScalar(Math.sin((1 - t) * omega) / s)
+    .add(b.clone().multiplyScalar(Math.sin(t * omega) / s)).normalize()
+}
+
 function makeArc(event) {
   if (!event || !event.from || !event.to ||
       event.from.lat == null || event.to.lat == null) return null
-  const a = latLonToVec3(event.from.lat, event.from.lon, RADIUS * 1.008)
-  const b = latLonToVec3(event.to.lat, event.to.lon, RADIUS * 1.008)
-  const angle = a.clone().normalize().angleTo(b.clone().normalize())
-  const lift = RADIUS * (0.06 + Math.min(0.42, angle * 0.24))
-  const mid = a.clone().add(b).normalize().multiplyScalar(RADIUS + lift)
-  const curve = new THREE.QuadraticBezierCurve3(a, mid, b)
-  const pts = curve.getPoints(64)
+  const dirA = latLonToVec3(event.from.lat, event.from.lon, 1).normalize()
+  const dirB = latLonToVec3(event.to.lat, event.to.lon, 1).normalize()
+  const angle = dirA.angleTo(dirB)
+  const lift = RADIUS * (0.055 + 0.30 * (angle / Math.PI))
+  const floor = RADIUS * 1.014 // selalu di atas kulit bumi, tidak pernah tenggelam
+  const pts = []
+  const N = 72
+  for (let i = 0; i <= N; i++) {
+    const u = i / N
+    const d = slerpDir(dirA, dirB, u)
+    const r = floor + lift * Math.sin(Math.PI * u)
+    pts.push(d.multiplyScalar(r))
+  }
+  const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal')
   const color = new THREE.Color(event.color || '#ff5d73')
 
+  // Jalur samar sebagai lintasan.
   const lineGeo = new THREE.BufferGeometry().setFromPoints(pts)
-  const lineMat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.34, depthWrite: false })
+  const lineMat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.22, depthWrite: false })
   const line = new THREE.Line(lineGeo, lineMat)
 
-  const headGeo = new THREE.SphereGeometry(0.026, 8, 8)
-  const headMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1, depthWrite: false })
-  const head = new THREE.Mesh(headGeo, headMat)
-
+  // Ekor dengan gradien warna: terang di kepala, memudar ke belakang.
+  const SEG = 22
   const trailGeo = new THREE.BufferGeometry()
-  trailGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(12 * 3), 3))
-  const trailMat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.95, depthWrite: false })
+  trailGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(SEG * 3), 3))
+  const shades = new Float32Array(SEG * 3)
+  trailGeo.setAttribute('color', new THREE.BufferAttribute(shades, 3))
+  const trailMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false })
   const trail = new THREE.Line(trailGeo, trailMat)
 
-  globeGroup.add(line, head, trail)
-  // jitter acak supaya busur tidak bergerak serempak
-  const dur = 2100 + Math.random() * 1700
-  const gap = 700 + Math.random() * 2200
+  const headGeo = new THREE.SphereGeometry(0.024, 8, 8)
+  const headMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1, depthWrite: false })
+  const head = new THREE.Mesh(headGeo, headMat)
+  const glowGeo = new THREE.SphereGeometry(0.055, 8, 8)
+  const glowMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending })
+  const glow = new THREE.Mesh(glowGeo, glowMat)
+
+  globeGroup.add(line, head, glow, trail)
+  const dur = 1900 + Math.random() * 1500
+  const gap = 500 + Math.random() * 1900
   return {
-    curve, line, head, trail, event,
+    curve, line, head, glow, trail, event, color, SEG,
     epoch: performance.now() + Math.random() * (dur + gap),
-    dur, gap,
-    head, line, trail, color,
+    dur, gap, prevT: 0,
   }
 }
 
 function clearArcs() {
   for (const a of arcs) {
-    globeGroup.remove(a.line, a.head, a.trail)
+    globeGroup.remove(a.line, a.head, a.glow, a.trail)
     a.line.geometry.dispose(); a.line.material.dispose()
     a.head.geometry.dispose(); a.head.material.dispose()
+    a.glow.geometry.dispose(); a.glow.material.dispose()
     a.trail.geometry.dispose(); a.trail.material.dispose()
   }
   arcs = []
@@ -213,31 +238,82 @@ function rebuild(events, attackers = []) {
   }
 }
 
+function initFlashes() {
+  for (const f of flashes) {
+    globeGroup.remove(f.mesh)
+    f.mesh.geometry.dispose(); f.mesh.material.dispose()
+  }
+  flashes = []
+  for (let i = 0; i < 18; i++) {
+    const geo = new THREE.RingGeometry(0.035, 0.052, 20)
+    const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending })
+    const mesh = new THREE.Mesh(geo, mat)
+    mesh.visible = false
+    globeGroup.add(mesh)
+    flashes.push({ mesh, start: -1, dur: 760 })
+  }
+}
+
+function triggerFlash(pos, color) {
+  if (!flashes.length) return
+  const f = flashes[flashIdx++ % flashes.length]
+  f.mesh.position.copy(pos)
+  f.mesh.lookAt(pos.clone().multiplyScalar(2))
+  f.mesh.material.color.copy(color)
+  f.mesh.visible = true
+  f.start = performance.now()
+}
+
 function draw(now) {
   if (!renderer || disposed) return
   for (const a of arcs) {
-    // Siklus berulang terus: durasi terbang + jeda, lalu ulang dari awal.
     const cycle = a.dur + a.gap
     const phase = ((now - a.epoch) % cycle + cycle) % cycle
     const active = phase < a.dur
     const t = active ? phase / a.dur : 0
-    const dim = props.focus && !(a.event.from?.name || '').toLowerCase().includes(props.focus.toLowerCase()) &&
-      !(a.event.to?.name || '').toLowerCase().includes(props.focus.toLowerCase())
-    a.line.material.opacity = dim ? 0.08 : 0.34
+    const dim = props.focus && a.event.group !== props.focus
+    a.line.material.opacity = dim ? 0.07 : 0.2
     a.head.visible = active
+    a.glow.visible = active
     a.trail.visible = active
-    if (!active) continue
-    a.head.position.copy(a.curve.getPoint(t))
+    if (!active) { a.prevT = 0; continue }
+
+    // ease-out: cepat di awal, melambat di akhir
+    const et = 1 - Math.pow(1 - t, 1.6)
+    const head = a.curve.getPoint(et)
+    a.head.position.copy(head)
+    a.glow.position.copy(head)
+    a.glow.scale.setScalar(1 + 0.25 * Math.sin(now / 140 + a.epoch))
+
     const arr = a.trail.geometry.attributes.position.array
-    const seg = 12
-    for (let i = 0; i < seg; i++) {
-      const tt = Math.max(0, t - 0.14 + (0.14 * i) / (seg - 1))
+    const col = a.trail.geometry.attributes.color.array
+    const f = Math.max(0, et - 0.22)
+    for (let i = 0; i < a.SEG; i++) {
+      const u = i / (a.SEG - 1)
+      const tt = f + (et - f) * u
       const p = a.curve.getPoint(tt)
       arr[i * 3] = p.x; arr[i * 3 + 1] = p.y; arr[i * 3 + 2] = p.z
+      const fade = dim ? 0.12 * u : Math.pow(u, 1.8)
+      col[i * 3] = a.color.r * fade
+      col[i * 3 + 1] = a.color.g * fade
+      col[i * 3 + 2] = a.color.b * fade
     }
     a.trail.geometry.attributes.position.needsUpdate = true
-    a.trail.material.opacity = dim ? 0.2 : 0.95
+    a.trail.geometry.attributes.color.needsUpdate = true
+
+    if (a.prevT < 0.97 && t >= 0.97) triggerFlash(a.curve.getPoint(1), a.color)
+    a.prevT = t
   }
+
+  // flash kedatangan: cincin membesar lalu memudar
+  for (const f of flashes) {
+    if (f.start < 0) continue
+    const age = (now - f.start) / f.dur
+    if (age >= 1) { f.mesh.visible = false; f.start = -1; continue }
+    f.mesh.scale.setScalar(1 + age * 3.2)
+    f.mesh.material.opacity = (1 - age) * 0.85
+  }
+
   if (!props.paused && !reduced) globeGroup.rotation.y += 0.00055
   controls.update()
   renderer.render(scene, camera)
@@ -314,6 +390,7 @@ onMounted(async () => {
   globeGroup = new THREE.Group()
   globeGroup.rotation.y = -0.35
   scene.add(globeGroup)
+  initFlashes()
 
   const loader = new THREE.TextureLoader()
   const load = (url, srgb) => new Promise((resolve) => {
