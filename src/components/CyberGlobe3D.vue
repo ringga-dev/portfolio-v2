@@ -17,9 +17,10 @@
 
     <div class="cyber-globe__legend" aria-hidden="true">
       <span><i class="dot"></i> korban ransomware</span>
+      <span><i class="in"></i> serangan masuk ke korban</span>
       <span><i class="arc"></i> korban satu grup</span>
       <span><i class="ring"></i> asal serangan (DShield)</span>
-      <span class="cyber-globe__legend-note">grup ransomware tidak dipetakan ke negara asal</span>
+      <span class="cyber-globe__legend-note">arah acak = visual, bukan negara asal pelaku</span>
     </div>
   </div>
 </template>
@@ -140,10 +141,13 @@ function makeArc(event) {
   const trail = new THREE.Line(trailGeo, trailMat)
 
   globeGroup.add(line, head, trail)
+  // jitter acak supaya busur tidak bergerak serempak
+  const dur = 2100 + Math.random() * 1700
+  const gap = 700 + Math.random() * 2200
   return {
     curve, line, head, trail, event,
-    start: performance.now(),
-    dur: 2600 + Math.random() * 1400,
+    epoch: performance.now() + Math.random() * (dur + gap),
+    dur, gap,
     head, line, trail, color,
   }
 }
@@ -202,23 +206,27 @@ function rebuild(events, attackers = []) {
   clearArcs()
   addNodes(events)
   addAttackers(attackers)
-  const slice = events.slice(0, 36)
-  slice.forEach((e, i) => {
+  // SEMUA insiden dapat busur, bukan cuma 36 pertama.
+  for (const e of events) {
     const arc = makeArc(e)
-    if (arc) { arc.start = performance.now() + i * 55; arcs.push(arc) }
-  })
+    if (arc) arcs.push(arc)
+  }
 }
 
 function draw(now) {
   if (!renderer || disposed) return
   for (const a of arcs) {
-    const raw = (now - a.start) / a.dur
-    const t = Math.max(0, Math.min(1, raw))
+    // Siklus berulang terus: durasi terbang + jeda, lalu ulang dari awal.
+    const cycle = a.dur + a.gap
+    const phase = ((now - a.epoch) % cycle + cycle) % cycle
+    const active = phase < a.dur
+    const t = active ? phase / a.dur : 0
     const dim = props.focus && !(a.event.from?.name || '').toLowerCase().includes(props.focus.toLowerCase()) &&
       !(a.event.to?.name || '').toLowerCase().includes(props.focus.toLowerCase())
     a.line.material.opacity = dim ? 0.08 : 0.34
-    if (raw < 0) { a.head.visible = false; a.trail.visible = false; continue }
-    a.head.visible = true; a.trail.visible = true
+    a.head.visible = active
+    a.trail.visible = active
+    if (!active) continue
     a.head.position.copy(a.curve.getPoint(t))
     const arr = a.trail.geometry.attributes.position.array
     const seg = 12
@@ -229,10 +237,6 @@ function draw(now) {
     }
     a.trail.geometry.attributes.position.needsUpdate = true
     a.trail.material.opacity = dim ? 0.2 : 0.95
-    if (t >= 1) {
-      a.head.visible = false
-      a.trail.visible = false
-    }
   }
   if (!props.paused && !reduced) globeGroup.rotation.y += 0.00055
   controls.update()
@@ -402,6 +406,7 @@ watch(() => [props.events, props.attackers], () => rebuild(props.events, props.a
 .cyber-globe__legend { position: absolute; top: 14px; left: 14px; display: flex; flex-direction: column; gap: 4px; font-size: 10px; color: var(--muted); pointer-events: none; }
 .cyber-globe__legend span { display: inline-flex; align-items: center; gap: 6px; }
 .cyber-globe__legend i.dot { width: 7px; height: 7px; border-radius: 50%; background: #6ee7f9; }
+.cyber-globe__legend i.in { width: 14px; height: 2px; background: #ff5d73; }
 .cyber-globe__legend i.arc { width: 14px; height: 2px; background: #ff9f43; }
 .cyber-globe__legend i.ring { width: 8px; height: 8px; border-radius: 50%; border: 2px solid #ff5d73; background: transparent; }
 .cyber-globe__legend-note { color: var(--faint); font-size: 9px; margin-top: 2px; }

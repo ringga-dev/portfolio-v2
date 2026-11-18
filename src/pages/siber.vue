@@ -5,8 +5,8 @@
         <h1>Perang Siber</h1>
         <p class="cyber-lede">
           Insiden ransomware nyata dari ransomware.live, dipetakan ke Bumi dan diperbarui otomatis.
-          Setiap titik adalah korban yang benar-benar dilaporkan; garis menghubungkan korban dalam
-          grup yang sama — bukan klaim asal pelaku.
+          Setiap titik adalah korban yang benar-benar dilaporkan dan serangannya terus berulang seperti
+          threat map. Arah busur masuk dibuat acak sebagai visual — bukan klaim negara asal pelaku.
         </p>
         <div class="cyber-source">
           <span class="cyber-live-dot"></span>
@@ -195,27 +195,40 @@ const rankedGroups = computed(() => {
 
 const groups = computed(() => [...new Set(data.value.events.map(e => e.group).filter(Boolean))].sort())
 
-// Busur: hubungan antar korban dalam grup yang sama. BUKAN asal serangan.
+// Busur nyata: (1) korban berurutan dalam grup sama, (2) serangan masuk ke
+// SETIAP korban dari arah acak di langit — bukan klaim negara asal pelaku.
 const arcEvents = computed(() => {
-  const byGroup = new Map()
+  const out = []
+  const seen = []
   for (const e of data.value.events) {
     if (e.lat == null || e.lon == null) continue
+    const seed = [...(e.victim || '')].reduce((a, c) => a + c.charCodeAt(0), 0)
+    const bearing = ((seed % 360) * Math.PI) / 180
+    const to = { lat: e.lat, lon: e.lon, name: e.victim, country: e.country }
+    const from = {
+      lat: Math.max(-80, Math.min(80, e.lat + Math.cos(bearing) * 26)),
+      lon: ((e.lon + Math.sin(bearing) * 32 + 540) % 360) - 180,
+      name: 'serangan masuk', country: '',
+    }
+    out.push({ id: `in-${e.id}`, from, to, color: '#ff5d73', group: e.group, kind: 'inbound' })
+    seen.push({ ...e, to })
+  }
+
+  const byGroup = new Map()
+  for (const e of seen) {
     if (!byGroup.has(e.group)) byGroup.set(e.group, [])
     byGroup.get(e.group).push(e)
   }
-  const out = []
   for (const [g, list] of byGroup) {
     if (list.length < 2) continue
-    const sorted = [...list].sort((a, b) => new Date(a.discovered) - new Date(b.discovered))
-    for (let i = 1; i < Math.min(sorted.length, 5); i++) {
-      const a = sorted[i - 1], b = sorted[i]
-      if (a.country === b.country) continue
+    const sorted = [...list].sort((a, b) =>
+      new Date(a.attackdate || a.discovered || 0) - new Date(b.attackdate || b.discovered || 0))
+    for (let i = 1; i < sorted.length; i++) {
+      const a = sorted[i - 1].to, b = sorted[i].to
       out.push({
-        id: `${g}-${i}`,
-        from: { lat: a.lat, lon: a.lon, name: a.victim, country: a.country },
-        to: { lat: b.lat, lon: b.lon, name: b.victim, country: b.country },
-        color: '#ff9f43',
-        group: g,
+        id: `gr-${g}-${i}`,
+        from: a, to: b,
+        color: '#ff9f43', group: g, kind: 'group',
       })
     }
   }
