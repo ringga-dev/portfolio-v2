@@ -21,9 +21,10 @@
  */
 
 // URL Vite (string pada SSR; tidak menyentuh DOM). Nama file sesuai kontrak.
-import earthDayUrl from '~/assets/textures/eyes/earth-color-eyes.jpg?url'
-import earthNightUrl from '~/assets/textures/eyes/earth-night-eyes.jpg?url'
-import earthNormalUrl from '~/assets/textures/eyes/earth-normal-eyes.jpg?url'
+// Tekstur equirectangular 4096x2048 yang terverifikasi benar (Blue Marble NASA).
+import earthDayUrl from '~/assets/textures/earth-day.jpg?url'
+import earthNightUrl from '~/assets/textures/earth-night.jpg?url'
+import earthTopoUrl from '~/assets/textures/earth-topology.jpg?url'
 import marsUrl from '~/assets/textures/mars.jpg?url'
 import jupiterUrl from '~/assets/textures/jupiter.jpg?url'
 import saturnUrl from '~/assets/textures/saturn.jpg?url'
@@ -81,7 +82,7 @@ const CONFIG: Record<Variant, VariantConfig> = {
 
 const PLANETS: Record<Planet, PlanetConfig> = {
   earth: {
-    color: earthDayUrl, night: earthNightUrl, normal: earthNormalUrl,
+    color: earthDayUrl, night: earthNightUrl, normal: earthTopoUrl,
     cssColor: '#1e6fc4', cssGlow: 'rgba(110, 231, 249, .34)', threeColor: 0x14306b, tilt: 23.4,
   },
   mars: {
@@ -282,16 +283,19 @@ const EARTH_FRAG = /* glsl */ `
     vec3 N = normalize(vWorldNormal);
     vec3 L = normalize(uSunDirection);
 
-    // Normal map NASA (tangent-space) dipetakan ke bola. Tangent di sekitar
-    // sumbu-Y: cross(up, N) -> benua & pegunungan jauh lebih tajam daripada
-    // bump topografi. Fallback N bila normal gagal dimuat adalah (0,0,1).
+    // Topografi -> normal kasar lewat turunan tekstur (bump).
+    float texel = 1.0 / 2048.0;
+    float hL = texture2D(uNormal, vUv - vec2(texel, 0.0)).r;
+    float hR = texture2D(uNormal, vUv + vec2(texel, 0.0)).r;
+    float hD = texture2D(uNormal, vUv - vec2(0.0, texel)).r;
+    float hU = texture2D(uNormal, vUv + vec2(0.0, texel)).r;
     vec3 T = normalize(cross(vec3(0.0, 1.0, 0.0), N) + vec3(1e-5));
     vec3 B = cross(N, T);
-    vec3 mapN = texture2D(uNormal, vUv).xyz * 2.0 - 1.0;
-    vec3 Nb = normalize(T * mapN.x + B * mapN.y + N * mapN.z);
+    vec3 Nb = normalize(N - ((hR - hL) * T + (hU - hD) * B) * 0.45);
 
     float ndl = dot(Nb, L);
-    float day = smoothstep(-0.18, 0.28, ndl); // terminator lembut
+    // Terminator tegas: siang terang, malam gelap — pembagian jelas.
+    float day = smoothstep(-0.04, 0.12, ndl);
 
     // Tekstur warna memakai SRGBColorSpace -> GPU sudah linearisasi saat
     // sampling. Jangan srgbToLinear di sini.
@@ -331,7 +335,7 @@ const PLANET_FRAG = /* glsl */ `
     vec3 N = normalize(vWorldNormal);
     vec3 L = normalize(uSunDirection);
     float ndl = dot(N, L);
-    float day = smoothstep(-0.22, 0.30, ndl);
+    float day = smoothstep(-0.04, 0.12, ndl);
 
     vec3 dayCol = texture2D(uDay, vUv).rgb;
     float diffuse = clamp(ndl, 0.0, 1.0);
