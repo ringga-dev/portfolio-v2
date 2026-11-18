@@ -14,6 +14,12 @@
     </div>
 
     <div v-if="hoverLabel" class="cyber-globe__tip">{{ hoverLabel }}</div>
+
+    <div class="cyber-globe__legend" aria-hidden="true">
+      <span><i class="dot"></i> korban ransomware</span>
+      <span><i class="arc"></i> korban satu grup</span>
+      <span class="cyber-globe__legend-note">grup ransomware tidak dipetakan ke negara asal</span>
+    </div>
   </div>
 </template>
 
@@ -263,7 +269,7 @@ onMounted(async () => {
 
   scene = new THREE.Scene()
   camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100)
-  camera.position.set(0, 0, 6.4)
+  camera.position.set(0, 0, 7.4)
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
   renderer.setClearColor(0x05060d, 0)
@@ -276,8 +282,8 @@ onMounted(async () => {
   controls.enableDamping = !reduced
   controls.dampingFactor = 0.06
   controls.enablePan = false
-  controls.minDistance = 4.0
-  controls.maxDistance = 10.0
+  controls.minDistance = 4.4
+  controls.maxDistance = 11.0
   controls.rotateSpeed = 0.62
   controls.zoomSpeed = 0.8
   controls.update()
@@ -375,5 +381,10 @@ watch(() => props.events, (v) => rebuild(v), { deep: false })
 .cyber-globe__reset { width: 30px; height: 30px; display: grid; place-items: center; background: rgba(8,14,34,.7); border: 1px solid rgba(110,231,249,.38); border-radius: 50%; color: #9fe8f7; cursor: pointer; }
 .cyber-globe__reset:hover { background: rgba(16,34,70,.9); color: #fff; }
 .cyber-globe__tip { position: absolute; bottom: 14px; right: 14px; font-size: 11px; letter-spacing: .06em; color: var(--accent); background: rgba(5,6,13,.75); padding: 5px 9px; pointer-events: none; }
+.cyber-globe__legend { position: absolute; top: 14px; left: 14px; display: flex; flex-direction: column; gap: 4px; font-size: 10px; color: var(--muted); pointer-events: none; }
+.cyber-globe__legend span { display: inline-flex; align-items: center; gap: 6px; }
+.cyber-globe__legend i.dot { width: 7px; height: 7px; border-radius: 50%; background: #6ee7f9; }
+.cyber-globe__legend i.arc { width: 14px; height: 2px; background: #ff9f43; }
+.cyber-globe__legend-note { color: var(--faint); font-size: 9px; margin-top: 2px; }
 @media (max-width: 640px) { .cyber-globe { min-height: 380px; } .cyber-globe__fallback-img { width: 78%; } }
 </style>
