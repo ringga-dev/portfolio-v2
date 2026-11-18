@@ -6,7 +6,8 @@
         <p class="cyber-lede">
           Insiden ransomware nyata dari ransomware.live, dipetakan ke Bumi dan diperbarui otomatis.
           Setiap titik adalah korban yang benar-benar dilaporkan dan serangannya terus berulang seperti
-          threat map. Arah busur masuk dibuat acak sebagai visual — bukan klaim negara asal pelaku.
+          threat map. Garis merah berangkat dari negara asal yang terobservasi di feed DShield — bukan
+          dari laut, dan bukan klaim pasangan historis penyerang-korban.
         </p>
         <div class="cyber-source">
           <span class="cyber-live-dot"></span>
@@ -195,22 +196,25 @@ const rankedGroups = computed(() => {
 
 const groups = computed(() => [...new Set(data.value.events.map(e => e.group).filter(Boolean))].sort())
 
-// Busur nyata: (1) korban berurutan dalam grup sama, (2) serangan masuk ke
-// SETIAP korban dari arah acak di langit — bukan klaim negara asal pelaku.
+// Busur nyata: korban <-> korban satu grup, dan serangan masuk dari negara
+// asal yang benar-benar terobservasi (DShield). Titik awal TIDAK acak/laut.
 const arcEvents = computed(() => {
   const out = []
   const seen = []
+  const origins = (data.value.attackers || []).filter(a => a.lat != null && a.lon != null &&
+    !/censys|shodan|scanner|googlebot/i.test(a.asname || ''))
   for (const e of data.value.events) {
     if (e.lat == null || e.lon == null) continue
-    const seed = [...(e.victim || '')].reduce((a, c) => a + c.charCodeAt(0), 0)
-    const bearing = ((seed % 360) * Math.PI) / 180
     const to = { lat: e.lat, lon: e.lon, name: e.victim, country: e.country }
-    const from = {
-      lat: Math.max(-80, Math.min(80, e.lat + Math.cos(bearing) * 26)),
-      lon: ((e.lon + Math.sin(bearing) * 32 + 540) % 360) - 180,
-      name: 'serangan masuk', country: '',
+    if (origins.length) {
+      // pilih asal secara deterministik dari data nyata, bukan arah acak
+      const seed = [...(e.victim || '')].reduce((a, c) => a + c.charCodeAt(0), 0)
+      const src = origins[seed % origins.length]
+      const from = { lat: src.lat, lon: src.lon, name: src.country, country: src.country }
+      if (Math.abs(from.lat - to.lat) > 0.5 || Math.abs(from.lon - to.lon) > 0.5) {
+        out.push({ id: `in-${e.id}`, from, to, color: '#ff5d73', group: e.group, kind: 'inbound' })
+      }
     }
-    out.push({ id: `in-${e.id}`, from, to, color: '#ff5d73', group: e.group, kind: 'inbound' })
     seen.push({ ...e, to })
   }
 

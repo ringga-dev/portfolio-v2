@@ -134,6 +134,7 @@ async function dshieldSources() {
         const code = iso(node.ascountry)
         const g = geo(code)
         if (!g) continue
+        if (/censys|shodan|scanner|googlebot/i.test(node.asname || '')) continue // scanner, bukan penyerang
         out.push({
           id: `ds-${r.ip}`,
           ip: r.ip,

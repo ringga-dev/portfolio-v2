@@ -17,10 +17,10 @@
 
     <div class="cyber-globe__legend" aria-hidden="true">
       <span><i class="dot"></i> korban ransomware</span>
-      <span><i class="in"></i> serangan masuk ke korban</span>
+      <span><i class="in"></i> asal serangan → korban</span>
       <span><i class="arc"></i> korban satu grup</span>
       <span><i class="ring"></i> asal serangan (DShield)</span>
-      <span class="cyber-globe__legend-note">arah acak = visual, bukan negara asal pelaku</span>
+      <span class="cyber-globe__legend-note">asal & korban dari feed nyata, bukan pasangan historis</span>
     </div>
   </div>
 </template>
