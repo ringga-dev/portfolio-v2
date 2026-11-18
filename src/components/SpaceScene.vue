@@ -208,7 +208,10 @@ let rings: RingData[] = []
 let cityVectors: any[] = []
 
 const sunDir: any = { x: 0, y: 0, z: 0, copy(v: any) { this.x = v.x; this.y = v.y; this.z = v.z; return this }, normalize() { const l = Math.hypot(this.x, this.y, this.z) || 1; this.x /= l; this.y /= l; this.z /= l; return this }, set(x: number, y: number, z: number) { this.x = x; this.y = y; this.z = z; return this } }
-let sunAngle = Math.PI + 0.45 // matahari dari kiri-BELAKANG: separuh depan Bumi gelap, lampu kota jelas
+// Matahari dari samping kiri (+Z sedikit) → sisi kiri terang, kanan gelap.
+// z positif penting: tanpa itu seluruh sisi depan gelap dan tidak ada siang.
+let sunAngle = Math.PI * 0.75 // 135°: cos=-0.71 (kiri), sin=+0.71 (depan)
+let sunPhase = 0
 
 let disposables: Array<{ dispose(): void }> = []
 
@@ -1136,9 +1139,11 @@ function tick(now: number) {
     scrollCurrentY += (scrollTargetY - scrollCurrentY) * Math.min(1, dt * 6)
     applyScrollRotation()
 
-    // Siklus siang/malam: matahari berputar perlahan.
-    sunAngle += dt * 0.055
-    sunDir.set(Math.cos(sunAngle), 0.18, Math.sin(sunAngle)).normalize()
+    // Matahari bergerak bolak-balik di rentang depan (±40° dari 135°) supaya
+    // terminator SELALU terlihat — jangan sampai muter ke belakang Bumi.
+    sunPhase += dt * 0.28
+    const sunA = Math.PI * 0.75 + Math.sin(sunPhase) * 0.7
+    sunDir.set(Math.cos(sunA), 0.16, Math.sin(sunA)).normalize()
     if (sunLight) sunLight.position.set(sunDir.x * 8, sunDir.y * 8, sunDir.z * 8)
     if (earthUniforms) earthUniforms.uSunDirection.value.set(sunDir.x, sunDir.y, sunDir.z)
 
