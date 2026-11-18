@@ -303,12 +303,9 @@ const EARTH_FRAG = /* glsl */ `
     float day = smoothstep(-0.04, 0.12, ndl);
 
     // Tekstur warna memakai SRGBColorSpace -> GPU sudah linearisasi saat
-    // sampling. Jangan srgbToLinear di sini.
+    // sampling. Jangan srgbToLinear di sini. Sudah di-unsharp saat generation.
     vec3 dayCol = texture2D(uDay, vUv).rgb;
     vec3 nightCol = texture2D(uNight, vUv).rgb;
-
-    // Tekstur sudah di-unsharp saat generation; jangan di-sharp lagi di GLSL.
-    vec3 dayCol = texture2D(uDay, vUv).rgb;
 
     // Siang: Blue Marble + diffuse matte (tanpa specular).
     float diffuse = clamp(ndl, 0.0, 1.0);
