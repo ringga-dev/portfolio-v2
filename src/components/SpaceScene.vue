@@ -22,8 +22,9 @@
 
 // URL Vite (string pada SSR; tidak menyentuh DOM). Nama file sesuai kontrak.
 // Tekstur equirectangular 4096x2048 yang terverifikasi benar (Blue Marble NASA).
-// Tekstur equirectangular 8192x4096 (upscaled Lanczos + unsharp dari Blue Marble NASA).
-import earthDayUrl from '~/assets/textures/earth-day-8k.jpg?url'
+// 4096x2048 kompatibel dengan SEMUA GPU (banyak device max 4096, bukan 8192).
+// 8192 bisa gagal upload -> planet hitam/transparan di device tersebut.
+import earthDayUrl from '~/assets/textures/earth-day-4k-safe.jpg?url'
 import earthNightUrl from '~/assets/textures/earth-night.jpg?url'
 import earthTopoUrl from '~/assets/textures/earth-topology.jpg?url'
 import marsUrl from '~/assets/textures/mars.jpg?url'
