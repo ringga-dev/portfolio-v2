@@ -1,0 +1,51 @@
+name: Siber data — ambil insiden nyata tiap jam
+
+on:
+  schedule:
+    # GitHub bisa menunda schedule; jangan anggap jam 07:00 UTC sebagai indikator gagal.
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: "siber-data"
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Fetch real incident data
+        run: node scripts/fetch-real-attacks.mjs
+
+      - name: Commit snapshot bila berubah
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/threats.json
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Tidak ada perubahan data."
+          else
+            git commit -m "data: refresh real cyber incidents from public feeds"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger deploy dengan data terbaru
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run deploy.yml --ref main

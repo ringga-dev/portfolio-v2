@@ -4,58 +4,69 @@
       <div class="wrap">
         <h1>Perang Siber</h1>
         <p class="cyber-lede">
-          Visualisasi simulasi lalu lintas serangan: simpul jaringan, kota, dan busur serangan yang
-          melintasi peta dunia secara real-time. Ini karya visual, bukan data ancaman nyata.
+          Insiden ransomware nyata dari ransomware.live, dipetakan ke Bumi dan diperbarui otomatis.
+          Setiap titik adalah korban yang benar-benar dilaporkan; garis menghubungkan korban dalam
+          grup yang sama — bukan klaim asal pelaku.
         </p>
+        <div class="cyber-source">
+          <span class="cyber-live-dot"></span>
+          DATA REAL · {{ fetchedLabel }} · {{ data.count }} insiden
+          <a href="https://www.ransomware.live/" target="_blank" rel="noopener">sumber ↗</a>
+        </div>
       </div>
     </section>
 
     <section class="cyber-stage-wrap">
       <div class="wrap">
         <div class="cyber-stage">
-          <CyberScene
-            :intensity="intensity"
+          <CyberGlobe3D
+            :events="arcEvents"
             :focus="focus"
             :paused="paused"
-            @attack="onAttack"
-            @update:focus="focus = $event"
+            @select="onSelect"
           />
           <div class="cyber-controls" role="group" aria-label="Kontrol visualisasi">
-            <div class="cyber-seg" role="group" aria-label="Intensitas serangan">
-              <button
-                v-for="m in modes" :key="m.id" type="button"
-                :class="{ on: intensity === m.id }"
-                :aria-pressed="intensity === m.id"
-                @click="intensity = m.id"
-              >{{ m.name }}</button>
-            </div>
+            <label class="cyber-select">
+              <span class="sr-only">Fokus grup ransomware</span>
+              <select :value="focus" @change="focus = $event.target.value">
+                <option value="">Semua grup</option>
+                <option v-for="g in groups" :key="g" :value="g">{{ g }}</option>
+              </select>
+            </label>
             <button class="cyber-btn" type="button" :aria-pressed="paused" @click="paused = !paused">
               {{ paused ? 'Lanjutkan' : 'Jeda' }}
             </button>
-            <label class="cyber-select">
-              <span class="sr-only">Fokus ke simpul</span>
-              <select :value="focus" @change="focus = $event.target.value">
-                <option value="">Semua simpul</option>
-                <option v-for="n in nodeList" :key="n.id" :value="n.id">{{ n.name }}</option>
-              </select>
-            </label>
           </div>
+          <p class="cyber-hint">Geser untuk memutar Bumi · gulir untuk zoom · klik titik untuk fokus</p>
         </div>
 
-        <div class="cyber-feed" aria-label="Aktivitas serangan simulasi">
+        <div class="cyber-feed" aria-label="Insiden nyata terbaru">
           <div class="cyber-feed__head">
-            <span>Aktivitas terbaru</span>
-            <span class="cyber-feed__tag">SIMULASI</span>
+            <span>Insiden terbaru</span>
+            <span class="cyber-feed__tag">DATA REAL</span>
           </div>
           <ul>
-            <li v-for="(e, i) in feed" :key="e.key">
-              <span class="cyber-feed__time">{{ e.time }}</span>
-              <i :style="{ background: e.color }"></i>
-              <span class="cyber-feed__type">{{ e.type }}</span>
-              <span class="cyber-feed__route">{{ e.src }} <b>→</b> {{ e.dst }}</span>
+            <li v-for="e in visibleEvents" :key="e.id">
+              <span class="cyber-feed__time">{{ shortDate(e.discovered) }}</span>
+              <span class="cyber-feed__type">{{ e.group }}</span>
+              <span class="cyber-feed__route">
+                <b>{{ e.victim }}</b> · {{ countryName(e.country) }} · {{ e.sector || 'sektor n/a' }}
+              </span>
             </li>
-            <li v-if="!feed.length" class="cyber-feed__empty">Menunggu aktivitas…</li>
           </ul>
+          <details class="cyber-detail">
+            <summary>Lihat {{ data.events.length }} insiden lengkap</summary>
+            <ul>
+              <li v-for="e in data.events" :key="e.id">
+                <span class="cyber-feed__time">{{ shortDate(e.discovered) }}</span>
+                <span class="cyber-feed__type">{{ e.group }}</span>
+                <span class="cyber-feed__route">
+                  <b>{{ e.victim }}</b> · {{ countryName(e.country) }} · {{ e.sector || 'sektor n/a' }}
+                  <template v-if="e.dataSize"> · {{ e.dataSize }}</template>
+                </span>
+              </li>
+            </ul>
+          </details>
         </div>
       </div>
     </section>
@@ -63,29 +74,14 @@
     <section class="cyber-section">
       <div class="wrap cyber-grid">
         <div class="cyber-section__head">
-          <h2>Anatomi serangan</h2>
-          <p>Empat tahap yang biasa terlihat pada insiden siber, dari pintu masuk sampai dampak akhir.</p>
+          <h2>Grup paling aktif</h2>
+          <p>Diurutkan dari jumlah korban yang saat ini tercatat di feed.</p>
         </div>
-        <ol class="cyber-phases">
-          <li>
-            <span class="cyber-phase__kicker">PENGENALAN</span>
-            <h3>Reconnaissance</h3>
-            <p>Memindai port, enumerasi subdomain, dan mengumpulkan jejak publik sebelum menyentuh sistem.</p>
-          </li>
-          <li>
-            <span class="cyber-phase__kicker">AKSES AWAL</span>
-            <h3>Ekspoitasi</h3>
-            <p>Kredensial bocor, phishing, atau celah aplikasi dipakai untuk masuk ke jaringan korban.</p>
-          </li>
-          <li>
-            <span class="cyber-phase__kicker">PERGERAKAN</span>
-            <h3>Lateral movement</h3>
-            <p>Sekali masuk, pergerakan menyebar ke host lain memakai hak akses yang dicuri.</p>
-          </li>
-          <li>
-            <span class="cyber-phase__kicker">DAMPAK</span>
-            <h3>Eksfiltrasi &amp; ransomware</h3>
-            <p>Data dikirim keluar atau dienkripsi, lalu pelaku meninggalkan jejak penghancuran.</p>
+        <ol class="cyber-groups">
+          <li v-for="g in rankedGroups" :key="g.name">
+            <span class="cyber-group__count">{{ g.count }}</span>
+            <h3>{{ g.name }}</h3>
+            <p>{{ g.countries }}</p>
           </li>
         </ol>
       </div>
@@ -94,187 +90,165 @@
     <section class="cyber-section cyber-section--alt">
       <div class="wrap cyber-grid">
         <div class="cyber-section__head">
-          <h2>Jenis vektor</h2>
-          <p>Warna pada peta menandakan kategori serangan yang divisualisasikan.</p>
+          <h2>Anatomi serangan</h2>
+          <p>Empat tahap umum pada insiden ransomware, dari akses awal sampai dampak.</p>
         </div>
-        <ul class="cyber-vectors">
-          <li v-for="v in vectors" :key="v.name">
-            <i :style="{ background: v.color }"></i>
-            <h3>{{ v.name }}</h3>
-            <p>{{ v.desc }}</p>
-          </li>
-        </ul>
+        <ol class="cyber-phases">
+          <li><span class="cyber-phase__kicker">AKSES AWAL</span><h3>Ekspoitasi &amp; kredensial</h3><p>Celah perangkat lunak atau kredensial bocor dipakai untuk masuk ke jaringan korban.</p></li>
+          <li><span class="cyber-phase__kicker">PERGERAKAN</span><h3>Lateral movement</h3><p>Akses diperluas ke host lain memakai hak yang dicuri.</p></li>
+          <li><span class="cyber-phase__kicker">EKSTRAKSI</span><h3>Pencurian data</h3><p>Data disalin keluar sebelum enkripsi, lalu dipakai sebagai tekanan pembayaran.</p></li>
+          <li><span class="cyber-phase__kicker">DAMPAK</span><h3>Enkripsi &amp; pengumuman</h3><p>Sistem dikunci dan korban dipublikasikan di situs grup bila tebusan tidak dibayar.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="cyber-credit">
+      <div class="wrap">
+        <p>
+          Sumber data: ransomware.live (korban ransomware yang dipublikasikan pelaku). Koordinat
+          negara dari Natural Earth 110m. Data diambil otomatis oleh GitHub Actions, bukan rekaan.
+        </p>
       </div>
     </section>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import CyberScene from '~/components/CyberScene.vue'
+import { ref, computed, onMounted } from 'vue'
+import CyberGlobe3D from '~/components/CyberGlobe3D.vue'
+import snapshot from '~/data/threats-snapshot.json'
 
 useHead({ title: 'Perang Siber — Ringga.Space' })
 
-const modes = [
-  { id: 'rendah', name: 'Rendah' },
-  { id: 'sedang', name: 'Sedang' },
-  { id: 'tinggi', name: 'Tinggi' },
-]
-const nodeList = [
-  { id: 'jkt', name: 'Jakarta' }, { id: 'sin', name: 'Singapura' }, { id: 'tyo', name: 'Tokyo' },
-  { id: 'sel', name: 'Seoul' }, { id: 'bjs', name: 'Beijing' }, { id: 'bom', name: 'Mumbai' },
-  { id: 'dxb', name: 'Dubai' }, { id: 'mos', name: 'Moskow' }, { id: 'iev', name: 'Kyiv' },
-  { id: 'ber', name: 'Berlin' }, { id: 'lon', name: 'London' }, { id: 'par', name: 'Paris' },
-  { id: 'lag', name: 'Lagos' }, { id: 'jnb', name: 'Johannesburg' }, { id: 'nyc', name: 'New York' },
-  { id: 'was', name: 'Washington' }, { id: 'yyz', name: 'Toronto' }, { id: 'sao', name: 'São Paulo' },
-  { id: 'syd', name: 'Sydney' }, { id: 'tpe', name: 'Taipei' },
-]
-const vectors = [
-  { name: 'DDoS', color: '#ff5d73', desc: 'Banjir trafik dari banyak sumber untuk melumpuhkan layanan.' },
-  { name: 'Ransomware', color: '#ff9f43', desc: 'Malware yang mengunci data dan menuntut pembayaran.' },
-  { name: 'Phishing', color: '#f6d365', desc: 'Penyamarataan identitas untuk mencuri kredensial.' },
-  { name: 'Exploit', color: '#c084fc', desc: 'Pemanfaatan celah perangkat lunak yang belum ditambal.' },
-  { name: 'Botnet', color: '#6ee7f9', desc: 'Jaringan perangkat yang dikendalikan dari jarak jauh.' },
-]
-
-const intensity = ref('sedang')
+const data = ref(snapshot)
 const focus = ref('')
 const paused = ref(false)
-const feed = ref([])
-let seq = 0
 
-function onAttack(e) {
-  const now = new Date()
-  feed.value = [{
-    key: ++seq,
-    time: now.toTimeString().slice(0, 8),
-    color: e.color,
-    type: e.type,
-    src: e.src,
-    dst: e.dst,
-  }, ...feed.value].slice(0, 7)
+onMounted(async () => {
+  try {
+    const base = useRuntimeConfig().app.baseURL || '/'
+    const r = await fetch(`${base}data/threats.json`, { cache: 'no-store' })
+    if (r.ok) {
+      const fresh = await r.json()
+      if (fresh && Array.isArray(fresh.events) && fresh.events.length) data.value = fresh
+    }
+  } catch { /* snapshot tetap dipakai */ }
+})
+
+const fetchedLabel = computed(() => {
+  const d = new Date(data.value.fetchedAt)
+  return Number.isNaN(d.getTime()) ? '' : d.toISOString().slice(0, 16).replace('T', ' ') + ' UTC'
+})
+
+const names = typeof Intl !== 'undefined' && Intl.DisplayNames
+  ? new Intl.DisplayNames(['id'], { type: 'region' }) : null
+function countryName(code) {
+  if (!code) return 'negara n/a'
+  try { return names ? (names.of(code) || code) : code } catch { return code }
+}
+function shortDate(s) { return s ? String(s).slice(0, 10) : '—' }
+
+const rankedGroups = computed(() => {
+  const m = new Map()
+  for (const e of data.value.events) {
+    const g = e.group || 'tidak diketahui'
+    if (!m.has(g)) m.set(g, { name: g, count: 0, set: new Set() })
+    const o = m.get(g); o.count++; if (e.country) o.set.add(countryName(e.country))
+  }
+  return [...m.values()].sort((a, b) => b.count - a.count).slice(0, 8)
+    .map(x => ({ name: x.name, count: x.count, countries: [...x.set].slice(0, 5).join(', ') }))
+})
+
+const groups = computed(() => [...new Set(data.value.events.map(e => e.group).filter(Boolean))].sort())
+
+// Busur: hubungan antar korban dalam grup yang sama. BUKAN asal serangan.
+const arcEvents = computed(() => {
+  const byGroup = new Map()
+  for (const e of data.value.events) {
+    if (e.lat == null || e.lon == null) continue
+    if (!byGroup.has(e.group)) byGroup.set(e.group, [])
+    byGroup.get(e.group).push(e)
+  }
+  const out = []
+  for (const [g, list] of byGroup) {
+    if (list.length < 2) continue
+    const sorted = [...list].sort((a, b) => new Date(a.discovered) - new Date(b.discovered))
+    for (let i = 1; i < Math.min(sorted.length, 5); i++) {
+      const a = sorted[i - 1], b = sorted[i]
+      if (a.country === b.country) continue
+      out.push({
+        id: `${g}-${i}`,
+        from: { lat: a.lat, lon: a.lon, name: a.victim, country: a.country },
+        to: { lat: b.lat, lon: b.lon, name: b.victim, country: b.country },
+        color: '#ff9f43',
+        group: g,
+      })
+    }
+  }
+  return out
+})
+
+const visibleEvents = computed(() => {
+  const list = focus.value ? data.value.events.filter(e => e.group === focus.value) : data.value.events
+  return list.slice(0, 8)
+})
+
+function onSelect(name) {
+  const hit = data.value.events.find(e => e.victim === name || e.group === name)
+  if (hit) focus.value = hit.group
 }
 </script>
 
 <style scoped>
 .cyber-page { padding-bottom: 40px; }
 .cyber-hero { padding-block: clamp(72px, 10vw, 130px) clamp(36px, 5vw, 60px); }
-.cyber-hero h1 {
-  font-family: var(--display);
-  font-weight: 700;
-  font-size: clamp(56px, 11vw, 150px);
-  line-height: 0.9;
-  letter-spacing: -0.045em;
-  margin: 0;
-}
-.cyber-lede {
-  max-width: 62ch;
-  margin: 26px 0 0;
-  font-size: clamp(16px, 1.7vw, 20px);
-  line-height: 1.55;
-  color: var(--muted);
-}
+.cyber-hero h1 { font-family: var(--display); font-weight: 700; font-size: clamp(56px, 11vw, 150px); line-height: .9; letter-spacing: -.045em; margin: 0; }
+.cyber-lede { max-width: 68ch; margin: 26px 0 0; font-size: clamp(16px, 1.7vw, 20px); line-height: 1.55; color: var(--muted); }
+.cyber-source { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 20px; font-size: 12px; color: var(--muted); }
+.cyber-source a { color: var(--accent); }
+.cyber-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; }
 .cyber-stage-wrap { padding-bottom: clamp(80px, 12vw, 150px); }
-.cyber-stage {
-  position: relative;
-  height: clamp(480px, 62vh, 720px);
-  border: 1px solid var(--line-soft);
-  background: #05060d;
-  overflow: hidden;
-}
-.cyber-controls {
-  position: absolute;
-  left: 16px;
-  bottom: 52px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-  z-index: 2;
-}
-.cyber-seg { display: inline-flex; border: 1px solid var(--line); }
-.cyber-seg button, .cyber-btn {
-  font: 500 12px var(--body);
-  color: var(--muted);
-  background: rgba(5, 6, 13, 0.82);
-  border: none;
-  padding: 8px 14px;
-  cursor: pointer;
-  transition: color 160ms ease, background 160ms ease;
-}
-.cyber-seg button + button { border-left: 1px solid var(--line-soft); }
-.cyber-seg button:hover, .cyber-btn:hover { color: var(--ink); }
-.cyber-seg button.on { background: var(--accent); color: var(--accent-ink); }
-.cyber-btn { border: 1px solid var(--line); }
-.cyber-select select {
-  font: 500 12px var(--body);
-  color: var(--ink);
-  background: rgba(5, 6, 13, 0.9);
-  border: 1px solid var(--line);
-  padding: 8px 10px;
-  max-width: 170px;
-}
+.cyber-stage { position: relative; height: clamp(560px, 72vh, 820px); border: 1px solid var(--line-soft); background: #05060d; overflow: hidden; }
+.cyber-controls { position: absolute; left: 16px; bottom: 46px; display: flex; flex-wrap: wrap; gap: 10px; z-index: 3; }
+.cyber-btn, .cyber-select select { font: 500 12px var(--body); color: var(--ink); background: rgba(5,6,13,.86); border: 1px solid var(--line); padding: 8px 12px; cursor: pointer; }
+.cyber-btn:hover { color: var(--accent); }
+.cyber-select select { max-width: 230px; }
+.cyber-hint { position: absolute; left: 16px; bottom: 14px; margin: 0; font-size: 11px; color: var(--faint); z-index: 2; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
 .cyber-feed { margin-top: 22px; }
-.cyber-feed__head {
-  display: flex; align-items: center; gap: 12px;
-  font: 600 12px var(--body); color: var(--ink); margin-bottom: 10px;
-}
-.cyber-feed__tag {
-  font-size: 10px; letter-spacing: .1em; color: var(--faint);
-  border: 1px solid var(--line-soft); padding: 2px 7px;
-}
+.cyber-feed__head { display: flex; align-items: center; gap: 12px; font: 600 12px var(--body); color: var(--ink); margin-bottom: 10px; }
+.cyber-feed__tag { font-size: 10px; letter-spacing: .1em; color: #4ade80; border: 1px solid rgba(74,222,128,.3); padding: 2px 7px; }
 .cyber-feed ul { list-style: none; margin: 0; padding: 0; }
-.cyber-feed li {
-  display: flex; align-items: center; gap: 12px;
-  padding: 7px 0; border-top: 1px solid var(--line-soft);
-  font-size: 13px; color: var(--muted);
-}
+.cyber-feed li { display: flex; align-items: baseline; gap: 12px; padding: 7px 0; border-top: 1px solid var(--line-soft); font-size: 13px; color: var(--muted); }
 .cyber-feed li:first-child { border-top: none; }
-.cyber-feed li i { width: 7px; height: 7px; border-radius: 50%; flex: none; }
-.cyber-feed__time { font-variant-numeric: tabular-nums; color: var(--faint); min-width: 62px; }
-.cyber-feed__type { min-width: 110px; color: var(--ink); }
-.cyber-feed__route b { color: var(--accent); font-weight: 500; padding-inline: 3px; }
-.cyber-feed__empty { color: var(--faint); }
-
+.cyber-feed__time { font-variant-numeric: tabular-nums; color: var(--faint); min-width: 86px; }
+.cyber-feed__type { min-width: 130px; color: var(--ink); }
+.cyber-feed__route b { color: var(--accent); font-weight: 500; }
+.cyber-detail { margin-top: 16px; font-size: 13px; color: var(--muted); }
+.cyber-detail summary { cursor: pointer; color: var(--accent); }
+.cyber-detail ul { margin-top: 12px; max-height: 420px; overflow: auto; }
 .cyber-section { padding-block: clamp(70px, 10vw, 130px); border-top: 1px solid var(--line-soft); }
 .cyber-section--alt { background: var(--bg-2); }
-.cyber-grid { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: clamp(40px, 6vw, 100px); }
-.cyber-section__head h2 {
-  font-family: var(--display); font-weight: 700;
-  font-size: clamp(34px, 5vw, 64px); line-height: 1; letter-spacing: -0.035em; margin: 0;
-}
+.cyber-grid { display: grid; grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); gap: clamp(40px,6vw,100px); }
+.cyber-section__head h2 { font-family: var(--display); font-weight: 700; font-size: clamp(34px,5vw,64px); line-height: 1; letter-spacing: -.035em; margin: 0; }
 .cyber-section__head p { margin: 20px 0 0; color: var(--muted); font-size: 15px; line-height: 1.6; max-width: 38ch; }
-.cyber-phases { list-style: none; margin: 0; padding: 0; }
-.cyber-phases li { padding: 20px 0; border-top: 1px solid var(--line-soft); }
-.cyber-phases li:first-child { border-top: none; padding-top: 0; }
+.cyber-groups, .cyber-phases { list-style: none; margin: 0; padding: 0; }
+.cyber-groups li { display: grid; grid-template-columns: 58px 1fr; gap: 4px 16px; padding: 14px 0; border-top: 1px solid var(--line-soft); }
+.cyber-groups li:first-child, .cyber-phases li:first-child { border-top: none; padding-top: 0; }
+.cyber-group__count { grid-row: span 2; font-family: var(--display); font-size: 28px; color: var(--accent); }
+.cyber-groups h3, .cyber-phases h3 { font-family: var(--display); font-size: 18px; margin: 0; font-weight: 600; }
+.cyber-groups p, .cyber-phases p { grid-column: 2; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.cyber-phases li { padding: 18px 0; border-top: 1px solid var(--line-soft); }
 .cyber-phase__kicker { font-size: 10px; letter-spacing: .12em; color: var(--accent); }
-.cyber-phases h3 { font-family: var(--display); font-size: 21px; margin: 8px 0 6px; font-weight: 600; }
-.cyber-phases p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
-.cyber-vectors { list-style: none; margin: 0; padding: 0; }
-.cyber-vectors li { display: grid; grid-template-columns: 10px 130px 1fr; align-items: baseline; gap: 14px; padding: 16px 0; border-top: 1px solid var(--line-soft); }
-.cyber-vectors li:first-child { border-top: none; padding-top: 0; }
-.cyber-vectors i { width: 9px; height: 9px; border-radius: 50%; }
-.cyber-vectors h3 { font-family: var(--display); font-size: 17px; margin: 0; font-weight: 600; }
-.cyber-vectors p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
-
-.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-
-@media (max-width: 820px) {
-  .cyber-grid { grid-template-columns: 1fr; gap: 40px; }
-  .cyber-stage { height: 520px; }
-}
+.cyber-phases h3 { margin: 8px 0 6px; }
+.cyber-credit { padding-block: 60px; border-top: 1px solid var(--line-soft); color: var(--faint); font-size: 13px; }
+.cyber-credit a { color: var(--accent); }
+@media (max-width: 820px) { .cyber-grid { grid-template-columns: 1fr; gap: 40px; } .cyber-stage { height: 540px; } }
 @media (max-width: 640px) {
-  .cyber-stage { height: 440px; }
-  .cyber-controls { bottom: 46px; right: 12px; left: 12px; gap: 7px; }
-  .cyber-seg button, .cyber-btn { padding: 7px 10px; font-size: 11px; }
-  .cyber-select select { max-width: 130px; font-size: 11px; }
-  .cyber-feed li { flex-wrap: wrap; gap: 6px 10px; }
+  .cyber-stage { height: 480px; }
+  .cyber-controls { left: 12px; right: 12px; bottom: 42px; }
+  .cyber-feed li { flex-wrap: wrap; gap: 4px 10px; }
   .cyber-feed__type { min-width: 0; }
-  .cyber-vectors li { grid-template-columns: 10px 1fr; }
-  .cyber-vectors p { grid-column: 2; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .cyber-seg button, .cyber-btn { transition: none; }
-  html { scroll-behavior: auto; }
-}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 </style>
