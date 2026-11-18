@@ -1535,7 +1535,7 @@ onUnmounted(() => {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: min(52vmin, 480px);
+  width: min(72vmin, 640px);
   aspect-ratio: 1 / 1;
   transform: translate(-50%, -50%);
   display: grid;
@@ -1602,7 +1602,7 @@ onUnmounted(() => {
 
 .space-fallback__planet {
   position: relative;
-  width: 44%;
+  width: 88%;
   aspect-ratio: 1 / 1;
   border-radius: 50%;
   overflow: hidden;
