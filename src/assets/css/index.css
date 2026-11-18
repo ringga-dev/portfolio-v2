@@ -85,6 +85,10 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ---------- layout helpers ---------- */
 .wrap { width: 100%; max-width: 1200px; margin-inline: auto; padding-inline: clamp(20px, 5vw, 64px); }
+/* Teks hero tidak mem-blok drag/zoom pada planet di belakangnya.
+   Hanya link & tombol yang tetap bisa diklik. */
+.hero-content { pointer-events: none; }
+.hero-content a, .hero-content button { pointer-events: auto; }
 .section { padding-block: clamp(64px, 10vw, 140px); position: relative; }
 .eyebrow {
   font-family: var(--body);

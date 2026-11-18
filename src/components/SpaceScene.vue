@@ -860,8 +860,8 @@ function applyFit(aspect: number) {
   // di kiri tidak menimpanya. Di layar sempit Bumi turun ke bawah teks.
   if (tiltGroup) {
     const wide = aspect >= 1.15
-    const targetX = wide ? (props.variant === 'hero' ? 1.45 : 0.85) : 0
-    const targetY = wide ? -0.12 : -1.05
+    const targetX = wide ? (props.variant === 'hero' ? 0.82 : 0.6) : 0
+    const targetY = wide ? (props.variant === 'hero' ? 0.05 : -0.12) : -0.95
     tiltGroup.position.set(targetX / fit, targetY / fit, 0)
   }
 }
@@ -1381,7 +1381,6 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  pointer-events: none;
   isolation: isolate;
   background: radial-gradient(
     ellipse 70% 60% at 50% 45%,
@@ -1471,6 +1470,9 @@ onUnmounted(() => {
 }
 .space-fallback--hidden {
   opacity: 0;
+  /* PENTING: elemen opacity:0 tetap menangkap pointer dan mem-blok drag
+     OrbitControls di canvas di bawahnya. Harus non-interaktif. */
+  pointer-events: none;
 }
 
 .space-fallback__stars {
