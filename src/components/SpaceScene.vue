@@ -22,7 +22,8 @@
 
 // URL Vite (string pada SSR; tidak menyentuh DOM). Nama file sesuai kontrak.
 // Tekstur equirectangular 4096x2048 yang terverifikasi benar (Blue Marble NASA).
-import earthDayUrl from '~/assets/textures/earth-day.jpg?url'
+// Tekstur equirectangular 8192x4096 (upscaled Lanczos + unsharp dari Blue Marble NASA).
+import earthDayUrl from '~/assets/textures/earth-day-8k.jpg?url'
 import earthNightUrl from '~/assets/textures/earth-night.jpg?url'
 import earthTopoUrl from '~/assets/textures/earth-topology.jpg?url'
 import marsUrl from '~/assets/textures/mars.jpg?url'
@@ -286,8 +287,8 @@ const EARTH_FRAG = /* glsl */ `
     vec3 N = normalize(vWorldNormal);
     vec3 L = normalize(uSunDirection);
 
-    // Topografi -> normal kasar lewat turunan tekstur (bump).
-    float texel = 1.0 / 2048.0;
+    // Topografi -> normal kasar. Peta topografi 1024x512 -> texel 1/1024.
+    float texel = 1.0 / 1024.0;
     float hL = texture2D(uNormal, vUv - vec2(texel, 0.0)).r;
     float hR = texture2D(uNormal, vUv + vec2(texel, 0.0)).r;
     float hD = texture2D(uNormal, vUv - vec2(0.0, texel)).r;
@@ -305,8 +306,8 @@ const EARTH_FRAG = /* glsl */ `
     vec3 dayCol = texture2D(uDay, vUv).rgb;
     vec3 nightCol = texture2D(uNight, vUv).rgb;
 
-    // Unsharp lokal supaya kontras benua tetap tajam di globe besar.
-    dayCol = mix(dayCol, smoothstep(0.03, 0.97, dayCol), 0.28);
+    // Tekstur sudah di-unsharp saat generation; jangan di-sharp lagi di GLSL.
+    vec3 dayCol = texture2D(uDay, vUv).rgb;
 
     // Siang: Blue Marble + diffuse matte (tanpa specular).
     float diffuse = clamp(ndl, 0.0, 1.0);
