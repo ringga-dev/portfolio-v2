@@ -844,6 +844,10 @@ async function upgradePlanetMaterials() {
   }
 
   earthMesh.material = track(shaderMat)
+
+  // Tekstur sudah terpasang — sekarang aman sembunyikan fallback.
+  webglReady.value = true
+  if (reducedMotion.value) start() // satu frame final dengan tekstur nyata
 }
 
 /* -------------------------------------------------------------------------- */
@@ -969,7 +973,10 @@ function initScene(threeModule: any, OrbitControlsCtor: any) {
   )
   intersectionObserver.observe(container)
 
-  webglReady.value = true
+  // Jangan sembunyikan fallback di sini. upgradePlanetMaterials() yang akan
+  // menandai webglReady = true SETELAH tekstur selesai dimuat & frame siap.
+  // Kalau disembunyikan lebih awal, user melihat planet biru polos/"transparan"
+  // selama texture 8K masih loading.
   start()
   void upgradePlanetMaterials()
 }
