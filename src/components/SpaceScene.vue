@@ -1,26 +1,36 @@
 <script setup lang="ts">
 /**
- * SpaceScene — Bumi realistik, SSR-safe, self-contained.
+ * SpaceScene — planet realistik ala NASA Eyes, SSR-safe, self-contained.
  *
- * API (jangan diubah):
- *   <SpaceScene variant="hero" style="position:absolute; inset:0; z-index:0" />
- *   variant: 'hero' | 'orbital' | 'mini'
+ * API:
+ *   <SpaceScene planet="earth" variant="hero" style="position:absolute; inset:0; z-index:0" />
+ *   planet:  'earth' | 'mars' | 'jupiter' | 'saturn' | 'neptune' | 'mercury' | 'venus' | 'uranus'
+ *   variant: 'hero' | 'orbital' | 'mini' (API lama tetap didukung).
  *   class / atribut pemakai diteruskan ke elemen akar (inheritAttrs: false).
  *
  * Arsitektur:
  *  - Semua akses window/document/THREE terjadi di dalam onMounted / dynamic
  *    import. Tidak ada efek samping di SSR.
- *  - Tekstur NASA (day / night / topology / water) diimpor sebagai URL Vite,
- *    dimuat dengan TextureLoader di client. Jika gagal -> material biru +
- *    wireframe tetap tampil.
+ *  - Bumi: color + night (city lights) + normal map NASA Eyes -> benua tajam.
+ *    Planet lain: color map + diffuse matte, tanpa city lights.
+ *  - Tekstur diimpor sebagai URL Vite, dimuat dengan TextureLoader di client.
+ *    Jika gagal -> material warna planet + wireframe tetap tampil.
+ *  - OrbitControls: drag = rotate, wheel = zoom, tombol reset, panah = rotasi.
+ *    Rotasi scroll tetap diterapkan ke objek planet, bukan kamera.
  *  - Jika three gagal diimpor / WebGL tidak ada -> fallback CSS tetap rapi.
  */
 
 // URL Vite (string pada SSR; tidak menyentuh DOM). Nama file sesuai kontrak.
-import dayUrl from '~/assets/textures/earth-day.jpg?url'
-import nightUrl from '~/assets/textures/earth-night.jpg?url'
-import topoUrl from '~/assets/textures/earth-topology.jpg?url'
-import waterUrl from '~/assets/textures/earth-water.jpg?url'
+import earthDayUrl from '~/assets/textures/eyes/earth-color-eyes.jpg?url'
+import earthNightUrl from '~/assets/textures/eyes/earth-night-eyes.jpg?url'
+import earthNormalUrl from '~/assets/textures/eyes/earth-normal-eyes.jpg?url'
+import marsUrl from '~/assets/textures/mars.jpg?url'
+import jupiterUrl from '~/assets/textures/jupiter.jpg?url'
+import saturnUrl from '~/assets/textures/saturn.jpg?url'
+import neptuneUrl from '~/assets/textures/neptune.jpg?url'
+import mercuryUrl from '~/assets/textures/mercury.jpg?url'
+import venusUrl from '~/assets/textures/venus.jpg?url'
+import uranusUrl from '~/assets/textures/uranus.jpg?url'
 
 import {
   onMounted,
@@ -35,6 +45,7 @@ defineOptions({
 })
 
 type Variant = 'hero' | 'orbital' | 'mini'
+type Planet = 'earth' | 'mars' | 'jupiter' | 'saturn' | 'neptune' | 'mercury' | 'venus' | 'uranus'
 
 interface VariantConfig {
   stars: number
@@ -46,13 +57,72 @@ interface VariantConfig {
   arcs: number
 }
 
-const props = withDefaults(defineProps<{ variant?: Variant }>(), { variant: 'hero' })
+interface PlanetConfig {
+  color: string        // peta warna (sRGB)
+  night?: string       // city lights — hanya Bumi
+  normal?: string      // tangent-space normal map — hanya Bumi
+  cssColor: string     // fallback CSS
+  cssGlow: string      // rgba untuk glow fallback CSS
+  threeColor: number   // material fallback WebGL
+  tilt: number         // kemiringan sumbu (derajat)
+}
+
+const props = withDefaults(defineProps<{ variant?: Variant; planet?: string }>(), {
+  variant: 'hero',
+  planet: 'earth',
+})
 const attrs = useAttrs()
 
 const CONFIG: Record<Variant, VariantConfig> = {
   hero: { stars: 1900, dust: 300, radius: 2.35, segW: 72, segH: 54, cameraZ: 7.2, arcs: 28 },
   orbital: { stars: 1600, dust: 240, radius: 1.35, segW: 56, segH: 40, cameraZ: 6.2, arcs: 22 },
   mini: { stars: 1500, dust: 140, radius: 1.1, segW: 40, segH: 28, cameraZ: 5.6, arcs: 20 },
+}
+
+const PLANETS: Record<Planet, PlanetConfig> = {
+  earth: {
+    color: earthDayUrl, night: earthNightUrl, normal: earthNormalUrl,
+    cssColor: '#1e6fc4', cssGlow: 'rgba(110, 231, 249, .34)', threeColor: 0x14306b, tilt: 23.4,
+  },
+  mars: {
+    color: marsUrl,
+    cssColor: '#c1562f', cssGlow: 'rgba(224, 112, 72, .32)', threeColor: 0x6b2f1c, tilt: 25.2,
+  },
+  jupiter: {
+    color: jupiterUrl,
+    cssColor: '#d8b98a', cssGlow: 'rgba(226, 190, 138, .30)', threeColor: 0x715438, tilt: 3.1,
+  },
+  saturn: {
+    color: saturnUrl,
+    cssColor: '#e3d3a2', cssGlow: 'rgba(233, 214, 160, .30)', threeColor: 0x766844, tilt: 26.7,
+  },
+  neptune: {
+    color: neptuneUrl,
+    cssColor: '#3f66d8', cssGlow: 'rgba(88, 126, 240, .34)', threeColor: 0x142a6b, tilt: 28.3,
+  },
+  mercury: {
+    color: mercuryUrl,
+    cssColor: '#a89c90', cssGlow: 'rgba(190, 180, 170, .28)', threeColor: 0x4a4540, tilt: 0.03,
+  },
+  venus: {
+    color: venusUrl,
+    cssColor: '#e6c982', cssGlow: 'rgba(238, 205, 134, .32)', threeColor: 0x6f5730, tilt: 177.4,
+  },
+  uranus: {
+    color: uranusUrl,
+    cssColor: '#a4dce2', cssGlow: 'rgba(164, 220, 226, .32)', threeColor: 0x2c5a60, tilt: 97.8,
+  },
+}
+
+function planetName(): Planet {
+  const p = props.planet as Planet
+  return PLANETS[p] ? p : 'earth'
+}
+function planetCfg(): PlanetConfig {
+  return PLANETS[planetName()]
+}
+function isEarth(): boolean {
+  return planetName() === 'earth'
 }
 
 const PALETTE = {
@@ -108,6 +178,7 @@ let camera: any = null
 let world: any = null
 let tiltGroup: any = null
 let earthSpin: any = null
+let controls: any = null   // OrbitControls (dibuat di initScene, dibuang saat unmount)
 
 let starField: any = null
 let starMaterial: any = null
@@ -151,10 +222,12 @@ let isDisposed = false
 let lastTime = 0
 
 // Rotasi Bumi: spin dasar + offset scroll (dilembutkan via lerp).
+// Keduanya diterapkan ke earthSpin, TIDAK ke kamera — kamera milik OrbitControls.
 const SCROLL_SPIN_FACTOR = 0.0016
 let baseSpin = 0
 let scrollTargetY = 0
 let scrollCurrentY = 0
+let viewTiltX = 0 // kemiringan pandangan dari keyboard (panah atas/bawah)
 
 const pointer = { x: 0, y: 0 }
 const pointerTarget = { x: 0, y: 0 }
@@ -197,10 +270,8 @@ const EARTH_VERT = /* glsl */ `
 const EARTH_FRAG = /* glsl */ `
   uniform sampler2D uDay;
   uniform sampler2D uNight;
-  uniform sampler2D uTopo;
-  uniform sampler2D uWater;
+  uniform sampler2D uNormal;
   uniform vec3 uSunDirection;
-  uniform float uTexel;
   varying vec2 vUv;
   varying vec3 vWorldNormal;
   varying vec3 vWorldPos;
@@ -210,47 +281,64 @@ const EARTH_FRAG = /* glsl */ `
   void main() {
     vec3 N = normalize(vWorldNormal);
     vec3 L = normalize(uSunDirection);
-    vec3 V = normalize(cameraPosition - vWorldPos);
 
-    // Topografi -> normal kasar (bump) lewat turunan tekstur.
+    // Normal map NASA (tangent-space) dipetakan ke bola. Tangent di sekitar
+    // sumbu-Y: cross(up, N) -> benua & pegunungan jauh lebih tajam daripada
+    // bump topografi. Fallback N bila normal gagal dimuat adalah (0,0,1).
     vec3 T = normalize(cross(vec3(0.0, 1.0, 0.0), N) + vec3(1e-5));
     vec3 B = cross(N, T);
-    float hL = texture2D(uTopo, vUv - vec2(uTexel, 0.0)).r;
-    float hR = texture2D(uTopo, vUv + vec2(uTexel, 0.0)).r;
-    float hD = texture2D(uTopo, vUv - vec2(0.0, uTexel)).r;
-    float hU = texture2D(uTopo, vUv + vec2(0.0, uTexel)).r;
-    vec3 Nb = normalize(N - ((hR - hL) * T + (hU - hD) * B) * 0.55);
+    vec3 mapN = texture2D(uNormal, vUv).xyz * 2.0 - 1.0;
+    vec3 Nb = normalize(T * mapN.x + B * mapN.y + N * mapN.z);
 
     float ndl = dot(Nb, L);
     float day = smoothstep(-0.18, 0.28, ndl); // terminator lembut
 
     // Tekstur warna memakai SRGBColorSpace -> GPU sudah linearisasi saat
-    // sampling (internalFormat SRGB8_ALPHA8). Jangan srgbToLinear di sini.
+    // sampling. Jangan srgbToLinear di sini.
     vec3 dayCol = texture2D(uDay, vUv).rgb;
     vec3 nightCol = texture2D(uNight, vUv).rgb;
 
-    // Unsharp lebih tegas: angkat kontras lokal supaya benua tajam di globe besar.
-    dayCol = mix(dayCol, smoothstep(0.03, 0.97, dayCol), 0.32);
+    // Unsharp lokal supaya kontras benua tetap tajam di globe besar.
+    dayCol = mix(dayCol, smoothstep(0.03, 0.97, dayCol), 0.28);
 
-    // Siang: Blue Marble + pencahayaan diffuse.
+    // Siang: Blue Marble + diffuse matte (tanpa specular).
     float diffuse = clamp(ndl, 0.0, 1.0);
-    // Matte tapi cerah: jangan meredam tekstur dengan ambient berlebih.
     vec3 lit = dayCol * (0.06 + 0.94 * diffuse);
-
-    // Specular dimatikan total: permukaan matte, tanpa highlight putih berkilau.
     vec3 specCol = vec3(0.0);
 
-    // Malam: city lights dari tekstur NASA. Cukup terang untuk terlihat,
-    // tapi tetap tipis — bukan noda putih.
+    // Malam: city lights NASA, tipis bukan noda putih.
     vec3 city = nightCol * 2.0;
     vec3 nightAmbient = vec3(0.010, 0.018, 0.045);
     vec3 nightSide = city + nightAmbient;
 
     vec3 color = mix(nightSide, lit + specCol, day);
+    gl_FragColor = vec4(linearToSrgb(color), 1.0);
+  }
+`
 
-    // Tanpa specular / inner-glow tambahan: permukaan matte bersih.
-    // Atmosfer sudah ditangani oleh mesh glow di tepi siluet saja.
+// Planet non-Bumi: peta warna + diffuse matte. Tanpa city lights, tanpa
+// specular, tanpa normal map. Terminator siang/malam tetap dipertahankan.
+const PLANET_FRAG = /* glsl */ `
+  uniform sampler2D uDay;
+  uniform vec3 uSunDirection;
+  varying vec2 vUv;
+  varying vec3 vWorldNormal;
+  varying vec3 vWorldPos;
 
+  vec3 linearToSrgb(vec3 c) { return pow(c, vec3(1.0 / 2.2)); }
+
+  void main() {
+    vec3 N = normalize(vWorldNormal);
+    vec3 L = normalize(uSunDirection);
+    float ndl = dot(N, L);
+    float day = smoothstep(-0.22, 0.30, ndl);
+
+    vec3 dayCol = texture2D(uDay, vUv).rgb;
+    float diffuse = clamp(ndl, 0.0, 1.0);
+    vec3 lit = dayCol * (0.05 + 0.95 * diffuse);
+
+    vec3 nightAmbient = vec3(0.006, 0.010, 0.026);
+    vec3 color = mix(nightAmbient, lit, day);
     gl_FragColor = vec4(linearToSrgb(color), 1.0);
   }
 `
@@ -468,13 +556,15 @@ function createStarfield(count: number, isDust = false) {
 }
 
 function createEarth(cfg: VariantConfig) {
-  // Material biru + wireframe sebagai fallback (diganti saat tekstur termuat).
+  // Material warna planet + wireframe sebagai fallback (diganti saat tekstur termuat).
   const geo = track(new THREE.SphereGeometry(cfg.radius, cfg.segW, cfg.segH))
+  const base = planetCfg().threeColor
+  const emissive = new THREE.Color(base).multiplyScalar(0.18).getHex()
   const mat = track(new THREE.MeshStandardMaterial({
-    color: 0x14306b,
-    emissive: 0x0a1a3a,
+    color: base,
+    emissive,
     emissiveIntensity: 0.55,
-    metalness: 0.12,
+    metalness: 0.1,
     roughness: 0.85,
   }))
   earthMesh = new THREE.Mesh(geo, mat)
@@ -509,13 +599,18 @@ function createEarth(cfg: VariantConfig) {
 }
 
 function createAtmosphere(cfg: VariantConfig) {
-  const makeMat = (a: number, b: number, power: number, intensity: number) => track(
+  const earth = isEarth()
+  const tint = new THREE.Color(planetCfg().cssColor)
+  const colorA = earth ? PALETTE.cyan : tint.getHex()
+  const colorB = earth ? 0x2b6cff : tint.clone().multiplyScalar(0.35).getHex()
+  const intensity = earth ? 0.42 : 0.2
+  const makeMat = (a: number, b: number, power: number, strength: number) => track(
     new THREE.ShaderMaterial({
       uniforms: {
         uColorA: { value: new THREE.Color(a) },
         uColorB: { value: new THREE.Color(b) },
         uPower: { value: power },
-        uIntensity: { value: intensity },
+        uIntensity: { value: strength },
       },
       vertexShader: ATMO_VERT,
       fragmentShader: ATMO_FRAG,
@@ -527,13 +622,13 @@ function createAtmosphere(cfg: VariantConfig) {
   )
 
   // Glow utama + halo tipis. Intensity diredam agar additive blending tidak
-  // menutupi permukaan Bumi dengan cyan/putih.
+  // menutupi permukaan planet dengan warna glow.
   const glowGeo = track(new THREE.SphereGeometry(cfg.radius * 1.16, 48, 48))
-  const glow = new THREE.Mesh(glowGeo, makeMat(PALETTE.cyan, 0x2b6cff, 2.6, 0.42))
+  const glow = new THREE.Mesh(glowGeo, makeMat(colorA, colorB, 2.6, intensity))
   tiltGroup.add(glow)
 
   const haloGeo = track(new THREE.SphereGeometry(cfg.radius * 1.3, 48, 48))
-  const halo = new THREE.Mesh(haloGeo, makeMat(0x2b6cff, PALETTE.violet, 3.6, 0.10))
+  const halo = new THREE.Mesh(haloGeo, makeMat(colorB, colorA, 3.6, intensity * 0.25))
   tiltGroup.add(halo)
 }
 
@@ -663,28 +758,38 @@ function sampleArc(arc: ArcData, t: number) {
 /*  TEKSTUR -> SHADER MATERIAL                                                 */
 /* -------------------------------------------------------------------------- */
 
-async function upgradeEarthMaterials() {
-  const results = await Promise.all([
-    loadTexture(dayUrl),      // warna -> sRGB
-    loadTexture(nightUrl),    // warna -> sRGB
-    loadTexture(topoUrl, false),  // data -> NoColorSpace
-    loadTexture(waterUrl, false), // data -> NoColorSpace
-  ])
+async function upgradePlanetMaterials() {
+  const earth = isEarth()
+  const cfg = planetCfg()
+
+  // Bumi butuh 3 peta (color + night + normal), planet lain cukup color.
+  const loaded = earth
+    ? await Promise.all([
+        loadTexture(cfg.color, true),          // warna -> sRGB
+        loadTexture(cfg.night as string, true),// city lights -> sRGB
+        loadTexture(cfg.normal as string, false), // normal map -> NoColorSpace
+      ])
+    : await Promise.all([loadTexture(cfg.color, true)])
+
+  const day = loaded[0]
+  const night = earth ? loaded[1] : null
+  const normalMap = earth ? loaded[2] : null
+
   if (isDisposed) {
-    results.forEach((t) => t?.dispose?.())
+    loaded.forEach((t) => t?.dispose?.())
     return
   }
 
-  const [day, night, topo, water] = results
-
-  // Awan sengaja tidak dirender: hari cerah = benua biru/hijau bersih.
+  // Awan sengaja tidak dirender untuk semua planet.
   if (clouds) clouds.visible = false
+  if (!earthMesh) {
+    loaded.forEach((t) => t?.dispose?.())
+    return
+  }
 
-  if (!earthMesh) return
-
-  // Tanpa day/night: pertahankan fallback biru + wireframe.
-  if (!day || !night) {
-    [day, night, topo, water].forEach((t) => t?.dispose?.())
+  // Tanpa peta warna (dan untuk Bumi tanpa night): pertahankan fallback.
+  if (!day || (earth && !night)) {
+    loaded.forEach((t) => t?.dispose?.())
     return
   }
 
@@ -697,28 +802,40 @@ async function upgradeEarthMaterials() {
   earthMesh.material = null
   oldMat?.dispose?.()
 
-  const topoTex = topo ?? makeSolidTexture(0, 0, 0)
-  const waterTex = water ?? makeSolidTexture(0, 0, 0)
-  if (topo) track(topo)
-  if (water) track(water)
-  track(day)
-  track(night)
+  const sunValue = new THREE.Vector3(sunDir.x, sunDir.y, sunDir.z)
+  let shaderMat: any
 
-  earthUniforms = {
-    uDay: { value: day },
-    uNight: { value: night },
-    uTopo: { value: topoTex },
-    uWater: { value: waterTex },
-    uSunDirection: { value: new THREE.Vector3(sunDir.x, sunDir.y, sunDir.z) },
-    uTexel: { value: 1 / 1024 },
+  if (earth && night) {
+    track(day)
+    track(night)
+    const normalTex = normalMap ?? makeSolidTexture(128, 128, 255)
+    if (normalMap) track(normalMap)
+
+    earthUniforms = {
+      uDay: { value: day },
+      uNight: { value: night },
+      uNormal: { value: normalTex },
+      uSunDirection: { value: sunValue },
+    }
+    shaderMat = new THREE.ShaderMaterial({
+      uniforms: earthUniforms,
+      vertexShader: EARTH_VERT,
+      fragmentShader: EARTH_FRAG,
+    })
+  } else {
+    track(day)
+    earthUniforms = {
+      uDay: { value: day },
+      uSunDirection: { value: sunValue },
+    }
+    shaderMat = new THREE.ShaderMaterial({
+      uniforms: earthUniforms,
+      vertexShader: EARTH_VERT,
+      fragmentShader: PLANET_FRAG,
+    })
   }
 
-  const shaderMat = track(new THREE.ShaderMaterial({
-    uniforms: earthUniforms,
-    vertexShader: EARTH_VERT,
-    fragmentShader: EARTH_FRAG,
-  }))
-  earthMesh.material = shaderMat
+  earthMesh.material = track(shaderMat)
 }
 
 /* -------------------------------------------------------------------------- */
@@ -739,7 +856,7 @@ function applyFit(aspect: number) {
   }
 }
 
-function initScene(threeModule: any) {
+function initScene(threeModule: any, OrbitControlsCtor: any) {
   THREE = threeModule
   const container = containerRef.value
   const host = canvasHostRef.value
@@ -769,6 +886,22 @@ function initScene(threeModule: any) {
   }
   host.appendChild(renderer.domElement)
 
+  // OrbitControls: drag = rotate, wheel = zoom. Menempel pada canvas, BUKAN
+  // kamera statis — rotasi scroll tetap di earthSpin (lihat applyScrollRotation).
+  if (OrbitControlsCtor) {
+    controls = new OrbitControlsCtor(camera, renderer.domElement)
+    controls.enableDamping = !reducedMotion.value
+    controls.dampingFactor = 0.06
+    controls.enablePan = false
+    controls.minDistance = cfg.cameraZ * 0.5
+    controls.maxDistance = cfg.cameraZ * 2.0
+    controls.zoomToCursor = true
+    controls.target.set(0, 0, 0)
+    controls.update()
+    controls.saveState() // reset() kembali ke framing awal ini
+    controls.addEventListener('change', handleControlsChange)
+  }
+
   // Cahaya: ambient rendah + matahari (mengikuti sunDirection) + fill.
   const ambient = new THREE.AmbientLight(0x2a3a66, 0.45)
   sunLight = new THREE.DirectionalLight(0xfff3e0, 2.1)
@@ -793,17 +926,19 @@ function initScene(threeModule: any) {
   // terlihat kotak dan mengganggu Bumi. Starfield saja sudah cukup.
 
 
-  // Bumi: kemiringan sumbu ~23.4 derajat.
+  // Planet: kemiringan sumbu sesuai planet (Bumi 23.4°).
   tiltGroup = new THREE.Group()
-  tiltGroup.rotation.z = 23.4 * (Math.PI / 180)
+  tiltGroup.rotation.z = planetCfg().tilt * (Math.PI / 180)
   world.add(tiltGroup)
+  applyViewTilt()
 
   earthSpin = new THREE.Group()
   tiltGroup.add(earthSpin)
 
   createEarth(cfg)
   createAtmosphere(cfg)
-  createNetwork(cfg)
+  // Jaringan 16 kota HANYA untuk Bumi.
+  if (isEarth()) createNetwork(cfg)
 
   applyFit(width / height)
 
@@ -828,7 +963,7 @@ function initScene(threeModule: any) {
 
   webglReady.value = true
   start()
-  void upgradeEarthMaterials()
+  void upgradePlanetMaterials()
 }
 
 /* -------------------------------------------------------------------------- */
@@ -850,10 +985,15 @@ function handlePointerLeave() {
 }
 
 // Rotasi Bumi = spin dasar + offset scroll. Dipakai loop animasi maupun event
-// scroll saat reduced-motion (tanpa animasi kontinu).
+// scroll saat reduced-motion (tanpa animasi kontinu). Seluruhnya di earthSpin,
+// sehingga TIDAK bertabrakan dengan OrbitControls yang menguasai kamera.
 function applyScrollRotation() {
   if (!earthSpin) return
   earthSpin.rotation.y = baseSpin + scrollCurrentY * SCROLL_SPIN_FACTOR
+}
+
+function applyViewTilt() {
+  if (tiltGroup) tiltGroup.rotation.x = viewTiltX
 }
 
 function handleScroll() {
@@ -866,11 +1006,60 @@ function handleScroll() {
   }
 }
 
+// Saat reduced-motion loop tidak berjalan; 'change' dari OrbitControls
+// cukup untuk meminta satu frame statis. update() dipanggil di tick().
+function handleControlsChange() {
+  if (reducedMotion.value) start()
+}
+
+// Jaga-jaga: beberapa versi OrbitControls hanya memanggil update() di loop.
+function handleInteract() {
+  if (reducedMotion.value && controls) {
+    controls.update()
+    start()
+  }
+}
+
+function resetView() {
+  if (controls) controls.reset()
+  baseSpin = 0
+  scrollCurrentY = scrollTargetY = window.scrollY || 0 // sinkron dgn halaman
+  viewTiltX = 0
+  applyScrollRotation()
+  applyViewTilt()
+  start()
+}
+
+function handleKeyDown(e: KeyboardEvent) {
+  const step = 0.16
+  let handled = true
+  switch (e.key) {
+    case 'ArrowLeft': baseSpin -= step; break
+    case 'ArrowRight': baseSpin += step; break
+    case 'ArrowUp': viewTiltX = Math.max(-0.6, viewTiltX - 0.08); break
+    case 'ArrowDown': viewTiltX = Math.min(0.6, viewTiltX + 0.08); break
+    case 'r': case 'R': resetView(); break
+    default: handled = false
+  }
+  if (!handled) return
+  e.preventDefault()
+  applyScrollRotation()
+  applyViewTilt()
+  start()
+}
+
 function bindEvents() {
   window.addEventListener('pointermove', handlePointerMove, { passive: true })
   window.addEventListener('pointerleave', handlePointerLeave, { passive: true })
   window.addEventListener('blur', handlePointerLeave)
   window.addEventListener('scroll', handleScroll, { passive: true })
+  containerRef.value?.addEventListener('keydown', handleKeyDown)
+  const canvas = renderer?.domElement
+  if (canvas) {
+    canvas.addEventListener('pointerdown', handleInteract, { passive: true })
+    canvas.addEventListener('pointermove', handleInteract, { passive: true })
+    canvas.addEventListener('wheel', handleInteract, { passive: true })
+  }
 }
 
 function unbindEvents() {
@@ -878,20 +1067,27 @@ function unbindEvents() {
   window.removeEventListener('pointerleave', handlePointerLeave)
   window.removeEventListener('blur', handlePointerLeave)
   window.removeEventListener('scroll', handleScroll)
+  containerRef.value?.removeEventListener('keydown', handleKeyDown)
+  const canvas = renderer?.domElement
+  if (canvas) {
+    canvas.removeEventListener('pointerdown', handleInteract)
+    canvas.removeEventListener('pointermove', handleInteract)
+    canvas.removeEventListener('wheel', handleInteract)
+  }
 }
 
 function handleMotionChange(e: MediaQueryListEvent) {
   reducedMotion.value = e.matches
+  if (controls) controls.enableDamping = !e.matches
   if (e.matches) {
     pointer.x = pointer.y = pointerTarget.x = pointerTarget.y = 0
-    if (camera) {
-      camera.position.x = 0
-      camera.position.y = 0
-      camera.lookAt(0, 0, 0)
-    }
+    if (controls) controls.reset() // view statis kembali ke framing awal
     if (starField) starField.rotation.set(0, 0, 0)
     scrollCurrentY = scrollTargetY
+    baseSpin = 0
+    viewTiltX = 0
     applyScrollRotation()
+    applyViewTilt()
     start() // satu frame statis yang rapi
   } else if (isVisible) {
     start()
@@ -908,6 +1104,7 @@ function handleResize() {
   renderer.setSize(w, h)
   camera.aspect = w / h
   camera.updateProjectionMatrix()
+  controls?.update()
   applyFit(w / h)
   if (reducedMotion.value) start()
 }
@@ -970,14 +1167,12 @@ function tick(now: number) {
       if (pulsePoints) pulsePoints.geometry.attributes.position.needsUpdate = true
     }
 
-    // Parallax pointer.
-    if (camera) {
-      camera.position.x = pointer.x * 0.85
-      camera.position.y = -pointer.y * 0.6
-      camera.lookAt(0, 0, 0)
-    }
+    // Parallax pointer cukup pada latar; kamera diserahkan ke OrbitControls
+    // supaya drag/wheel tidak bertabrakan (lihat blok update() di bawah).
   }
 
+  // Wajib tiap frame saat damping aktif; aman pula saat reduced-motion.
+  if (controls) controls.update()
   renderer.render(scene, camera)
 
   if (reducedMotion.value) stop() // cukup satu frame
@@ -1016,7 +1211,17 @@ onMounted(async () => {
     // @ts-ignore -- 'three' opsional; fallback CSS menutupi ketiadaannya.
     const threeModule = await import('three')
     if (isDisposed || !threeModule) return
-    initScene(threeModule)
+
+    // OrbitControls opsional: bila gagal diimpor, scene tetap tampil tanpa
+    // kontrol mouse (drag/zoom dinonaktifkan, bukan menggagalkan scene).
+    let OrbitCtor: any = null
+    try {
+      const mod = await import('three/addons/controls/OrbitControls.js')
+      OrbitCtor = (mod as any).OrbitControls ?? null
+    } catch { /* abaikan */ }
+
+    if (isDisposed) return
+    initScene(threeModule, OrbitCtor)
   } catch {
     // Impor gagal -> fallback CSS tetap terlihat.
   }
@@ -1041,6 +1246,15 @@ onUnmounted(() => {
     try { item.dispose() } catch { /* abaikan */ }
   }
   disposables = []
+
+  // controls.dispose() melepas listener DOM internal; listener 'change' kita
+  // dilepas eksplisit karena tidak ikut terhapus oleh dispose().
+  if (controls) {
+    controls.removeEventListener('change', handleControlsChange)
+    controls.dispose()
+  }
+  controls = null
+
   arcs = []
   rings = []
   cityVectors = []
@@ -1057,6 +1271,7 @@ onUnmounted(() => {
   world = null
   tiltGroup = null
   earthSpin = null
+  viewTiltX = 0
   starField = null
   starMaterial = null
   dustField = null
@@ -1079,9 +1294,11 @@ onUnmounted(() => {
   <div
     ref="containerRef"
     class="space-scene"
-    :class="`space-scene--${variant}`"
+    :class="`space-scene--${variant} space-scene--${planetName()}`"
     v-bind="attrs"
-    aria-hidden="true"
+    tabindex="0"
+    role="img"
+    :aria-label="`${planetName() === 'earth' ? 'Bumi' : planetName()} interaktif. Geser untuk memutar, gulir untuk zoom, panah untuk memutar, R untuk reset.`"
   >
     <!-- Kanvas WebGL (diisi secara dinamis di onMounted) -->
     <div ref="canvasHostRef" class="space-scene__canvas"></div>
@@ -1090,6 +1307,10 @@ onUnmounted(() => {
     <div
       class="space-fallback"
       :class="{ 'space-fallback--hidden': webglReady }"
+      :style="{
+        '--planet-color': planetCfg().cssColor,
+        '--planet-glow': planetCfg().cssGlow,
+      }"
     >
       <div class="space-fallback__stars space-fallback__stars--far"></div>
       <div class="space-fallback__stars space-fallback__stars--near"></div>
@@ -1109,6 +1330,23 @@ onUnmounted(() => {
           <span class="space-fallback__node space-fallback__node--d"></span>
         </div>
       </div>
+    </div>
+
+    <!-- Kontrol overlay: tombol reset view (hanya saat WebGL aktif). -->
+    <div class="space-scene__overlay">
+      <button
+        v-if="webglReady"
+        class="space-scene__reset"
+        type="button"
+        aria-label="Reset tampilan planet"
+        title="Reset tampilan (R)"
+        @click="resetView"
+      >
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+          <path d="M3 3v5h5" />
+        </svg>
+      </button>
     </div>
   </div>
 </template>
@@ -1137,6 +1375,11 @@ onUnmounted(() => {
   min-height: 0;
 }
 
+.space-scene:focus-visible {
+  outline: 2px solid rgba(110, 231, 249, .7);
+  outline-offset: -2px;
+}
+
 .space-scene__canvas,
 .space-scene__canvas :deep(canvas) {
   display: block;
@@ -1144,8 +1387,60 @@ onUnmounted(() => {
   height: 100%;
 }
 
+/* Kanvas harus menerima pointer supaya OrbitControls bisa drag/zoom. */
+.space-scene__canvas {
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+}
+.space-scene__canvas:active,
+.space-scene__canvas:active :deep(canvas) {
+  cursor: grabbing;
+}
+.space-scene__canvas :deep(canvas) {
+  touch-action: none;
+}
+
+/* Overlay tombol reset — tidak menghalangi drag di kanvas. */
+.space-scene__overlay {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 12px;
+  pointer-events: none;
+}
+.space-scene__reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgba(110, 231, 249, .38);
+  border-radius: 50%;
+  background: rgba(8, 14, 34, .62);
+  color: #9fe8f7;
+  cursor: pointer;
+  pointer-events: auto;
+  backdrop-filter: blur(6px);
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+.space-scene__reset:hover {
+  background: rgba(16, 34, 70, .86);
+  border-color: rgba(110, 231, 249, .8);
+  color: #ffffff;
+  transform: rotate(-25deg);
+}
+.space-scene__reset:focus-visible {
+  outline: 2px solid rgba(110, 231, 249, .9);
+  outline-offset: 2px;
+}
+
 /* --------------------------- FALLBACK --------------------------- */
 .space-fallback {
+  /* Default (Bumi); ditimpa inline :style per planet dari template. */
+  --planet-color: #1e6fc4;
+  --planet-glow: rgba(110, 231, 249, .34);
   position: relative;
   width: 100%;
   height: 100%;
@@ -1288,14 +1583,14 @@ onUnmounted(() => {
   border-radius: 50%;
   overflow: hidden;
   background:
-    radial-gradient(circle at 30% 26%, rgba(110, 231, 249, .5), transparent 42%),
-    radial-gradient(circle at 74% 72%, rgba(167, 139, 250, .38), transparent 48%),
-    radial-gradient(circle at 46% 44%, #16427a 0%, #0c1e46 52%, #05060d 100%);
+    radial-gradient(circle at 30% 26%, var(--planet-glow), transparent 44%),
+    radial-gradient(circle at 74% 72%, var(--planet-glow), transparent 50%),
+    radial-gradient(circle at 46% 44%, var(--planet-color) 0%, #0c1e46 58%, #05060d 100%);
   box-shadow:
     inset -16px -12px 38px rgba(0, 0, 0, .82),
-    inset 10px 8px 30px rgba(110, 231, 249, .1),
-    0 0 48px rgba(110, 231, 249, .24),
-    0 0 110px rgba(167, 139, 250, .18);
+    inset 10px 8px 30px var(--planet-glow),
+    0 0 48px var(--planet-glow),
+    0 0 110px var(--planet-glow);
   animation: planet-spin 28s linear infinite;
 }
 .space-fallback__planet::before {

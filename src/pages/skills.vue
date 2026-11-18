@@ -1,9 +1,10 @@
 <template>
   <div>
     <section style="position: relative; min-height: 56dvh; display: flex; align-items: center; overflow: hidden;">
-      <SpaceScene variant="orbital" style="position: absolute; inset: 0; z-index: 0; opacity: 0.85;" />
+      <SpaceScene planet="saturn" variant="hero" style="position: absolute; inset: 0; z-index: 0; opacity: 0.85;" />
       <div class="wrap" style="position: relative; z-index: 1; padding-block: 96px 56px;">
-        <p class="eyebrow rise-in">Signal map</p>
+        <p class="eyebrow rise-in">Signal map · Saturnus</p>
+        <span class="planet-badge rise-in">PLANET 06 · SATURNUS</span>
         <h1 class="rise-in" style="font-size: clamp(52px, 10vw, 128px); margin-top: 16px;">Skills</h1>
         <p class="rise-in" style="font-size: clamp(17px, 2vw, 21px); color: var(--ink); max-width: 52ch; margin-top: 20px;">Proficiency by orbital band — mobile, web, backend, and DevOps.</p>
       </div>

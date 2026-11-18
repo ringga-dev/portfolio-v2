@@ -6,6 +6,7 @@
           <span class="brand-dot" aria-hidden="true"></span>
           <span>RINGGA<span style="color: var(--accent)">.SPACE</span></span>
         </NuxtLink>
+        <span class="planet-now" aria-hidden="true">{{ activePlanet }}</span>
         <nav class="nav-links" aria-label="Main">
           <NuxtLink to="/" class="nav-link" :class="{ active: isActive('/') }">Home</NuxtLink>
           <NuxtLink to="/about" class="nav-link" :class="{ active: isActive('/about') }">About</NuxtLink>
@@ -28,6 +29,7 @@
           <div>
             <p style="color: var(--muted); font-size: 14px; margin: 0;">{{ profile.title }} · {{ profile.location }}</p>
             <p style="color: var(--faint); font-size: 13px; margin: 6px 0 0;">© {{ year }} {{ profile.name }}. Built in orbit.</p>
+            <p style="color: var(--faint); font-size: 12px; margin: 10px 0 0;">Imagery: NASA/JPL-Caltech, Eyes on the Solar System</p>
           </div>
           <nav class="nav-links" aria-label="Footer">
             <a :href="profile.github" target="_blank" rel="noopener">GitHub</a>
@@ -48,6 +50,15 @@ import profile from '~/data/profile.json'
 const route = useRoute()
 const year = computed(() => new Date().getFullYear())
 const isActive = (path) => route.path === path || (path !== '/' && route.path.startsWith(path))
+
+const planetByPath = {
+  '/': 'BUMI',
+  '/about': 'MARS',
+  '/projects': 'JUPITER',
+  '/skills': 'SATURNUS',
+  '/contact': 'NEPTUNUS',
+}
+const activePlanet = computed(() => planetByPath[route.path] ?? 'BUMI')
 
 let observer
 async function observeReveals() {

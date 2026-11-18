@@ -1,9 +1,10 @@
 <template>
   <div>
     <section style="position: relative; min-height: 58dvh; display: flex; align-items: center; overflow: hidden;">
-      <SpaceScene variant="mini" style="position: absolute; inset: 0; z-index: 0; opacity: 0.8;" />
+      <SpaceScene planet="jupiter" variant="hero" style="position: absolute; inset: 0; z-index: 0; opacity: 0.8;" />
       <div class="wrap" style="position: relative; z-index: 1; padding-block: 96px 56px;">
-        <p class="eyebrow rise-in">Full manifest</p>
+        <p class="eyebrow rise-in">Orbit kerja · Jupiter</p>
+        <span class="planet-badge rise-in">PLANET 05 · JUPITER</span>
         <h1 class="rise-in" style="font-size: clamp(52px, 10vw, 128px); margin-top: 16px;">The work</h1>
         <p class="rise-in" style="font-size: clamp(17px, 2vw, 21px); color: var(--ink); max-width: 52ch; margin-top: 20px;">Systems designed, launched, and maintained. Open-source and production work.</p>
       </div>
