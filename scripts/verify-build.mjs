@@ -6,7 +6,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const DIST = path.resolve(process.cwd(), 'dist')
-const ROUTES = ['/', '/about', '/projects', '/skills', '/contact', '/tata-surya']
+const ROUTES = ['/', '/about', '/projects', '/skills', '/contact', '/tata-surya', '/siber']
 
 const errors = []
 const fail = (message) => errors.push(message)
