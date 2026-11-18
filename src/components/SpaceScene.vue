@@ -1611,16 +1611,18 @@ onUnmounted(() => {
     0 0 42px var(--planet-glow),
     0 0 110px var(--planet-glow);
 }
-/* Bola dari FOTO TEKSTUR NASA asli. background-size 200% = peta dunia penuh,
-   diposisikan ke tengah sehingga benua terlihat, lalu diputar perlahan. */
+/* Bola dari FOTO TEKSTUR NASA asli. Peta equirectangular dipetakan ke
+   lingkaran: hanya satu "wajah" bumi yang terlihat, jadi pakai cover dan
+   posisi tengah. Animasi hanya menggeser sedikit (±8%) agar benua tidak
+   pernah keluar frame / tampak transparan. */
 .space-fallback__globe {
   position: absolute;
   inset: 0;
   border-radius: 50%;
   background-image: var(--planet-map);
-  background-size: 200% 100%;
+  background-size: cover;
   background-position: 50% 50%;
-  animation: globe-pan 60s linear infinite alternate;
+  animation: globe-pan 40s ease-in-out infinite alternate;
 }
 /* Shading bola: tepi gelap + terminator terang-kiri/gelap-kanan dari cahaya. */
 .space-fallback__planet::after {
@@ -1691,8 +1693,8 @@ onUnmounted(() => {
   to { transform: rotate(360deg); }
 }
 @keyframes globe-pan {
-  from { background-position: 20% 50%; }
-  to { background-position: 80% 50%; }
+  from { background-position: 42% 50%; }
+  to { background-position: 58% 50%; }
 }
 @keyframes bands-slide {
   from { transform: translateX(-12%); }
